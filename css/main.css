@@ -2253,6 +2253,12 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
+#board {
+  margin-top: -1rem;
+  padding: 2.5rem 0;
+  background-color: #ffffff;
+}
+
 .navbar,
 .navbar.scrolling-navbar {
   background-color: #ffffff !important;
@@ -2273,12 +2279,16 @@ body {
   background: #f5f5f7 !important;
 }
 
+.banner .full-bg-img {
+  background-image: none !important;
+}
+
 .banner .mask {
   background-color: transparent !important;
 }
 
 .header-inner {
-  height: 55vh !important;
+  height: 45vh !important;
 }
 
 .scroll-down-bar {
