@@ -19,17 +19,22 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","darkmode":true,"version":"8.27.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"hide","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":true,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":false,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"},"path":"/search.xml","localsearch":{"enable":true,"top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="LaTeX排版最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。">
+    <meta name="description" content="来源最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LaTex排版">
 <meta property="og:url" content="http://example.com/2024/07/21/LaTex%E6%8E%92%E7%89%88/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="LaTeX排版最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。">
+<meta property="og:description" content="来源最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2024/07/21/LaTex%E6%8E%92%E7%89%88/%E5%85%AC%E5%BC%8F%E5%AF%B9%E9%BD%90.png">
+<meta property="og:image" content="http://example.com/2024/07/21/LaTex%E6%8E%92%E7%89%88/%E4%B8%89%E7%BA%BF%E5%9B%BE.png">
 <meta property="article:published_time" content="2024-07-21T04:03:59.000Z">
-<meta property="article:modified_time" content="2026-01-17T18:51:29.516Z">
+<meta property="article:modified_time" content="2026-01-19T17:02:20.494Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="科研">
+<meta property="article:tag" content="学习">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2024/07/21/LaTex%E6%8E%92%E7%89%88/%E5%85%AC%E5%BC%8F%E5%AF%B9%E9%BD%90.png">
 
 
 <link rel="canonical" href="http://example.com/2024/07/21/LaTex%E6%8E%92%E7%89%88/">
@@ -156,7 +161,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#LaTeX%E6%8E%92%E7%89%88"><span class="nav-number">1.</span> <span class="nav-text">LaTeX排版</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">1.1.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E5%9F%BA%E6%9C%AC%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.2.</span> <span class="nav-text">文档基本设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8F%E5%8C%85"><span class="nav-number">1.3.</span> <span class="nav-text">宏包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%AE%AF%E4%BD%9C%E8%80%85"><span class="nav-number">1.4.</span> <span class="nav-text">通讯作者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E7%89%87%E6%8F%92%E5%85%A5"><span class="nav-number">1.5.</span> <span class="nav-text">图片插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AC%E5%BC%8F%E6%8F%92%E5%85%A5"><span class="nav-number">1.6.</span> <span class="nav-text">公式插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E6%A0%BC%E6%8F%92%E5%85%A5"><span class="nav-number">1.7.</span> <span class="nav-text">表格插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E7%94%A8"><span class="nav-number">1.8.</span> <span class="nav-text">引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.9.</span> <span class="nav-text">页面设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E7%9B%AE%E6%A0%87"><span class="nav-number">1.10.</span> <span class="nav-text">总体目标</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9D%A5%E6%BA%90"><span class="nav-number">1.</span> <span class="nav-text">来源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E6%A1%A3%E5%9F%BA%E6%9C%AC%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.</span> <span class="nav-text">文档基本设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%8F%E5%8C%85"><span class="nav-number">3.1.</span> <span class="nav-text">宏包</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%AE%AF%E4%BD%9C%E8%80%85"><span class="nav-number">3.2.</span> <span class="nav-text">通讯作者</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BE%E7%89%87%E6%8F%92%E5%85%A5"><span class="nav-number">3.3.</span> <span class="nav-text">图片插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AC%E5%BC%8F%E6%8F%92%E5%85%A5"><span class="nav-number">3.4.</span> <span class="nav-text">公式插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A1%A8%E6%A0%BC%E6%8F%92%E5%85%A5"><span class="nav-number">3.5.</span> <span class="nav-text">表格插入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E7%94%A8"><span class="nav-number">3.6.</span> <span class="nav-text">引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E8%AE%BE%E7%BD%AE"><span class="nav-number">3.7.</span> <span class="nav-text">页面设置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E4%BD%93%E7%9B%AE%E6%A0%87"><span class="nav-number">4.</span> <span class="nav-text">总体目标</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -171,13 +176,13 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -248,7 +253,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">Edited on</span>
-      <time title="Modified: 2026-01-18 02:51:29" itemprop="dateModified" datetime="2026-01-18T02:51:29+08:00">2026-01-18</time>
+      <time title="Modified: 2026-01-20 01:02:20" itemprop="dateModified" datetime="2026-01-20T01:02:20+08:00">2026-01-20</time>
     </span>
 
   
@@ -258,7 +263,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">Word count in article: </span>
-      <span>858</span>
+      <span>829</span>
     </span>
     <span class="post-meta-item" title="Reading time">
       <span class="post-meta-item-icon">
@@ -275,11 +280,11 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><h2 id="LaTeX排版"><a href="#LaTeX排版" class="headerlink" title="LaTeX排版"></a>LaTeX排版</h2><p>最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。</p>
+    <div class="post-body" itemprop="articleBody"><h2 id="来源"><a href="#来源" class="headerlink" title="来源"></a>来源</h2><p>最近帮师哥用 LaTeX 排了一篇 Springer Nature 旗下的期刊，第一次用 LaTeX 排版，记录一下遇到的小问题和细节。</p>
 <span id="more"></span>
 
-<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>把图片转成 PDF，再转为 EPS 格式，使用 Inkscape 这个软件，导出格式选择封装的 PostScript，即 EPS。</p>
-<h3 id="文档基本设置"><a href="#文档基本设置" class="headerlink" title="文档基本设置"></a>文档基本设置</h3><p><code>[]</code> 里面表示文档类的参数，分别是数学物理格式，双列布局，<code>&#123;&#125;</code> 里面是文档类名称。</p>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>把图片转成 PDF，再转为 EPS 格式，使用 Inkscape 这个软件，导出格式选择封装的 PostScript，即 EPS。</p>
+<h2 id="文档基本设置"><a href="#文档基本设置" class="headerlink" title="文档基本设置"></a>文档基本设置</h2><p><code>[]</code> 里面表示文档类的参数，分别是数学物理格式，双列布局，<code>&#123;&#125;</code> 里面是文档类名称。</p>
 <figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\documentclass</span>[sn-mathphys-num,iicol]&#123;sn-jnl&#125;<span class="comment">%</span></span><br></pre></td></tr></table></figure>
 
 <h3 id="宏包"><a href="#宏包" class="headerlink" title="宏包"></a>宏包</h3><p>该加的都加进去，只要注意一下不要冲突就行</p>
@@ -299,8 +304,8 @@
 <p>使用 <code>split</code> 创建多行公式</p>
 <p>采用 <code>&amp;</code> 可以指定对齐的位置，用 <code>~</code> 当空格占位置</p>
 <p>效果</p>
-<!-- 请将图片 image.png 放到 source/_posts/LaTex排版/ 文件夹下，然后使用下面的 Markdown 语法来插入图片 -->
-<!-- ![图片描述](LaTex排版/image.png) -->
+<img src="/2024/07/21/LaTex%E6%8E%92%E7%89%88/%E5%85%AC%E5%BC%8F%E5%AF%B9%E9%BD%90.png" width:auto style="margin: 0 auto; display: block;" alt="公式对齐">
+
 
 
 <h3 id="表格插入"><a href="#表格插入" class="headerlink" title="表格插入"></a>表格插入</h3><p>通常使用三线表，<code>\toprule</code>, <code>\midrule</code>, <code>\bottomrule</code></p>
@@ -309,8 +314,8 @@
 <p><code>\multirow&#123;2&#125;&#123;*&#125;&#123;Value&#125;</code> 表示“Value”占两行，这样可以做到表格自动排列不合适情况下自己手动排版。</p>
 <p><code>&#123;@&#123;&#125;p&#123;0.17\columnwidth&#125;p&#123;0.08\columnwidth&#125;@&#123;&#125;&#125;</code>，<code>@&#123;&#125;</code> 去掉左右空白，<code>p</code> 设置占用的长度，<code>l</code> 左对齐，<code>c</code> 居中对齐。</p>
 <p>效果：</p>
-<!-- 请将图片 image.png 放到 source/_posts/LaTex排版/ 文件夹下，然后使用下面的 Markdown 语法来插入图片 -->
-<!-- ![图片描述](LaTex排版/image.png) -->
+<img src="/2024/07/21/LaTex%E6%8E%92%E7%89%88/%E4%B8%89%E7%BA%BF%E5%9B%BE.png" style="max-height: 500px; width: auto; display: block; margin: 0 auto;" alt="三线表">
+
 
 
 <h3 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h3><p>对图标之类的使用标签，引用的时候用 <code>\ref&#123;&#125;</code>，</p>
@@ -322,7 +327,7 @@
 <figure class="highlight latex"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">\RequirePackage</span>[<span class="comment">%</span></span><br><span class="line">    reversemp,</span><br><span class="line">    paperwidth=193mm,</span><br><span class="line">    paperheight=260mm,</span><br><span class="line">    top=&#123;19.29mm&#125;,</span><br><span class="line">    headheight=&#123;12pt&#125;,</span><br><span class="line">    headsep=&#123;5.15mm&#125;,</span><br><span class="line">    text=&#123;160mm,216mm&#125;,</span><br><span class="line">    marginparsep=5mm,</span><br><span class="line">    marginparwidth=12mm,</span><br><span class="line">    bindingoffset=6mm,</span><br><span class="line">    footskip=10.13mm,twocolumn]&#123;geometry&#125;<span class="comment">%</span></span><br></pre></td></tr></table></figure>
 
 <p>主要修改 <code>paperwidth=193mm</code>, <code>paperheight=260mm</code>。如果是别的页面格式对应修改。</p>
-<h3 id="总体目标"><a href="#总体目标" class="headerlink" title="总体目标"></a>总体目标</h3><p>使用 Overleaf 编译的结果没报 error 就算成功，否则最好把 error 消完，如果只需要编译出来的 PDF 文件可以不管。</p>
+<h2 id="总体目标"><a href="#总体目标" class="headerlink" title="总体目标"></a>总体目标</h2><p>使用 Overleaf 编译的结果没报 error 就算成功，否则最好把 error 消完，如果只需要编译出来的 PDF 文件可以不管。</p>
 
     </div>
 
@@ -331,6 +336,10 @@
     
 
     <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%A7%91%E7%A0%94/" rel="tag"># 科研</a>
+              <a href="/tags/%E5%AD%A6%E4%B9%A0/" rel="tag"># 学习</a>
+          </div>
 
         
 
@@ -341,8 +350,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2026/01/18/hello-world/" rel="next" title="Hello World">
-                  Hello World <i class="fa fa-angle-right"></i>
+                <a href="/2026/01/18/%E5%8F%A5%E5%AD%90/" rel="next" title="一些句子">
+                  一些句子 <i class="fa fa-angle-right"></i>
                 </a>
             </div>
           </div>
