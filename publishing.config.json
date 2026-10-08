@@ -1,0 +1,9 @@
+{
+  "remote": "https://github.com/DAWNMXV/DAWNMXV.github.io.git",
+  "githubRepository": "DAWNMXV/DAWNMXV.github.io",
+  "sourceBranch": "astro-source",
+  "siteBranch": "main",
+  "siteUrl": "https://dawnmxv.github.io/",
+  "newFileDirectories": ["src/", "public/", "tools/", "illustrations/", "docs/", "shortcuts/", ".github/"],
+  "newRootFiles": ["publishing.config.json"]
+}

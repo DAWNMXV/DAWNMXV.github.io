@@ -16,7 +16,10 @@
     "lint": "eslint .",
     "verify": "node tools/verify.mjs",
     "publish": "node tools/publish.mjs",
-    "new": "node tools/new-post.mjs"
+    "new": "node tools/new-post.mjs",
+    "blog": "node tools/blog.mjs",
+    "verify:migration": "node tools/verify-migration.mjs",
+    "test:publishing": "node --test tools/tests/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.0",
@@ -26,16 +29,19 @@
     "@tailwindcss/vite": "^4.3.2",
     "astro": "^7.0.3",
     "dayjs": "^1.11.21",
+    "js-yaml": "4.3.2",
     "lodash.kebabcase": "^4.1.1",
     "rehype-callouts": "^2.2.0",
     "rehype-katex": "^7.0.1",
     "remark-collapse": "^0.1.2",
     "remark-math": "^6.0.0",
+    "remark-parse": "11.0.0",
     "remark-toc": "^9.0.0",
     "satori": "^0.26.0",
     "sharp": "^0.35.2",
     "slugify": "^1.6.9",
-    "tailwindcss": "^4.3.2"
+    "tailwindcss": "^4.3.2",
+    "unified": "11.0.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

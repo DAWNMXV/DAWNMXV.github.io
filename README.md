@@ -2,6 +2,19 @@
 
 白底、文字为主的个人博客。基于 [AstroPaper](https://github.com/satnaing/astro-paper) 6.1.0，保留原站七篇文章、日期、标签、图片和文章地址，并加入《焦虑与和解》及四张配图。
 
+## 日常发布入口
+
+在 Mac 上双击 `shortcuts/博客助手.command`，即可使用中文菜单新建草稿、导入 Markdown 和配图、标记定稿、预览及发布。首次选择菜单 7 登录 GitHub。完整操作见 [发布指南](docs/发布指南.md)。
+
+```bash
+npm run blog
+npm run blog -- import '/完整路径/文章.md' english-slug
+npm run blog -- ready english-slug
+npm run publish
+```
+
+发布工具会检查本次源码快照，排除新的本地草稿及其配图，备份源码并更新网站，最后确认 GitHub Pages 部署状态。试运行可用 `npm run publish -- --dry-run`，工具测试可用 `npm run test:publishing`。
+
 Notion 的“问答提炼”整理成数字验证问答系列，包含 8 篇文章、22 个专题、205 条问答。系列入口是 `/series/digital-verification/`，每篇带可折叠目录，代码和公式分别使用语法高亮与 KaTeX 渲染。
 
 每篇技术文章还配有 2 张解释示意图，共 16 张，正文中可以点击放大。所有图使用内置 imagegen 原创生成，经逐张核对后转为 WebP。方案、插入位置、选用版本和独立提示词保存在 `illustrations/digital-verification/`；本地 PNG 原图在 `output/illustrations/digital-verification/`。
@@ -42,14 +55,14 @@ npm run preview
 - `notion-series-manifest.json`：问答系列的标题、问题清单及代码校验。
 
 网站继续发布到 https://dawnmxv.github.io/ 。`astro-source` 分支备份源码，`main` 分支保存 `dist/` 中生成的网页。
-可以让 Codex 使用已经连接的 GitHub 发布，也可以配置本机 GitHub 认证后执行：
+可以让 Codex 使用已经连接的 GitHub 发布，也可以在本机完成 `npm run blog -- login` 后执行：
 
 ```bash
 npm run publish -- --dry-run
 npm run publish
 ```
 
-本地发布脚本先构建、校验并备份源码，再以普通 Git 提交更新网页；不会强制覆盖远端历史。
+本地发布脚本检查源码快照后，以普通 Git 提交备份源码、更新网页，并等待 GitHub Pages 的部署结果。它保留原有暂存状态，检查失败不会推送，远端源码已更新时会要求先同步。
 需要 GitHub Pages 的发布来源仍指向 `main` 分支根目录。
 
 ## 迁移和图片
@@ -59,7 +72,7 @@ npm run publish
 新文章地址是 `/posts/anxiety-and-reconciliation/`，发布日期设为 2026-10-08，正文与提供的 Markdown 一致。
 四张拼贴插画转换成 960 像素宽的 WebP，保留完整构图；原 PNG 在用户原来的插画目录中保留。
 
-校验针对本次迁移和新增文章。如以后有意改写旧文或新文章正文，请同步审核并更新校验基线。
+`npm run verify` 是日常发布检查，允许新增文章和正常改写。`npm run verify:migration` 保存本次迁移、问答与图片的原始校验基线；有意改写旧内容时，该历史检查可能不再通过，不影响日常发布。
 
 问答系列的正文位于 `src/content/posts/dv-*.md`，可以直接编辑。`tools/import-notion-series.mjs` 用于从本地 `.notion-cache/` 重新生成本次分组；缓存属于导入材料，已排除在 Git 和网站发布内容之外。重新导入会覆盖系列文章，手工修改后应先保存副本。
 
