@@ -23,6 +23,9 @@ const topics = series.reduce((count, article) => count + article.sections, 0);
     <p class="text-muted-foreground mt-4">
       {series.length} 篇文章 · {topics} 个专题 · {questions} 条问答笔记
     </p>
+    <p class="text-muted-foreground mt-2 text-sm">
+      每篇配有 2 张讲解示意图，可在正文中点击放大。
+    </p>
     <ol class="mt-8">
       {
         series.map(article => (

@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（二）：仿真调度、并发与 SVA"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.201Z
 tags: ["数字验证","SystemVerilog","SVA"]
 description: "事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-simulation-concurrency-sva/event-regions.webp"
 ---
 
 这篇是数字验证问答系列的第二篇，整理自我的复习笔记。事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -22,6 +28,14 @@ SystemVerilog 仿真中的“时间片”不是简单的一个瞬间，而是同
 同一 `Active` 区中多个并行进程的先后顺序通常不能依赖，因此如果两个 `always/initial` 在同一时刻访问同一信号，可能出现 race condition。`#0` 只是把操作移到 `Inactive`，并不是可靠的通用消除竞争手段。类似地，`a <= #5 b` 应区分“何时采样 RHS”和“何时更新 LHS”：通常当前时刻就计算 `b`，5 个时间单位后再更新 `a`，不能简单理解成 5ns 后才读取 `b`。
 ### SVA 在哪里采样、在哪里求值？
 对于 SVA，最重要的是 `Preponed` 和 `Observed`。Concurrent assertion 通常在 `Preponed` 区采样相关信号，在 `Observed` 区进行 property 求值。因此即使 `Observed` 位于 `NBA` 之后，assertion 判断使用的仍主要是之前采样到的值，而不是简单读取 NBA 后的新值。理解 `$rose/$fell/$past` 以及“断言看到哪一拍数据”时，必须以这种 sampled-value 语义为基础，而不是只看当前变量表面上的实时值。
+
+<!-- dv-illustration: 3 -->
+<figure class="technical-figure" data-illustration="3">
+<img src="/images/digital-verification/dv-simulation-concurrency-sva/event-regions.webp" alt="同一时间槽里的关键调度区" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>SVA 的采样和求值分处不同区域，NBA 更新不会改变本次已采样的值。图中省略了部分区域及迭代。</figcaption>
+</figure>
+<!-- /dv-illustration: 3 -->
+
 ### Reactive、Postponed 与 UVM 有什么关系？
 `Reactive` 主要属于 testbench/program/assertion action 一侧，设计目的之一是让测试平台在 DUT 的主要设计更新之后再作响应，从而减少 testbench 与 DUT 之间的竞争；`Re-Inactive`、`Re-NBA` 可以看作 Reactive 域对应的 Inactive 和 NBA。现代 UVM 一般不依赖 `program block`，而更多通过 `interface` 和 `clocking block` 明确采样和驱动时序。最后的 `Postponed` 用于观察当前时间片已经稳定后的结果，典型是 \$strobe、\$monitor；因此 \$display往往能看到 NBA 更新前的旧值，而 \$strobe 能看到当前时间片最终稳定后的值。
 ### 如何记住主要调度顺序？
@@ -140,6 +154,14 @@ wait fork;
 
 每次进入该 `fork` 作用域都会产生独立的 automatic `k`，分别保存 `0、1、2`，因此三个子线程最终分别打印这三个值，顺序不保证。这里 `automatic` 的本质是“每次作用域激活拥有独立存储”，不是让代码并行。还要特别注意：若改成 `fork begin automatic int k=i; ... end join_none`，`k=i` 位于子进程内部，要等子进程真正开始执行时才初始化，此时 `i` 可能已经变成 3，因此作用不同。
 `for + fork` 的组合要看谁包谁。`fork` 里放一个完整 `for`，只是“整个循环”与其他 fork 分支并行，循环内部仍顺序；`for` 每轮里使用 `fork...join`，每轮都会等子线程结束后才进入下一轮，因此通常没有跨迭代并行；只有 `for + fork...join_none` 才会快速创建多轮并发线程，这也是最需要 `automatic` 保存循环变量快照的场景。`join_any` 在 fork 中只有一个子线程时与 `join` 效果相同；有多个子线程时，任意一个结束父线程就继续，如果希望“谁先结束就终止其他分支”，常见模式是 `join_any` 后接 `disable fork`。
+
+<!-- dv-illustration: 4 -->
+<figure class="technical-figure" data-illustration="4">
+<img src="/images/digital-verification/dv-simulation-concurrency-sva/fork-join.webp" alt="Fork 的三种等待方式" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>join、join_any、join_none 改变父进程的等待条件；join_any 本身不会终止其余子进程。</figcaption>
+</figure>
+<!-- /dv-illustration: 4 -->
+
 ### Semaphore 与 Mailbox：资源控制和事务传递
 `semaphore`（旗语/信号量）和 `mailbox` 都用于 SystemVerilog 并发线程之间的同步，但解决的问题不同。`semaphore` 解决“共享资源访问控制”，本质是一个可计数的许可证池：`new(N)` 表示初始有 N 个 key，线程通过 `get(n)` 获取 key，资源不足时会阻塞；使用结束后通过 `put(n)` 归还。`try_get(n)` 是非阻塞版本，拿不到立即返回失败。`new(1)` 时可当作互斥锁使用，保证同一时刻只有一个线程进入临界区；`new(N)` 则可限制最多 N 个线程同时使用某类资源。要注意 semaphore 本质是计数型信号量，不只是 mutex。
 `mailbox` 解决“线程间数据传递”，本质是线程安全、支持阻塞操作的 FIFO，典型用于 producer-consumer 模型。`put()` 将数据放入 mailbox，`get()` 取出并删除最前面的数据；若 mailbox 为空，`get()` 会阻塞等待数据。`peek()` 只读取最前面的数据但不删除。`try_get()`、`try_put()`、`try_peek()` 是对应的非阻塞版本。`mailbox mbx = new()` 为不限容量，`new(N)` 为有界 mailbox；有界 mailbox 满时，`put()` 会阻塞，因此可以自然形成 backpressure。实际验证中优先使用类型化邮箱，如 `mailbox #(transaction)`，可避免错误类型的数据进入邮箱。

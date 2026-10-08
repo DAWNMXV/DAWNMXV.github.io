@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（五）：AXI 协议"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.205Z
 tags: ["数字验证","AXI"]
 description: "通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-axi-protocol/axi-channels.webp"
 ---
 
 这篇是数字验证问答系列的第五篇，整理自我的复习笔记。通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -18,6 +24,14 @@ description: "通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子�
 AXI 本质上是**点到点接口协议**，规定的是两个接口之间的信号含义、VALID/READY 握手和时序，而不是整个 SoC 的互联拓扑。多个 Master/Slave 如何仲裁、地址译码、路由，是 Interconnect/Crossbar/NoC 的职责。AXI 的高性能来自通道解耦和 outstanding：读写通道彼此独立，多笔 transaction 可以同时未完成；协议通过 ID 区分不同逻辑事务流。可以把一个物理 AXI Port 看成多个由 ID 划分的 logical ports：**同一 ID 的事务存在 ordering 约束，不同 ID 的事务通常允许乱序完成**。乱序指 transaction 之间的完成顺序，不代表一个 burst 内部的 beat 可以任意乱序。
 ### 读写为什么分别需要两条与三条通道？
 AXI 读事务使用 **AR 读地址通道 + R 读数据通道**，写事务使用 **AW 写地址通道 + W 写数据通道 + B 写响应通道**。读操作中 Master 只需要通过 AR 告诉 Slave“从哪里、以什么 burst 和 size 读取”，数据由 Slave 从 R 通道返回；写操作则既要告诉 Slave“写到哪里”，又要提供“写什么数据”，所以地址和数据分别使用 AW、W 两个独立通道。AXI 各通道都采用 VALID/READY 握手：只有时钟沿上二者同时为 1 才完成一次传输；**VALID 不能依赖 READY**，否则双方都等待对方先拉高信号时可能产生死锁，而 READY 可以依赖 VALID。VALID 拉高后，在握手完成前 VALID 以及对应的地址、数据等 payload 必须保持稳定。
+
+<!-- dv-illustration: 9 -->
+<figure class="technical-figure" data-illustration="9">
+<img src="/images/digital-verification/dv-axi-protocol/axi-channels.webp" alt="AXI 的五条通道" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>读事务使用 AR/R，写事务使用 AW/W/B。箭头表示 payload 方向，各通道的 READY 沿相反方向返回。</figcaption>
+</figure>
+<!-- /dv-illustration: 9 -->
+
 ### Beat、Burst 和 Transaction 是什么关系？
 AXI 中最容易混淆的是 `burst`、`beat`、`transaction` 和 `outstanding`。一笔完整 AXI 读/写 transaction 可以包含一个或多个数据 beat；完整 AXI 用 burst 机制描述这些 beat，因此 `AxLEN + 1` 就是该事务包含的 beat 数。`AxLEN=0` 表示只有 1 beat，可以理解为长度为 1 的 burst；`AxLEN=7` 表示 8-beat burst。`FIXED / INCR / WRAP` 描述的是同一 burst 内各 beat 地址如何变化。由此要特别注意：一个 16-beat burst 仍然只是一笔 transaction，并不是 16 笔 transaction。
 Outstanding 统计未完成的 transaction，与一笔 burst 的 beat 数是不同维度。一个 256-beat burst 仍只算一笔事务；详细计数、ID 和乱序关系见第 08 页。
@@ -78,6 +92,14 @@ AXI 的窄传输（Narrow Transfer）指的是：物理数据总线很宽，但�
 非对齐时尤其要注意：`AWSIZE=2` 并不意味着每个 beat 的 `WSTRB` 一定恰好有 4 个 `1`。例如 128 bit 总线、`AWADDR=0x1003`、`AWSIZE=2`、INCR burst，首拍从非对齐地址 `0x1003` 开始，到下一个 4 Byte 自然边界 `0x1004` 前只剩 1 Byte，因此首拍可能只有 byte lane 3 有效；之后地址进入对齐状态，下一拍从 `0x1004` 开始，可正常使用 4 个 byte lane。也就是说，`AWSIZE` 表示该 transfer 的最大字节跨度/传输规格，而 `WSTRB` 才表示这一拍实际写入的字节集合，非对齐首拍可能只使用其中一部分。
 ### 128-bit 总线上，五拍非对齐传输如何映射？
 对于 `128-bit bus + 32-bit transfer + INCR + 起始地址 0x1001 + 5 beats`，这是同时具有 **narrow + unaligned**的传输。32-bit 即每拍最多 4 Byte，第一拍由于从 `0x1001` 开始，只能访问当前 4-Byte natural boundary 剩余的 `0x1001~0x1003`；之后恢复到自然边界，因此五拍分别为 `0x1001~0x1003`、`0x1004~0x1007`、`0x1008~0x100B`、`0x100C~0x100F`、`0x1010~0x1013`。在 128-bit 总线的 16 个 byte lane 上，对应 WSTRB 依次为 `16'h000E → 16'h00F0 → 16'h0F00 → 16'hF000 → 16'h000F`。所谓“WSTRB 滑动”，本质不是 WSTRB 自己存在特殊移位机制，而是随着 INCR 地址递增，有效 4-byte 窗口依次落到不同 byte lane，到 128-bit word 边界后重新回到低 lane。
+
+<!-- dv-illustration: 10 -->
+<figure class="technical-figure" data-illustration="10">
+<img src="/images/digital-verification/dv-axi-protocol/axi-byte-lanes.webp" alt="128-bit AXI：非对齐的五拍字节映射" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>起始地址 0x1001 的第一拍只写 lane1～3；随后按 4 Byte 递增，跨过 16 Byte 总线字后回到低 lane。</figcaption>
+</figure>
+<!-- /dv-illustration: 10 -->
+
 ### FIXED 和 INCR 的非对齐有什么区别？
 `FIXED` burst 也存在对齐与非对齐的概念。是否非对齐取决于 `AxADDR` 是否满足 `2^AxSIZE` 的自然对齐，而不是取决于总线总宽度。例如 32-bit 总线，`AWADDR=0x02, AWSIZE=1` 表示 2 Byte/beat，0x02 对 2 Byte 是对齐的，可以使用 lane2\~3；若 `AWADDR=0x03, AWSIZE=1`，才是非对齐。FIXED 的关键是每个 beat 地址都不变，因此有效 byte lane 的范围也不随 beat 移动；非对齐 FIXED 并不是“什么都写不进去”，而是可能只能使用剩余的部分 byte lane，效率较低。与之相比，INCR burst 的第一拍可以非对齐，后续 beat 会进入相应的递增地址。FIXED 常见于 FIFO 等固定地址端口。
 ### 为什么部分写不应简单替换为多笔窄写？

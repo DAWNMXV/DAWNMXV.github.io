@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（七）：NoC、CHI 与接口带宽"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.206Z
 tags: ["数字验证","NoC","CHI"]
 description: "路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-noc-chi-bandwidth/noc-router.webp"
 ---
 
 这篇是数字验证问答系列的第七篇，整理自我的复习笔记。路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -23,6 +29,14 @@ Router、Flit、Credit、VC、前进性、乱序检查和原子事务。
 `Floor` 不是所有 NoC 都统一定义的标准术语，需要结合具体项目判断。它通常表示比 Router 坐标更高一级的拓扑层级、物理区域或 3D NoC 中的层，例如一个节点可以用 `{floor, router_coord, endpoint_id}` 来定位；也可能只是与芯片 floorplan 相关的物理区域概念。因此看到 `floor_id/src_floor/dst_floor` 等字段时，应以项目中的 packet header、拓扑定义或 RTL 代码为准。
 ### 一笔 Flit 穿过 Router 的完整过程
 NoC 可以理解为片上“分组交换网络”：上层 AXI/CHI 等事务进入 Network Interface 后被封装成 Packet，再拆成 Flit，通过多个 Router 转发，最后在目的端重组。理解 NoC 时最重要的主线是：**一笔事务如何经过 Packetization → Routing → VC/Buffer → Flow Control → Arbitration → Crossbar/Link → Reassembly，最终正确到达目的端。** Router 是核心，典型内部过程包括输入缓存、路由计算、VC 分配、交换仲裁和 Crossbar 转发。确定性路由如 XY Routing 路径唯一，参考模型容易预测；自适应路由可能存在多个合法下一跳，因此验证时通常检查“实际选择是否属于合法集合”，而不是强制预测唯一输出。
+
+<!-- dv-illustration: 13 -->
+<figure class="technical-figure" data-illustration="13">
+<img src="/images/digital-verification/dv-noc-chi-bandwidth/noc-router.webp" alt="一笔 Flit 如何穿过 Router" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>Packet 拆成 Flit 后，经过缓存、路由计算、VC 分配、交换仲裁和转发。图为典型流程，实际实现可以合并流水级。</figcaption>
+</figure>
+<!-- /dv-illustration: 13 -->
+
 ### VALID/READY 与 Credit 为什么适用场景不同？
 `VALID/READY` 和 Credit 是两种不同的流控模型。AXI 的 `VALID/READY` 是逐拍握手：发送方用 `VALID` 表示当前数据有效，接收方用 `READY` 表示当前能够接收，二者同时为 1 时完成一次 transfer。它并不低效；只要双方连续保持 `VALID=READY=1`，AXI 同样可以做到每周期一个 beat。AXI 之所以采用这种方式，是因为它主要定义通用的点到点接口，机制简单、灵活，接收端可以随时通过 `READY` 施加 backpressure；实际 SoC 还会通过 FIFO、register slice、skid buffer 等切断过长的握手路径，并不是让一根 READY 信号跨越整个系统。
 Credit 流控则是接收端提前告诉发送端“我还有 N 个 Buffer，可以再收 N 个 flit”。发送方维护 `credit_count`，每发送一个消耗一个 credit，接收端释放 Buffer 后再返还 credit。它的核心是**资源预授权**，而不是逐拍询问是否可接收，因此更适合 CHI/NoC 这种多 Router、长流水、高频、packetized 的互连。Credit 与 VALID 也并不矛盾：Credit 决定“有没有资格发送”，VALID 仍可以表示“这一拍是否真的有有效 flit”；与 AXI 的区别主要是没有依赖远端 `READY` 对每一拍进行实时许可。可以概括为：**AXI 的 VALID/READY 更适合局部接口级流控，CHI 的 Credit 更适合网络级 Buffer 资源管理。**
@@ -61,6 +75,14 @@ XY 的无循环依赖结论依赖相应拓扑与资源模型；协议级资源�
 如果接口是“每个时钟传一次”，也可以写成：
 `Bandwidth (bit/s) = Clock Frequency × 每周期传输次数 × Data Width`
 例如 128-bit AXI、500 MHz，每周期最多完成一次数据握手，单方向理论峰值为 `8 GB/s`；若只有 80% 的周期发生有效 `VALID && READY` 握手，则实际数据带宽约为 `6.4 GB/s`。
+
+<!-- dv-illustration: 14 -->
+<figure class="technical-figure" data-illustration="14">
+<img src="/images/digital-verification/dv-noc-chi-bandwidth/bandwidth.webp" alt="从理论峰值到实际带宽" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>128-bit、500 MHz、每周期最多一拍时，单方向峰值为 8 GB/s；若满宽有效握手占 80%，带宽为 6.4 GB/s。</figcaption>
+</figure>
+<!-- /dv-illustration: 14 -->
+
 ### DDR 的 MT/s 为什么不等于时钟 MHz？
 **时钟频率和 Transfer Rate 不一定相等。**典型例子是 DDR：DDR 在一个时钟周期的上升沿和下降沿各传一次，因此 `1600 MHz` 时钟对应 `3200 MT/s`。DDR4-3200 的“3200”表示 `3200 MT/s`，不是 3200 MHz。对于 64-bit 单通道：
 `3200 MT/s × 64 bit / 8 = 25.6 GB/s`

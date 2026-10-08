@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（八）：SoC 验证与工程工具"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.206Z
 tags: ["数字验证","SoC","工程工具"]
 description: "系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-soc-engineering/reference-model.webp"
 ---
 
 这篇是数字验证问答系列的第八篇，整理自我的复习笔记。系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -28,6 +34,14 @@ end
 ```
 
 这种“先全量默认赋值，再覆盖一个动态 bit”的写法在语法和正常综合语义上都是合法的。综合器通常会把动态索引实现成 decoder + mux：被 `index` 选中的 bit 取新值，其他 bit 保持 `current_addr`。真正的风险通常来自动态索引越界、`index` 含 X、复位/初始化在 RTL 和 FPGA 上不一致、综合器特殊优化或工具 bug，以及 timing/CDC 问题。验证上应加入索引范围断言、`$isunknown()` 检查和“未被选中的 bit 必须保持不变”的断言，并配合 lint、RTL-to-netlist formal equivalence、必要时 gate-level simulation。一个重要判断方法是：若 RTL 与综合网表 equivalence 已经失败，优先查 RTL/综合语义；若 equivalence 通过但 FPGA 仍失败，则应更关注时序、CDC、复位、初始化和实现层问题。
+
+<!-- dv-illustration: 16 -->
+<figure class="technical-figure" data-illustration="16">
+<img src="/images/digital-verification/dv-soc-engineering/fpga-debug.webp" alt="RTL 通过、FPGA 失败：怎样分层定位" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>先对齐输入与配置，再按等价检查结果缩小范围；等价通过后仍需检查时序、CDC、复位和实现条件。</figcaption>
+</figure>
+<!-- /dv-illustration: 16 -->
+
 ### FPGA 原型与软件仿真各有什么优劣？
 FPGA 原型验证的主要挑战是设计规模和跨 FPGA 分割、板间或芯片间 I/O 限制、跨 FPGA 延迟、时钟和复位映射、ASIC 宏单元替代、内部可观测性弱以及长时间布局布线。其主要优势是运行速度高，适合长软件场景；软件仿真则恰好相反，速度慢但可观测性、可控性和调试能力强，适合断言、覆盖率、约束随机、错误注入和自动化回归。
 ### 形式验证适合哪些问题？
@@ -36,6 +50,14 @@ FPGA 原型验证的主要挑战是设计规模和跨 FPGA 分割、板间或芯
 门级后仿通常需要门级网表、标准单元仿真库、Testbench，以及带时序仿真时使用的 SDF；还可能需要 SRAM、PLL、IO 等 IP 模型。零延迟门级仿真主要检查综合后功能、复位和 X 传播；SDF 后仿还会体现单元和互连延迟、setup/hold、recovery/removal、脉宽等时序检查。门级仿真不能代替 STA，因为仿真只覆盖实际跑到的路径，而 STA 系统性分析时序路径。
 ### 参考模型应该做到什么精度？
 参考模型的作用是根据输入生成期望结果，再交给 scoreboard 与 DUT 输出比较。参考模型可分为功能级、bit-accurate、cycle-accurate、transaction-level 等不同精度。验证环境中不应盲目追求“越精确越好”，而应根据被验证功能决定是否需要位精确、周期精确或仅事务级一致。
+
+<!-- dv-illustration: 15 -->
+<figure class="technical-figure" data-illustration="15">
+<img src="/images/digital-verification/dv-soc-engineering/reference-model.webp" alt="参考模型如何参与结果比较" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>参考模型根据输入和规格生成 Expected，输出观测提供 Actual；模型精度应由本次验证目标决定。</figcaption>
+</figure>
+<!-- /dv-illustration: 15 -->
+
 ### 模拟前端 Expected/Actual 不一致怎样排查？
 数字配置与模拟前端联合验证出现 expected 与 actual 不一致时，应分层定位：先查复位时序、寄存器默认值、写入和读回，再查配置是否真正传到模拟接口，随后检查模拟稳定时间、采样时刻、符号位、量化、单位和缩放关系。模拟结果通常不适合严格 `==`，应使用绝对误差或相对误差容限。晶体管级模型精确但很慢，因此芯片级回归通常使用 Verilog-A/Verilog-AMS 行为模型、RNM、`wreal`、查找表或数学模型；晶体管级模型主要用于模块级精确验证和行为模型校准。核心思想是“晶体管级保精度，高层模型保速度”。
 ### 中断进入与返回的软硬件职责

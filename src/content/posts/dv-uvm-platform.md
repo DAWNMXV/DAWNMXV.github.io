@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（四）：UVM 验证平台"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.205Z
 tags: ["数字验证","UVM"]
 description: "Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-uvm-platform/uvm-dataflow.webp"
 ---
 
 这篇是数字验证问答系列的第四篇，整理自我的复习笔记。Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -148,6 +154,14 @@ UVM/VIP 的 Callback 本质是一种“局部扩展机制”：VIP 或组件在�
 事务通信、握手完成、response、对象所有权和采样。
 ### SV、UVM 与平台组件的完整关系
 SystemVerilog（SV）是语言，UVM 是建立在 SV 之上的验证方法学和类库。SV 提供 `class`、继承、多态、`virtual`、随机化约束、interface、队列等语言能力；UVM 用这些能力规定了一套标准验证架构。典型 UVM 数据流是 `sequence → sequencer → driver → DUT → monitor → scoreboard/coverage`：`sequence_item` 描述一笔事务，sequence 产生事务，sequencer 做事务传递和仲裁，driver 把 transaction 转成接口时序，monitor 把接口信号重新还原成 transaction，scoreboard 做期望值与实际值比较。agent 通常封装 driver、sequencer、monitor，env 再组织多个 agent、参考模型和 scoreboard，test 位于顶层负责配置环境和启动 sequence。UVM 的 factory、phase、objection、TLM、config_db 等机制，本质上都建立在 SV 的面向对象机制之上，因此理解 class、句柄、继承、多态和虚方法是理解 UVM 的基础。
+
+<!-- dv-illustration: 7 -->
+<figure class="technical-figure" data-illustration="7">
+<img src="/images/digital-verification/dv-uvm-platform/uvm-dataflow.webp" alt="UVM：从事务到引脚，再回到事务" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>Driver 把事务转换为接口时序，Monitor 将实际信号还原为事务，再广播给 Scoreboard 与 Coverage。Interface 属于静态 SV 结构。</figcaption>
+</figure>
+<!-- /dv-illustration: 7 -->
+
 ### Port、Export、Imp 和 blocking 接口是什么？
 TLM 的核心不是“端口上传输比特”，而是“组件之间通过标准化方法调用传递 transaction”。`put/get/peek/write/transport` 本质都是方法接口。Port、Export、Imp 的角色必须分清：Port 表示“我需要调用某个服务”，Imp 表示“这个 component 真正实现该方法”，Export 表示“我自己不实现，只把内部服务向外暴露/转发”。因此典型调用链是 `port → export(可选) → imp → component method`。`imp` 本质也是代理：它保存真正实现者的句柄，并把 `put()`、`write()` 等调用转发过去。Blocking 接口是 task，可以等待；nonblocking 接口是 function，必须立即返回，例如 `try_put()` / `can_put()`。`get` 会取走对象，`peek` 只查看不删除，`transport` 用于 request-response。
 ### Port→Port、Export→Export 是否合法？
@@ -223,6 +237,14 @@ UVM RAL 中，actual 是 DUT 的真实寄存器值，mirrored 是模型认为 DU
 - `set()` 按字段访问策略修改 desired，不访问 DUT；对于 W1C 等字段，不能直接把参数当作普通 RW 字段的最终值。
 - `update()` 根据 `needs_update()` 判断模型是否需要写入，再按访问策略构造写值。普通 RW 字段可用 desired 与 mirrored 的差异理解，但不能据此替代所有特殊字段语义。它不会先读取 actual 再作比较。
 参考：[Accellera UVM 1.2 Class Reference](https://www.accellera.org/images/downloads/standards/uvm/UVM_Class_Reference_Manual_1.2.pdf)。
+
+<!-- dv-illustration: 8 -->
+<figure class="technical-figure" data-illustration="8">
+<img src="/images/digital-verification/dv-uvm-platform/ral-values.webp" alt="RAL 的三个值，分别在哪里" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>Actual 属于 DUT，Mirrored 与 Desired 属于模型。set() 改模型，update() 再按字段访问策略决定是否写入。</figcaption>
+</figure>
+<!-- /dv-illustration: 8 -->
+
 ### Auto Prediction 和 Explicit Prediction 的原理与选择
 UVM RAL 中的 prediction 用来解决一个核心问题：**DUT 中寄存器真实值变化后，RAL 中的 mirrored value 如何保持同步。** `mirrored value` 表示寄存器模型“认为 DUT 当前是什么值”，而 prediction 的作用就是根据访问结果更新这个 mirror。
 - **自动预测（auto prediction）**通过 `reg_model.default_map.set_auto_predict(1)` 开启。它适用于由 RAL 自己发起的访问，例如 `reg_model.ctrl.write(..., UVM_FRONTDOOR)`。这类访问会经过 `uvm_reg_map → adapter → bus sequencer/driver → AXI/AHB/APB → DUT`，因为 RAL 知道自己发起了什么操作，所以访问完成后可以自动更新 mirror。它结构简单，适合 block-level、寄存器基本功能测试、RAL bring-up，以及“所有寄存器访问基本都由 RAL API 发起”的环境。

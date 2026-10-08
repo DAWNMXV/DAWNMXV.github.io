@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
 import { load } from "cheerio";
+import { applySeriesIllustrations } from "./apply-series-illustrations.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const groups = [
@@ -202,6 +203,7 @@ writeFileSync(
   join(root, "notion-series-manifest.json"),
   JSON.stringify(manifest, null, 2) + "\n"
 );
+applySeriesIllustrations();
 console.log(
   `Imported 22 topics into ${groups.length} articles, ${manifest.reduce((n, x) => n + x.questions.length, 0)} questions.`
 );

@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（一）：SystemVerilog 语言基础"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.199Z
 tags: ["数字验证","SystemVerilog"]
 description: "类型、四态逻辑、面向对象、对象复制、数组与随机约束。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-sv-basics/four-state.webp"
 ---
 
 这篇是数字验证问答系列的第一篇，整理自我的复习笔记。类型、四态逻辑、面向对象、对象复制、数组与随机约束。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -55,6 +61,14 @@ if ((a <= b) !== 1'b1)
 ```
 
 关键区别是：`!=` 属于普通四态逻辑比较，遇到 `X` 后结果仍可能是 `X`；而 `!==` 是 case inequality，最终结果一定是明确的 `0/1`，因此适合这种“未知态也应视为失败”的验证判定。若希望单独区分“超限”和“出现 X/Z”两类问题，则使用 `$isunknown()` 更利于定位；但如果只是要求 error 分支在前、且不想显式写 X 检查，`!==` 是更简洁的写法。
+
+<!-- dv-illustration: 1 -->
+<figure class="technical-figure" data-illustration="1">
+<img src="/images/digital-verification/dv-sv-basics/four-state.webp" alt="四态逻辑与未知态检查" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>四态比较可能得到 X；用 case inequality 可以把未知结果明确判为检查失败。</figcaption>
+</figure>
+<!-- /dv-illustration: 1 -->
+
 ### Case、Casez、Casex 有什么不同？
 `case`、`casez`、`casex` 的关键区别在通配规则：普通 `case` 不把任何状态当通配；`casez` 将 `Z/?` 当作 don't-care；`casex` 将 `X/Z/?` 都当作 don't-care。由于 `casex` 可能把真实的 `X` 异常掩盖掉，因此 RTL 设计中一般应谨慎使用，优先考虑普通 `case` 或合适的 `casez`。
 ### 四态逻辑有哪些易错点？
@@ -110,6 +124,14 @@ dst ──> packet2 ──> header2
 ```
 
 这一区别在验证平台中非常重要。例如 monitor 如果不断复用同一个 transaction，再把它通过 analysis port 发给 scoreboard，那么 scoreboard 保存下来的可能只是同一个对象句柄；后续 monitor 修改 transaction 时，以前保存的数据也会“跟着变化”。常见做法是每笔事务重新创建对象，或者在需要保存独立快照时进行深拷贝/克隆。
+
+<!-- dv-illustration: 2 -->
+<figure class="technical-figure" data-illustration="2">
+<img src="/images/digital-verification/dv-sv-basics/object-copy.webp" alt="句柄、浅拷贝与深拷贝" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>判断深浅拷贝，要看内部对象是否共享，不能只看外层对象有没有重新创建。</figcaption>
+</figure>
+<!-- /dv-illustration: 2 -->
+
 ### Copy、Do_copy、Clone 各负责哪一层？
 UVM 中的 `copy()`、`do_copy()`、`clone()` 不应简单理解成“一个浅拷贝、一个深拷贝”。三者职责不同。`dst.copy(src)` 是标准复制入口，要求 `dst` 已经存在；它内部最终会调用对象的 `do_copy()`。`do_copy()` 是子类真正定义“哪些成员怎么复制”的地方，所以最终是深拷贝还是浅拷贝，主要由这里决定。例如：
 ```system-verilog

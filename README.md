@@ -4,6 +4,8 @@
 
 Notion 的“问答提炼”整理成数字验证问答系列，包含 8 篇文章、22 个专题、205 条问答。系列入口是 `/series/digital-verification/`，每篇带可折叠目录，代码和公式分别使用语法高亮与 KaTeX 渲染。
 
+每篇技术文章还配有 2 张解释示意图，共 16 张，正文中可以点击放大。所有图使用内置 imagegen 原创生成，经逐张核对后转为 WebP。方案、插入位置、选用版本和独立提示词保存在 `illustrations/digital-verification/`；本地 PNG 原图在 `output/illustrations/digital-verification/`。
+
 ## 本地使用
 
 要求 Node.js 22.12 或更新版本。本项目使用 npm 和 `package-lock.json`。
@@ -60,6 +62,8 @@ npm run publish
 校验针对本次迁移和新增文章。如以后有意改写旧文或新文章正文，请同步审核并更新校验基线。
 
 问答系列的正文位于 `src/content/posts/dv-*.md`，可以直接编辑。`tools/import-notion-series.mjs` 用于从本地 `.notion-cache/` 重新生成本次分组；缓存属于导入材料，已排除在 Git 和网站发布内容之外。重新导入会覆盖系列文章，手工修改后应先保存副本。
+
+重新导入时，已生成的配图会按问题标题恢复。也可以执行 `node tools/apply-series-illustrations.mjs` 单独恢复配图；该命令可重复执行，不会插入重复图片。需要从本地 PNG 重新压缩图片时，执行 `node tools/prepare-series-illustrations.mjs`，它会更新图片校验并插入文章。修改原问答内容时，需同时审核原有问答校验基线和配图说明。
 
 ## 回退
 

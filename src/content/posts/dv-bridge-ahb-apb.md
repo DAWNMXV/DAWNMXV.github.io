@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（六）：Bridge 验证与 AHB/APB"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.205Z
 tags: ["数字验证","AXI","AHB","APB"]
 description: "位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-bridge-ahb-apb/width-conversion.webp"
 ---
 
 这篇是数字验证问答系列的第六篇，整理自我的复习笔记。位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -16,6 +22,14 @@ description: "位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lit
 位宽转换、缓存、Slave responder、数据组织与交叉覆盖。
 ### 128→64 位宽转换是否一定拆拍？
 AXI 窄传输的本质是：**总线物理位宽不变，但每个 transfer 的有效数据宽度由 **`AxSIZE`** 决定，再由地址决定有效数据落在哪些 byte lane 上。** 例如 Master 数据总线 128 bit、`AWADDR=0x04`、`AWSIZE=2`（4 Byte/beat）、`AWLEN=3`、INCR burst，则一共 4 个 transfer，地址依次为 `0x04、0x08、0x0C、0x10`。虽然每拍只传 32 bit 有效数据，但 `WDATA`仍然是 128 bit，分别落在 `[63:32]、[95:64]、[127:96]、[31:0]`，对应 `WSTRB=00F0、0F00、F000、000F`。如果经过 128→64 bit width converter，由于原 transfer 只有 32 bit，小于 64 bit Slave 总线宽度，所以**不需要拆拍，仍然是 4 个 32-bit transfer**，只是重新映射到 64-bit 总线的上下半部分，`WSTRB` 交替为 `F0、0F、F0、0F`。只有当单个 transfer 本身宽于 Slave 总线，例如 128-bit transfer 进入 64-bit Slave，才需要拆成多个 beat。这里最容易混淆的是：**窄传输 ≠ WDATA 物理位宽变窄，也 ≠ width converter 必然拆拍。**
+
+<!-- dv-illustration: 11 -->
+<figure class="technical-figure" data-illustration="11">
+<img src="/images/digital-verification/dv-bridge-ahb-apb/width-conversion.webp" alt="128 → 64：全宽传输的字节守恒" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>这是对齐全宽写的拆分示例；是否拆拍还取决于传输大小、地址和 WSTRB，不能只看物理总线位宽。</figcaption>
+</figure>
+<!-- /dv-illustration: 11 -->
+
 ### Narrow transfer 的 WSTRB 如何跨位宽重映射？
 AXI 的 **narrow transfer** 是 `2^AxSIZE` 小于总线字节宽度的传输。例如 128-bit 总线有 16 个 byte lane，`AxSIZE=2` 表示每 beat 只有 4 Byte 有效，WDATA 仍然是 128 bit，但具体有效字节由 WSTRB 指示。例如地址 `0x1004` 时，有效的是 lane 4\~7，因此 `WSTRB=16'h00F0`。经过 128→64 Bridge 后，WSTRB 从 16 bit 变成 8 bit，但不能简单截取，而要根据**地址、AxSIZE 和下游总线宽度重新映射 byte lane**；同一例子在 64-bit 总线上对应 `WSTRB=8'hF0`。核心关系是：**AxSIZE 决定每 beat 有多少有效字节，地址决定这些字节所在的 lane，WSTRB 在写操作中进一步指示哪些 byte lane 真正写入。**
 ### 写拆分是否必须使用内部数据缓存？
@@ -93,6 +107,14 @@ Cross 也要先定义合法组合。没有硬件支持的组合不应靠随机�
 协议定位、流水、burst 边界、两拍 ERROR 和写掩码。
 ### APB、AHB、AXI：简单访问、流水与事务并发
 APB、AHB、AXI 可以理解为 AMBA 体系中从“简单外设访问”到“高性能并发互连”的三个层次。APB 面向 UART、GPIO、Timer 等低速外设，一次传输主要经历 Setup 和 Access 两阶段，结构简单、功耗和面积低；AHB 面向 SRAM、DMA 等较高性能模块，核心改进是地址阶段和数据阶段流水，例如同一周期可以出现“上一笔的数据 + 下一笔的地址”，但对同一笔 transfer 永远是地址阶段先于数据阶段，不能先写数据再发地址；AXI 则进一步把读写拆成 AW、W、B、AR、R 五个独立 VALID/READY 通道，并支持 ID、multiple outstanding 和一定范围内的乱序，更适合 CPU、DDR、GPU、NPU、NoC 等高并发系统。最核心的演进主线可以概括为：**APB 强调简单，AHB 强调流水吞吐，AXI 强调事务并发和通道解耦。**
+
+<!-- dv-illustration: 12 -->
+<figure class="technical-figure" data-illustration="12">
+<img src="/images/digital-verification/dv-bridge-ahb-apb/apb-states.webp" alt="APB：Setup 与 Access" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>SETUP 只持续一周期；ACCESS 中 PREADY 为 0 时继续等待，完成后下一笔访问仍要经过 SETUP。</figcaption>
+</figure>
+<!-- /dv-illustration: 12 -->
+
 ### AHB-Lite 相对 AHB 简化了什么？
 AHB-Lite 可以看成 **AHB 的单 Master 简化版**。AHB 和 AHB-Lite 都保留地址/数据阶段流水、`HTRANS`、`HSIZE`、`HBURST`、`HREADY` 等核心传输机制；主要区别是 AHB-Lite 只允许一个 Master，因此删除了多 Master 仲裁相关的 `HBUSREQ/HGRANT/HMASTER` 等机制，同时不支持传统 AHB 中为多 Master 总线利用率服务的 `SPLIT/RETRY`，响应主要就是 `OKAY/ERROR`。所以 AHB-Lite 的“Lite”主要是**去掉多 Master 仲裁复杂度，而不是去掉 burst 或流水传输能力**。
 ### AHB INCR 为什么不需要预先声明长度？

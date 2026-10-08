@@ -3,6 +3,7 @@ import { resolve, join } from "node:path";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { load } from "cheerio";
+import { normalizedArticleSource } from "./apply-series-illustrations.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const output = join(root, "dist");
@@ -172,3 +173,39 @@ assert.equal(
 console.log(
   "Verified all 8 series articles, 22 source topics, 205 question headings, original code blocks, formulas and table-of-contents links."
 );
+
+const illustrationPath = join(
+  root,
+  "illustrations/digital-verification/manifest.json"
+);
+if (existsSync(illustrationPath)) {
+  const { images } = JSON.parse(readFileSync(illustrationPath, "utf8"));
+  assert.equal(images.length, 16);
+  for (const entry of series) {
+    const post = entry.path.split("/")[1];
+    const expected = images.filter(image => image.post === post);
+    const $ = page(entry.path);
+    assert.equal(expected.length, 2, `Expected 2 illustrations in ${post}`);
+    assert.equal($("#article .technical-figure").length, 2);
+    const text = normalizedArticleSource(
+      readFileSync(join(root, "src/content/posts", `${post}.md`), "utf8")
+    );
+    for (const image of expected) {
+      const figure = $(`figure[data-illustration='${image.id}']`);
+      assert.equal(figure.find("img").attr("src"), image.asset);
+      assert.equal(figure.find("img").attr("alt"), image.title);
+      assert.equal(figure.find("figcaption").text(), image.caption);
+      assert.equal(figure.find("img").attr("width"), String(image.width));
+      assert.equal(figure.find("img").attr("height"), String(image.height));
+      assert.equal(hash(readFileSync(join(output, image.asset))), image.sha256);
+      assert.equal(
+        hash(text),
+        image.sourceTextHash,
+        `Article source changed: ${post}`
+      );
+    }
+  }
+  console.log(
+    "Verified 16 illustrations, 2 per article, image hashes, dimensions, captions and unchanged question source text."
+  );
+}

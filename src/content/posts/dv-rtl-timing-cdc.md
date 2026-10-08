@@ -1,13 +1,19 @@
 ---
 title: "数字验证问答（三）：数字设计、时序与 CDC"
 pubDatetime: 2026-10-08T14:00:00+08:00
+modDatetime: 2026-10-08T11:25:02.204Z
 tags: ["数字验证","RTL","CDC"]
 description: "RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。"
+ogImage: "https://dawnmxv.github.io/images/digital-verification/dv-rtl-timing-cdc/setup-hold.webp"
 ---
 
 这篇是数字验证问答系列的第三篇，整理自我的复习笔记。RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。
 
 [查看系列目录](/series/digital-verification/)
+
+<!-- dv-illustration-hint -->
+<p class="technical-figure-hint">文中示意图可点击放大。</p>
+<!-- /dv-illustration-hint -->
 
 ## 目录
 
@@ -115,6 +121,14 @@ t_{cq,\min}+t_{cd,\min}
 \ge t_{hold}+t_{skew}
 $$
 若定义 `t_skew = t_capture − t_launch`，则正 skew 对 setup 有利、对 hold 不利。Setup 违例可通过降低频率、减少组合逻辑、流水化、使用更快单元等解决；Hold 违例通常通过增加数据路径延时、插 buffer 等解决。降低时钟频率通常不能修复 hold 违例，因为 hold 检查发生在同一个采样边沿附近，而不是下一个周期。
+
+<!-- dv-illustration: 5 -->
+<figure class="technical-figure" data-illustration="5">
+<img src="/images/digital-verification/dv-rtl-timing-cdc/setup-hold.webp" alt="建立时间与保持时间看两条路径" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>Setup 看最大路径，Hold 看最小路径；图中采用 t_skew = t_capture − t_launch，省略 uncertainty 等裕量。</figcaption>
+</figure>
+<!-- /dv-illustration: 5 -->
+
 ### 采样窗口、库条件与最高频率
 时序方面，若 `Tsetup=1 ns`、`Thold=3 ns`，对某个采样沿而言，数据必须在采样沿前 1 ns 到后 3 ns 内保持稳定；在该窗口内变化可能导致采样错误或亚稳态。setup/hold 主要由触发器单元内部结构及 PVT、slew、load 等条件决定，通常由标准单元库提供。
 ### 为什么增加同步级数仍不能消除亚稳态？
@@ -123,6 +137,14 @@ $$
 跨时钟域（CDC）的根本问题包括**亚稳态、事件丢失以及多 bit 数据一致性**，不同类型信号必须采用不同方案。单 bit 稳态/电平信号通常使用 **2FF synchronizer**：第一级可能发生亚稳态，第二级给其恢复时间，从而降低亚稳态继续传播的概率；但 2FF **不能保证短脉冲一定被采到**。短脉冲可以先展宽再 2FF，或者使用 **Toggle Synchronizer**：源域每发生一次事件就翻转一个 bit，目标域经过 2FF 同步后利用前后状态异或恢复单周期脉冲。Toggle 的限制是源事件不能快到目标域来不及观察状态变化，否则 `0→1→0` 可能被目标域完全漏掉；高频或不能丢失的事件应改用握手或 FIFO。
 多 bit 总线通常**不能把每一位分别接 2FF**，因为各 bit 的传播、采样和亚稳态恢复情况不同，在数据同时变化时可能得到源端从未产生过的混合值。低吞吐多 bit 数据可使用 **Handshake/MCP（Multi-Cycle Path）**：先保证数据稳定，再跨域同步 `req/valid` 等控制信号，目标域收到控制信号后采样已经稳定的数据，并可通过 `ack` 返回确认。需要持续、高吞吐地传输数据时，通常采用**异步 FIFO**：数据存储在双口 RAM 中，写端工作于写时钟域、读端工作于读时钟域，读写指针分别产生于各自时钟域，再跨域传递以判断 `full/empty`。
 异步 FIFO 的读写指针通常先从 Binary 转成 **Gray Code**，再经过 2FF 同步到另一个时钟域，因为相邻 Gray Code 理论上只改变 1 bit，可显著降低多 bit 指针跨域时采到不一致组合的风险。需要注意，**Gray Code 本身并不能消除亚稳态**，典型结构仍然是 `Binary Pointer → Gray Encode → 2FF → Destination Domain`。因此 CDC 可以归纳为：**单 bit 电平用 2FF；短脉冲用展宽或 Toggle；低速多 bit 用 Handshake/MCP；高速连续数据用 Async FIFO；计数器/FIFO 指针等特殊多 bit 状态常用 Gray Code + 2FF。**
+
+<!-- dv-illustration: 6 -->
+<figure class="technical-figure" data-illustration="6">
+<img src="/images/digital-verification/dv-rtl-timing-cdc/cdc-selection.webp" alt="CDC 结构按信号类型选择" width="1536" height="1024" loading="lazy" decoding="async" />
+<figcaption>跨域方案取决于传递的是电平、事件还是多 bit 数据。两级同步器不能代替总线握手或异步 FIFO。</figcaption>
+</figure>
+<!-- /dv-illustration: 6 -->
+
 ### 跨域计数器比较为什么不能逐 bit 同步？
 双时钟域题的核心不是 `A==7 && B==5` 这个比较，而是如何安全地将跨域信息送到目标域。单 bit 控制信号可通过两级触发器同步；多 bit 二进制计数器不能逐位各自做两级同步，因为多个 bit 可能同时变化，目标域可能采到不存在的组合值。连续单步递增的计数器可在源域转 Gray 码，再经过两级同步进入目标域，最后还原后比较。如果要求某个状态或事件绝不能漏掉，则仅做电平采样甚至 Gray 码都不一定够，应使用脉冲同步、toggle 同步、请求—应答握手或异步 FIFO。CDC 解题时要先判断传的是“电平、事件还是多 bit 数据”。
 ### FIFO 深度怎么计算？
