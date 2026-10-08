@@ -1,0 +1,96 @@
+@import "tailwindcss";
+@import "./theme.css";
+@import "./typography.css";
+@import "rehype-callouts/theme/obsidian";
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@layer base {
+  * {
+    @apply border-border outline-accent/75;
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-muted) transparent;
+  }
+  a,
+  button,
+  #main-content {
+    @apply outline-accent outline-offset-1 focus-visible:no-underline focus-visible:outline-2 focus-visible:outline-dashed;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility max-w-app {
+  @apply max-w-3xl;
+}
+
+@utility app-layout {
+  @apply max-w-app mx-auto w-full px-4;
+}
+
+@utility active-nav {
+  @apply underline decoration-wavy decoration-2 underline-offset-8;
+}
+
+:target {
+  scroll-margin-block: 1rem;
+}
+
+/* Chinese reading styles: quiet headings, generous prose, restrained images. */
+#hero {
+  padding-block: 3rem 2rem;
+}
+#hero h1,
+main > h1 {
+  font-family: "Songti SC", "STSong", "Noto Serif CJK SC", serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+#hero p {
+  color: var(--muted-foreground);
+  line-height: 1.9;
+}
+#recent-posts > ul > li,
+#featured > ul > li {
+  padding-block: 0.5rem;
+  margin-block: 2rem;
+}
+.app-prose {
+  font-size: 1.125rem;
+  line-height: 1.95;
+}
+.app-prose p {
+  margin-block: 1.6em;
+  text-wrap: pretty;
+}
+.app-prose h2,
+.app-prose h3 {
+  font-style: normal;
+  line-height: 1.5;
+}
+.app-prose img {
+  max-width: min(100%, 480px);
+  height: auto;
+  border: 0;
+  margin-block: 2.5rem;
+}
+.app-prose pre {
+  font-size: 0.85rem;
+  overflow-x: auto;
+}
+.app-prose blockquote {
+  font-style: normal;
+}
+@media (min-width: 768px) {
+  .app-prose {
+    font-size: 1.1875rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

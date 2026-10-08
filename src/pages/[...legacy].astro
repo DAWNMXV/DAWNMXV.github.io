@@ -1,0 +1,28 @@
+---
+import { getCollection } from "astro:content";
+import PostPage from "./posts/[...slug]/index.astro";
+import legacyRoutes from "@/legacy-routes.json";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+
+export async function getStaticPaths() {
+  const posts = getSortedPosts(await getCollection("posts"));
+  return posts.flatMap((post, index) => {
+    const path = (legacyRoutes as Record<string, string>)[post.id];
+    if (!path) return [];
+    const adjacent = (offset: number) => {
+      const entry = posts[index + offset];
+      return entry
+        ? { id: entry.id, title: entry.data.title, filePath: entry.filePath }
+        : null;
+    };
+    return [
+      {
+        params: { legacy: path.replace(/^\/+|\/+$/g, "") },
+        props: { post, prevPost: adjacent(1), nextPost: adjacent(-1) },
+      },
+    ];
+  });
+}
+---
+
+<PostPage {...Astro.props} />

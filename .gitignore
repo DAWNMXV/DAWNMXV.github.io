@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.astro/
+public/pagefind/
+output/
+.playwright-cli/
+.DS_Store
+.env*

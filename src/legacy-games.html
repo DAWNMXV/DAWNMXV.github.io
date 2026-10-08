@@ -1,0 +1,476 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
+<style>
+  .game-section {
+    margin-bottom: 60px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    text-align: center;
+  }
+  
+  .game-title {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+  }
+
+  /* Dino Game Styles */
+  #dino-wrapper {
+    font-family: 'Courier New', Courier, monospace;
+  }
+  #dino-container {
+    width: 600px;
+    height: 150px;
+    border-bottom: 2px solid #555;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background-color: #f9f9f9;
+    user-select: none;
+    cursor: pointer;
+  }
+  #dino {
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    border-radius: 4px;
+  }
+  .cactus {
+    width: 20px;
+    height: 40px;
+    background-color: #d00;
+    position: absolute;
+    bottom: 0;
+    border-radius: 4px 4px 0 0;
+  }
+  #dino-score {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: #333;
+    font-weight: bold;
+  }
+  #dino-start-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #333;
+    background: rgba(255,255,255,0.8);
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 10;
+  }
+
+  /* Watermelon Game Styles */
+  #watermelon-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #watermelon-canvas-container {
+    position: relative;
+    width: 360px;
+    height: 600px;
+    border: 2px solid #333;
+    background: #fff8dc;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+  #watermelon-score-board {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #555;
+    pointer-events: none;
+    z-index: 5;
+  }
+  #watermelon-game-over {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    font-weight: bold;
+    color: #e03a3a;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    display: none;
+    z-index: 10;
+    text-align: center;
+  }
+  #watermelon-next {
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #666;
+  }
+  .game-instructions {
+    margin-top: 15px;
+    color: #666;
+    font-size: 0.9em;
+  }
+</style>
+
+<div class="game-section">
+  <h2 class="game-title">🦕 Dino Runner</h2>
+  <div id="dino-wrapper">
+    <div id="dino-container" onclick="dinoJump()">
+      <div id="dino"></div>
+      <div id="dino-score">0</div>
+      <div id="dino-start-msg" onclick="dinoStartGame(event)">Press Space or Click to Start</div>
+    </div>
+    <p class="game-instructions">Use <b>Spacebar</b> or <b>Click</b> to jump!</p>
+  </div>
+</div>
+
+<div class="game-section">
+  <h2 class="game-title">🍉 Synthetic Big Watermelon (Lite)</h2>
+  <div id="watermelon-wrapper">
+    <div id="watermelon-next">Next Fruit: <span id="next-fruit-display">🍇</span></div>
+    <div id="watermelon-canvas-container">
+        <div id="watermelon-score-board">Score: <span id="watermelon-score">0</span></div>
+        <div id="watermelon-game-over">GAME OVER<br><span style="font-size:16px; color:#333">Click Reset to Play Again</span></div>
+    </div>
+    <p class="game-instructions"><b>Click</b> inside the box to drop the fruit. Same fruits merge into bigger ones!</p>
+    <button onclick="initWatermelonGame()" style="margin-top:10px; padding: 5px 15px; cursor: pointer;">Reset Game</button>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // Dino Runner Logic
+  // ==========================================
+  const dinoEl = document.getElementById("dino");
+  const dinoContainer = document.getElementById("dino-container");
+  const dinoScoreEl = document.getElementById("dino-score");
+  const dinoStartMsg = document.getElementById("dino-start-msg");
+  
+  let dinoIsJumping = false;
+  let dinoIsGameOver = false;
+  let dinoScore = 0;
+  let dinoIsRunning = false;
+  let dinoCactusTimeout;
+  
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'Space' && document.activeElement !== document.body) {
+         event.preventDefault();
+         if (dinoIsGameOver || !dinoIsRunning) {
+            dinoStartGame();
+         } else {
+            dinoJump();
+         }
+    }
+  });
+
+  function dinoJump() {
+    if (dinoIsJumping || !dinoIsRunning || dinoIsGameOver) return;
+    dinoIsJumping = true;
+    let position = 0;
+    let upInterval = setInterval(() => {
+      if (position >= 100) {
+        clearInterval(upInterval);
+        let downInterval = setInterval(() => {
+          if (position <= 0) {
+            clearInterval(downInterval);
+            dinoIsJumping = false;
+            dinoEl.style.bottom = '0px';
+          } else {
+            position -= 4;
+            dinoEl.style.bottom = position + 'px';
+          }
+        }, 15);
+      } else {
+        position += 4;
+        dinoEl.style.bottom = position + 'px';
+      }
+    }, 15);
+  }
+  
+  function dinoCreateCactus() {
+    if (!dinoIsRunning) return;
+    const cactus = document.createElement('div');
+    cactus.classList.add('cactus');
+    cactus.style.left = '600px';
+    dinoContainer.appendChild(cactus);
+    
+    let cactusPosition = 600;
+    let timerId = setInterval(() => {
+      if (!dinoIsRunning) {
+        clearInterval(timerId);
+        return;
+      }
+      cactusPosition -= 5;
+      cactus.style.left = cactusPosition + 'px';
+      
+      if (cactusPosition < -20) {
+        clearInterval(timerId);
+        if (dinoContainer.contains(cactus)) dinoContainer.removeChild(cactus);
+        dinoScore++;
+        dinoScoreEl.innerText = dinoScore;
+      }
+      
+      let dinoBottom = parseInt(window.getComputedStyle(dinoEl).getPropertyValue("bottom"));
+      if (cactusPosition > 50 && cactusPosition < 90 && dinoBottom < 40) {
+        dinoGameOver();
+        clearInterval(timerId);
+      }
+    }, 20);
+    
+    if (dinoIsRunning) {
+       let randomTime = Math.random() * 1000 + 1000;
+       dinoCactusTimeout = setTimeout(dinoCreateCactus, randomTime);
+    }
+  }
+
+  function dinoStartGame(event) {
+    if (event) event.stopPropagation();
+    if (dinoIsRunning) return;
+    
+    dinoIsGameOver = false;
+    dinoIsRunning = true;
+    dinoScore = 0;
+    dinoScoreEl.innerText = 0;
+    dinoStartMsg.style.display = 'none';
+    dinoEl.style.bottom = '0px';
+    
+    const cacti = document.querySelectorAll('.cactus');
+    cacti.forEach(c => c.remove());
+    
+    dinoCreateCactus();
+  }
+
+  function dinoGameOver() {
+    dinoIsGameOver = true;
+    dinoIsRunning = false;
+    clearTimeout(dinoCactusTimeout);
+    dinoStartMsg.innerHTML = "Game Over! Score: " + dinoScore + "<br>Click to Restart";
+    dinoStartMsg.style.display = 'block';
+  }
+
+
+  // ==========================================
+  // Watermelon Game Logic (Matter.js)
+  // ==========================================
+  let wmEngine, wmRender, wmRunner, wmWorld;
+  let wmScore = 0;
+  
+  const FRUITS = [
+    { label: 'grape', radius: 15, color: '#9e25c9', score: 2 },
+    { label: 'cherry', radius: 22, color: '#e82c2c', score: 4 },
+    { label: 'orange', radius: 30, color: '#ff9f1c', score: 8 },
+    { label: 'lemon',  radius: 38, color: '#f7d51d', score: 16 },
+    { label: 'kiwi',   radius: 48, color: '#88bf26', score: 32 },
+    { label: 'tomato', radius: 58, color: '#e03a3a', score: 64 },
+    { label: 'peach',  radius: 70, color: '#ffadad', score: 128 },
+    { label: 'melon',  radius: 85, color: '#a0e426', score: 256 },
+    { label: 'coco',   radius: 100, color: '#a37e5c', score: 512 },
+    { label: 'water',  radius: 120, color: '#2ec4b6', score: 1024 }
+  ];
+  
+  let currentFruitIdx = 0;
+  let canDrop = true;
+  let wmIsGameOver = false;
+
+  function initWatermelonGame() {
+    const container = document.getElementById('watermelon-canvas-container');
+    const gameOverEl = document.getElementById('watermelon-game-over');
+    
+    // Reset UI
+    gameOverEl.style.display = 'none';
+    wmIsGameOver = false;
+    canDrop = true;
+    
+    // Cleanup previous game
+    if (wmRunner) Matter.Runner.stop(wmRunner);
+    if (wmRender) Matter.Render.stop(wmRender);
+    if (wmEngine) {
+        Matter.World.clear(wmEngine.world);
+        Matter.Engine.clear(wmEngine);
+    }
+    
+    // Clear canvas
+    const canvas = container.querySelector('canvas');
+    if (canvas) canvas.remove();
+
+    document.getElementById('watermelon-score').innerText = '0';
+    wmScore = 0;
+    
+    // Module aliases
+    const Engine = Matter.Engine,
+          Render = Matter.Render,
+          Runner = Matter.Runner,
+          Bodies = Matter.Bodies,
+          Composite = Matter.Composite,
+          Events = Matter.Events;
+
+    // Create engine
+    wmEngine = Engine.create();
+    wmWorld = wmEngine.world;
+
+    // Create renderer
+    wmRender = Render.create({
+        element: container,
+        engine: wmEngine,
+        options: {
+            width: 360,
+            height: 600,
+            wireframes: false,
+            background: '#fff8dc'
+        }
+    });
+
+    // Create walls
+    const ground = Bodies.rectangle(180, 610, 360, 20, { isStatic: true, render: { fillStyle: '#333' } });
+    const leftWall = Bodies.rectangle(0, 300, 10, 600, { isStatic: true, render: { fillStyle: '#333' } });
+    const rightWall = Bodies.rectangle(360, 300, 10, 600, { isStatic: true, render: { fillStyle: '#333' } });
+    // Top dead line sensor (visible for player reference)
+    const deadLineY = 100;
+    const topSensor = Bodies.rectangle(180, deadLineY, 360, 2, { 
+        isStatic: true, 
+        isSensor: true, 
+        label: 'top_sensor',
+        render: { visible: true, fillStyle: '#e03a3a', opacity: 0.5 } 
+    });
+
+    Composite.add(wmWorld, [ground, leftWall, rightWall, topSensor]);
+
+    Render.run(wmRender);
+    
+    // Create runner
+    wmRunner = Runner.create();
+    Runner.run(wmRunner, wmEngine);
+
+    // Collision Event
+    Events.on(wmEngine, 'collisionStart', function(event) {
+        if (wmIsGameOver) return;
+        
+        const pairs = event.pairs;
+        const removedBodies = new Set();
+
+        for (let i = 0; i < pairs.length; i++) {
+            const bodyA = pairs[i].bodyA;
+            const bodyB = pairs[i].bodyB;
+
+            if (removedBodies.has(bodyA.id) || removedBodies.has(bodyB.id)) continue;
+
+            if (bodyA.label === bodyB.label && bodyA.label.startsWith('fruit_')) {
+                const idx = parseInt(bodyA.label.split('_')[1]);
+                if (idx < FRUITS.length - 1) {
+                    removedBodies.add(bodyA.id);
+                    removedBodies.add(bodyB.id);
+
+                    Composite.remove(wmWorld, bodyA);
+                    Composite.remove(wmWorld, bodyB);
+                    
+                    const midX = (bodyA.position.x + bodyB.position.x) / 2;
+                    const midY = (bodyA.position.y + bodyB.position.y) / 2;
+                    
+                    addFruit(midX, midY, idx + 1);
+                    
+                    wmScore += FRUITS[idx].score;
+                    document.getElementById('watermelon-score').innerText = wmScore;
+                }
+            }
+        }
+    });
+
+    // Game Over Check Loop
+    // Check every 500ms
+    setInterval(() => {
+        if (wmIsGameOver) return;
+        
+        const bodies = Composite.allBodies(wmWorld);
+        for (let body of bodies) {
+            if (body.label.startsWith('fruit_')) {
+                // If fruit is nearly stationary AND largely above the dead line
+                // The spawn point is y=30, dead line is y=100.
+                // We need to ignore the fruit that is currently falling (just spawned).
+                // We can check velocity (speed < 0.2)
+                
+                if (body.speed < 0.5 && body.position.y < deadLineY) {
+                    // Double check it's not the one we JUST dropped (which starts at speed 0)
+                    // We can check if it has moved down past the line at least once? 
+                    // Or check if it has been alive for some time.
+                    // Simple hack: check if its y is < deadLineY, but to be "overflowing", 
+                    // it usually means it's stacked on something.
+                    // If it's just spawned, it's falling freely.
+                    
+                    // Actually, if it's falling freely, speed increases.
+                    // If it's resting on top of the stack, speed is low.
+                    
+                    // Let's rely on the fact that if it's STUCK above the line, game over.
+                    // We give a grace period for new fruits.
+                    if (body.position.y < deadLineY - 10) { // slightly above line
+                        triggerWatermelonGameOver();
+                    }
+                }
+            }
+        }
+    }, 1000);
+
+    // Input Handling
+    container.addEventListener('click', function(e) {
+        if (!canDrop || wmIsGameOver) return;
+        
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const clampedX = Math.max(20, Math.min(340, x));
+        
+        addFruit(clampedX, 30, currentFruitIdx);
+        
+        currentFruitIdx = Math.floor(Math.random() * 3);
+        updateNextFruitDisplay();
+        
+        canDrop = false;
+        setTimeout(() => { if(!wmIsGameOver) canDrop = true; }, 800);
+    });
+    
+    updateNextFruitDisplay();
+  }
+  
+  function triggerWatermelonGameOver() {
+    if (wmIsGameOver) return;
+    wmIsGameOver = true;
+    canDrop = false;
+    document.getElementById('watermelon-game-over').style.display = 'block';
+    // Optional: Stop physics after a moment? 
+    // Matter.Runner.stop(wmRunner);
+  }
+  
+  function addFruit(x, y, idx) {
+    if (wmIsGameOver) return;
+    const fruitData = FRUITS[idx];
+    const fruit = Matter.Bodies.circle(x, y, fruitData.radius, {
+        label: 'fruit_' + idx,
+        restitution: 0.2,
+        friction: 0.1,
+        render: { fillStyle: fruitData.color }
+    });
+    Matter.Composite.add(wmWorld, fruit);
+  }
+  
+  function updateNextFruitDisplay() {
+    const display = document.getElementById('next-fruit-display');
+    const icons = ['🍇', '🍒', '🍊'];
+    display.innerText = icons[currentFruitIdx] || '?';
+  }
+
+  // Initialize Watermelon Game on Load
+  window.addEventListener('load', () => {
+    setTimeout(initWatermelonGame, 500);
+  });
+</script>
