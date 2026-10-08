@@ -1,0 +1,721 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-rtl-timing-cdc/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（三）：数字设计、时序与 CDC | DAWNMX</title><meta name="title" content="数字验证问答（三）：数字设计、时序与 CDC | DAWNMX"><meta name="description" content="RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（三）：数字设计、时序与 CDC | DAWNMX"><meta property="og:description" content="RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-rtl-timing-cdc/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-rtl-timing-cdc/"><meta property="twitter:title" content="数字验证问答（三）：数字设计、时序与 CDC | DAWNMX"><meta property="twitter:description" content="RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（三）：数字设计、时序与 CDC | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: rtl; }@layer astro { ::view-transition-old(rtl) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(rtl) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(rtl) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(rtl) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-3"] { view-transition-name: cdc; }@layer astro { ::view-transition-old(cdc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(cdc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(cdc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(cdc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-rtl-timing-cdc" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（三）：数字设计、时序与 CDC</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第三篇，整理自我的复习笔记。RTL 设计题、建立与保持时间、异步 FIFO、低功耗与实现约束。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#%E6%95%B0%E5%AD%97%E7%94%B5%E8%B7%AF%E4%B8%8E-rtl-%E8%AE%BE%E8%AE%A1%E9%A2%98">数字电路与 RTL 设计题</a>
+<ul>
+<li><a href="#%E7%94%A8-21-mux-%E5%AE%9E%E7%8E%B0-not-%E4%B8%8E-xor">用 2:1 MUX 实现 NOT 与 XOR</a></li>
+<li><a href="#cmos-%E4%B8%8A%E4%B8%8B%E6%8B%89%E7%BD%91%E7%BB%9C%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A4%A9%E7%84%B6%E6%9E%84%E6%88%90%E5%8F%8D%E7%9B%B8%E9%97%A8">CMOS 上下拉网络为什么天然构成反相门？</a></li>
+<li><a href="#yabc-%E7%9A%84%E6%99%B6%E4%BD%93%E7%AE%A1%E7%BA%A7%E5%AE%9E%E7%8E%B0%E4%B8%8E%E6%95%B0%E9%87%8F">Y=AB+C 的晶体管级实现与数量</a></li>
+<li><a href="#%E4%BB%8E-nand-%E9%94%81%E5%AD%98%E5%99%A8%E5%88%B0%E4%B8%BB%E4%BB%8E-dff">从 NAND 锁存器到主从 DFF</a></li>
+<li><a href="#mux-%E4%B8%8E%E5%85%B1%E8%AF%86%E9%A1%B9%E5%A6%82%E4%BD%95%E6%B6%88%E9%99%A4%E9%9D%99%E6%80%81%E5%86%92%E9%99%A9">MUX 与共识项：如何消除静态冒险？</a></li>
+<li><a href="#%E5%90%8C%E6%AD%A5%E8%AE%A1%E6%95%B0%E5%99%A8%E7%9A%84%E5%A4%8D%E4%BD%8D%E4%BD%BF%E8%83%BD%E4%B8%8E%E5%8D%95%E5%91%A8%E6%9C%9F%E8%BF%9B%E4%BD%8D">同步计数器的复位、使能与单周期进位</a></li>
+<li><a href="#%E4%B8%A5%E6%A0%BC-50-%E5%8D%A0%E7%A9%BA%E6%AF%94%E7%9A%84%E5%A5%87%E6%95%B0%E5%88%86%E9%A2%91">严格 50% 占空比的奇数分频</a></li>
+<li><a href="#%E9%87%8D%E5%8F%A0%E5%BA%8F%E5%88%97%E6%A3%80%E6%B5%8B%E5%A6%82%E4%BD%95%E5%AE%9A%E4%B9%89%E7%8A%B6%E6%80%81">重叠序列检测如何定义状态？</a></li>
+<li><a href="#moore-%E4%B8%8D%E9%87%8D%E5%8F%A0-1101-%E6%A3%80%E6%B5%8B">Moore 不重叠 1101 检测</a></li>
+<li><a href="#round-robin-%E6%80%8E%E6%A0%B7%E4%BF%9D%E8%AF%81%E6%8F%A1%E6%89%8B%E4%B8%8E%E5%85%AC%E5%B9%B3%E6%80%A7">Round-Robin 怎样保证握手与公平性？</a></li>
+<li><a href="#%E5%B8%B8%E6%95%B0%E4%B9%98%E6%B3%95%E4%BD%8D%E5%AE%BD%E4%B8%8E%E5%B9%B3%E8%A1%A1%E6%A0%91">常数乘法、位宽与平衡树</a></li>
+<li><a href="#vhdl-%E4%B9%98%E6%B3%95%E5%99%A8%E5%BA%94%E5%85%B3%E6%B3%A8%E4%BB%80%E4%B9%88">VHDL 乘法器应关注什么？</a></li>
+<li><a href="#top-downbottom-up-%E4%B8%8E-fpga-%E8%B5%84%E6%BA%90">Top-Down、Bottom-Up 与 FPGA 资源</a></li>
+<li><a href="#%E6%B5%81%E6%B0%B4%E7%BA%A7%E6%95%B0%E4%B8%8E-ipc">流水级数与 IPC</a></li>
+</ul>
+</li>
+<li><a href="#%E6%97%B6%E5%BA%8Fcdc-%E4%B8%8E%E5%BC%82%E6%AD%A5-fifo">时序、CDC 与异步 FIFO</a>
+<ul>
+<li><a href="#%E4%BB%8E%E7%BB%84%E5%90%88%E9%80%BB%E8%BE%91latchdff-%E7%90%86%E8%A7%A3%E6%97%B6%E5%BA%8F">从组合逻辑、Latch、DFF 理解时序</a></li>
+<li><a href="#%E5%90%8C%E6%AD%A5%E6%97%B6%E9%92%9F%E7%9A%84%E5%88%A4%E6%96%AD%E6%9D%A1%E4%BB%B6">同步时钟的判断条件</a></li>
+<li><a href="#setuphold-%E7%9A%84%E5%AE%8C%E6%95%B4%E7%BA%A6%E6%9D%9Fskew-%E4%B8%8E%E4%BF%AE%E5%A4%8D">Setup/Hold 的完整约束、Skew 与修复</a></li>
+<li><a href="#%E9%87%87%E6%A0%B7%E7%AA%97%E5%8F%A3%E5%BA%93%E6%9D%A1%E4%BB%B6%E4%B8%8E%E6%9C%80%E9%AB%98%E9%A2%91%E7%8E%87">采样窗口、库条件与最高频率</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%A2%9E%E5%8A%A0%E5%90%8C%E6%AD%A5%E7%BA%A7%E6%95%B0%E4%BB%8D%E4%B8%8D%E8%83%BD%E6%B6%88%E9%99%A4%E4%BA%9A%E7%A8%B3%E6%80%81">为什么增加同步级数仍不能消除亚稳态？</a></li>
+<li><a href="#%E4%B8%8D%E5%90%8C%E7%B1%BB%E5%9E%8B%E7%9A%84-cdc-%E5%BA%94%E8%AF%A5%E9%87%87%E7%94%A8%E4%BB%80%E4%B9%88%E7%BB%93%E6%9E%84">不同类型的 CDC 应该采用什么结构？</a></li>
+<li><a href="#%E8%B7%A8%E5%9F%9F%E8%AE%A1%E6%95%B0%E5%99%A8%E6%AF%94%E8%BE%83%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E9%80%90-bit-%E5%90%8C%E6%AD%A5">跨域计数器比较为什么不能逐 bit 同步？</a></li>
+<li><a href="#fifo-%E6%B7%B1%E5%BA%A6%E6%80%8E%E4%B9%88%E8%AE%A1%E7%AE%97">FIFO 深度怎么计算？</a></li>
+<li><a href="#%E9%95%BF%E6%9C%9F%E5%B9%B3%E5%9D%87%E9%80%9F%E7%8E%87%E4%B8%8D%E5%8C%B9%E9%85%8D%E6%97%B6fifo-%E8%83%BD%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E5%90%97">长期平均速率不匹配时，FIFO 能解决问题吗？</a></li>
+<li><a href="#%E5%90%8C%E6%AD%A5%E5%A4%8D%E4%BD%8D%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%A4%8D%E4%BD%8D%E6%80%8E%E6%A0%B7%E6%98%A0%E5%B0%84%E5%88%B0%E7%A1%AC%E4%BB%B6">同步复位与异步复位怎样映射到硬件？</a></li>
+<li><a href="#cdc-%E5%8A%9F%E8%83%BD%E9%AA%8C%E8%AF%81%E4%B8%8E%E6%97%B6%E5%BA%8F%E9%AA%8C%E8%AF%81%E7%9A%84%E8%BE%B9%E7%95%8C">CDC 功能验证与时序验证的边界</a></li>
+<li><a href="#slack-%E7%9A%84%E7%AC%A6%E5%8F%B7%E4%B8%8E%E6%A3%80%E6%9F%A5%E6%96%B9%E5%90%91">Slack 的符号与检查方向</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85gray-%E7%BC%96%E7%A0%81%E8%BF%98%E9%9C%80%E8%A6%81%E5%93%AA%E4%BA%9B%E5%AE%9E%E7%8E%B0%E6%9D%A1%E4%BB%B6">补充：Gray 编码还需要哪些实现条件？</a></li>
+</ul>
+</li>
+<li><a href="#%E4%BD%8E%E5%8A%9F%E8%80%97%E6%97%B6%E9%92%9F%E6%A0%91%E4%B8%8E%E5%AE%9E%E7%8E%B0%E7%BA%A6%E6%9D%9F">低功耗、时钟树与实现约束</a>
+<ul>
+<li><a href="#%E4%BD%8E%E5%8A%9F%E8%80%97%E7%9A%84%E5%85%AD%E7%B1%BB%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95">低功耗的六类主要方法</a></li>
+<li><a href="#ctsmulti-vt-%E4%B8%8E-ir-drop">CTS、Multi-Vt 与 IR Drop</a></li>
+<li><a href="#dvfs-%E7%9A%84%E9%A1%BA%E5%BA%8F%E4%B8%8E%E6%91%84%E5%83%8F%E5%A4%B4-soc-%E6%A8%A1%E5%BC%8F">DVFS 的顺序与摄像头 SoC 模式</a></li>
+<li><a href="#%E5%A4%9A%E7%94%B5%E6%BA%90%E5%9F%9F%E5%8D%95%E5%85%83%E4%B8%8E%E7%94%B5%E6%B0%94%E9%A3%8E%E9%99%A9">多电源域单元与电气风险</a></li>
+<li><a href="#%E4%B8%8A%E4%B8%8B%E7%94%B5%E9%A1%BA%E5%BA%8F%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3">上下电顺序如何理解？</a></li>
+<li><a href="#metal-eco-%E7%9A%84%E8%83%BD%E5%8A%9B%E8%BE%B9%E7%95%8C">Metal ECO 的能力边界</a></li>
+<li><a href="#%E9%80%BB%E8%BE%91%E6%A0%91%E5%B9%B3%E8%A1%A1%E4%B8%BA%E4%BB%80%E4%B9%88%E5%90%8C%E6%97%B6%E5%BD%B1%E5%93%8D%E6%97%B6%E5%BA%8F%E5%92%8C%E5%8A%9F%E8%80%97">逻辑树平衡为什么同时影响时序和功耗？</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="数字电路与-rtl-设计题">数字电路与 RTL 设计题</h2>
+<p>MUX、CMOS、锁存器、计数器、FSM、仲裁和算术优化。</p>
+<h3 id="用-21-mux-实现-not-与-xor">用 2:1 MUX 实现 NOT 与 XOR</h3>
+<p>2:1 MUX 的基本表达式是</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mi>S</mi><mo stretchy="true">‾</mo></mover><msub><mi>D</mi><mn>0</mn></msub><mo>+</mo><mi>S</mi><msub><mi>D</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">Y=\overline S D_0+SD_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0333em;vertical-align:-0.15em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+<p>利用这个关系，可以直接实现非门和异或门。实现非门时，把待取反输入 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span> 接到选择端 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span></span>，令 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mn>0</mn></msub><mo>=</mo><mn>1</mn><mo separator="true">,</mo><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">D_0=1,D_1=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord">1</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span>，则</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover><mo>⋅</mo><mn>1</mn><mo>+</mo><mi>A</mi><mo>⋅</mo><mn>0</mn><mo>=</mo><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">Y=\overline A\cdot1+A\cdot0=\overline A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span></span>
+<p>所以“用 MUX 实现非门”的关键是：<strong>变量接选择端，两个数据端分别接常数 1 和 0</strong>。
+实现异或 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y=A\oplus B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⊕</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> 时，可以让 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> 做选择信号：当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">B=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> 时异或结果为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span>，当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 时结果为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span>，因此取</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>S</mi><mo>=</mo><mi>B</mi><mo separator="true">,</mo><mspace width="2em"></mspace><msub><mi>D</mi><mn>0</mn></msub><mo>=</mo><mi>A</mi><mo separator="true">,</mo><mspace width="2em"></mspace><msub><mi>D</mi><mn>1</mn></msub><mo>=</mo><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">S=B,\qquad D_0=A,\qquad D_1=\overline A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">A</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span></span>
+<p>得到</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mi>B</mi><mo stretchy="true">‾</mo></mover><mi>A</mi><mo>+</mo><mi>B</mi><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mi>A</mi><mo>⊕</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">Y=\overline BA+B\overline A=A\oplus B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9667em;vertical-align:-0.0833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⊕</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span></span>
+<p>也可以交换 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mtext>、</mtext><mi>B</mi></mrow><annotation encoding="application/x-tex">A、B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mord cjk_fallback">、</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> 的角色。易混淆点在于：这种“一个 2:1 MUX 实现 XOR”的写法默认已经能获得 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>A</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span> 或 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>B</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span>。如果题目严格限制只能使用一个普通 2:1 MUX，且输入端只能接 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mtext>、</mtext><mi>B</mi><mtext>、</mtext><mn>0</mn><mtext>、</mtext><mn>1</mn></mrow><annotation encoding="application/x-tex">A、B、0、1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mord cjk_fallback">、</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mord cjk_fallback">、</span><span class="mord">0</span><span class="mord cjk_fallback">、</span><span class="mord">1</span></span></span></span>，不允许额外反相或直接提供反相信号，那么一个 MUX 本身不能实现 XOR；此时需要额外逻辑，或者再用一个 MUX 先生成反相信号。</p>
+<h3 id="cmos-上下拉网络为什么天然构成反相门">CMOS 上下拉网络为什么天然构成反相门？</h3>
+<p>静态 CMOS 逻辑门由 <strong>PMOS 上拉网络 PUN</strong> 和 <strong>NMOS 下拉网络 PDN</strong> 组成。NMOS 导通时负责把输出拉到 0，因此设计时通常先考虑“在什么输入条件下输出应该为 0”。在 NMOS 网络中，逻辑“与”对应串联，逻辑“或”对应并联；PMOS 网络则取对偶结构，即串并互换。
+因此，“N 串 P 并”对应的是 <strong>NAND 与非门</strong>，因为当 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">A=B=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 时，串联 NMOS 全部导通，输出被拉低，所以实际得到</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mrow><mi>A</mi><mi>B</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">Y=\overline{AB}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span></span>
+<p>而不是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>B</mi></mrow><annotation encoding="application/x-tex">AB</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span>。同理，“N 并 P 串”对应 <strong>NOR 或非门</strong>：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mrow><mi>A</mi><mo>+</mo><mi>B</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">Y=\overline{A+B}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9667em;vertical-align:-0.0833em;"></span><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.0833em;"><span></span></span></span></span></span></span></span></span></span>
+<p>之所以 AND、OR 往往还要再接一级反相器，是因为静态 CMOS 的 NMOS 网络描述的是“满足某个逻辑条件时把输出拉低”，所以按照原逻辑构造 PDN 后，天然得到的是原逻辑的取反。可以记成：<strong>NMOS：与串、或并；PMOS：与 NMOS 对偶；N串P并是 NAND，N并P串是 NOR；要 AND/OR，就在 NAND/NOR 后再反相一次。</strong></p>
+<h3 id="yabc-的晶体管级实现与数量">Y=AB+C 的晶体管级实现与数量</h3>
+<p>CMOS 题 <code>Y=(A&#x26;B)|C</code>，即 <code>Y=AB+C</code> 的标准静态 CMOS 实现应牢记。先用 6 管 AOI21 得到</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>X</mi><mo>=</mo><mover accent="true"><mrow><mi>A</mi><mi>B</mi><mo>+</mo><mi>C</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">X=\overline{AB+C}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9667em;vertical-align:-0.0833em;"></span><span class="mord overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.0833em;"><span></span></span></span></span></span></span></span></span></span>
+<p>其 NMOS 下拉网络为</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>C</mi><mo>∥</mo><mo stretchy="false">(</mo><mi>A</mi><mtext> 串 </mtext><mi>B</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">C\parallel(A\text{ 串 }B)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">A</span><span class="mord text"><span class="mord"> </span><span class="mord cjk_fallback">串</span><span class="mord"> </span></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose">)</span></span></span></span></span>
+<p>因为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 或 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">A=B=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> 时必须把 X 拉低；PMOS 上拉网络取对偶：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>C</mi><mtext> 串 </mtext><mo stretchy="false">(</mo><mi>A</mi><mo>∥</mo><mi>B</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">C\text{ 串 }(A\parallel B)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord text"><span class="mord"> </span><span class="mord cjk_fallback">串</span><span class="mord"> </span></span><span class="mopen">(</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mclose">)</span></span></span></span></span>
+<p>再在 X 后直接接一个由 1 个 PMOS 和 1 个 NMOS 构成的 CMOS 反相器：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>Y</mi><mo>=</mo><mover accent="true"><mi>X</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mi>A</mi><mi>B</mi><mo>+</mo><mi>C</mi></mrow><annotation encoding="application/x-tex">Y=\overline X=AB+C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span></span></span></span></span>
+<p>因此完整电路共 <strong>8 个 MOS 管</strong>。考试时反相器完全可以直接接在同一张晶体管级图右侧，不需要单独框起来；但如果题目要求“晶体管级电路”，最好不要只画一个逻辑 NOT 门符号。</p>
+<h3 id="从-nand-锁存器到主从-dff">从 NAND 锁存器到主从 DFF</h3>
+<p>D 触发器的门级实现应从与非门 SR 锁存器理解。两个 NAND 门交叉耦合可构成低有效 SR 锁存器，其中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>S</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\overline S=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> 表示置位，<span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>R</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\overline R=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> 表示复位，二者同时为 0 属于非法状态。为了只保留一个数据输入 D，可令</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>S</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mover accent="true"><mrow><mi>D</mi><mo>⋅</mo><mi>E</mi><mi>N</mi></mrow><mo stretchy="true">‾</mo></mover><mo separator="true">,</mo><mspace width="2em"></mspace><mover accent="true"><mi>R</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mover accent="true"><mrow><mover accent="true"><mi>D</mi><mo stretchy="true">‾</mo></mover><mo>⋅</mo><mi>E</mi><mi>N</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline S=\overline{D\cdot EN},\qquad
+\overline R=\overline{\overline D\cdot EN}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0576em;">S</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0778em;vertical-align:-0.1944em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">E</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.0833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">E</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span></span></span><span style="top:-4.0033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span></span>
+<p>其中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mi>D</mi><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline D</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span> 也可通过 NAND(D,D) 得到。这样构成的是高电平透明的 D Latch：EN=1 时 Q 跟随 D，EN=0 时保持。真正的边沿触发 D Flip-Flop 通常由两个 D Latch 串联形成主从结构。例如正边沿触发器中 Master 由 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover accent="true"><mrow><mi>C</mi><mi>L</mi><mi>K</mi></mrow><mo stretchy="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">\overline{CLK}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8833em;"></span><span class="mord overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8833em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord mathnormal">L</span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span></span></span><span style="top:-3.8033em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span></span></span></span> 使能，Slave 由 CLK 使能；CLK=0 时 Master 采样、Slave 保持，0→1 时 Master 关闭、Slave 打开，因此数据只在上升沿传递到 Q。易混淆点是：单个 D Latch 是电平敏感，不能直接称为边沿触发 D 触发器。</p>
+<h3 id="mux-与共识项如何消除静态冒险">MUX 与共识项：如何消除静态冒险？</h3>
+<p>二选一选择器 <code>Y = S ? A : B</code> 等价于 <code>Y = SA + ~S·B</code>。仅使用二输入与非门时，可先用 <code>NAND(S,S)</code> 生成 <code>~S</code>，再分别对 <code>SA</code>、<code>~SB</code> 取反，最后再用与非门完成“反相后的或”。该结构在 <code>A=B=1</code>、<code>S</code> 翻转时可能出现静态 1 冒险，因为 <code>S</code> 与 <code>~S</code> 两条路径的门延迟不同，可能导致两个乘积项短时间同时无效，使本应保持为 1 的输出产生低脉冲。经典消除方法是增加共识项 <code>AB</code>，得到 <code>Y=SA+~SB+AB</code>。要区分正常逻辑翻转和冒险：只有理论输出本应保持不变却因路径延迟出现毛刺，才属于静态冒险。</p>
+<h3 id="同步计数器的复位使能与单周期进位">同步计数器的复位、使能与单周期进位</h3>
+<p>带使能、同步复位的模 10 计数器应在时钟上升沿内判断复位，因此同步复位不会异步立即生效。计数使能有效时按 0～9 循环，9 跳到 0 的那个周期将进位信号置 1，其余周期必须清 0，保证进位只持续一个时钟周期。时序进程中未赋值的寄存器天然保持，不必显式写 <code>count &#x3C;= count</code>。</p>
+<h3 id="严格-50-占空比的奇数分频">严格 50% 占空比的奇数分频</h3>
+<p>5 分频若要求严格 50% 占空比，输出高、低电平都需要持续 <code>2.5 × T_in</code>。只使用输入时钟同一种边沿时，状态变化只能出现在整数周期位置，因此无法直接获得严格 2.5 周期的脉宽。典型做法是同时利用 posedge 和 negedge，例如先通过模 5 计数器产生持续 2 个周期的波形，再利用下降沿采样使其延长半个周期，从而得到高 2.5 周期、低 2.5 周期的输出。不能简单认为两个波形做 XOR 就必然得到正确奇数分频，必须保证相位和脉宽关系正确，否则可能产生毛刺。实际 ASIC/FPGA 设计中，也不推荐随意用普通组合逻辑生成新时钟，通常优先使用 PLL、专用时钟单元，或者直接产生 clock enable。</p>
+<h3 id="重叠序列检测如何定义状态">重叠序列检测如何定义状态？</h3>
+<p>RTL 编程中，2:1 MUX 可用完整的组合逻辑 <code>if/else</code> 或 <code>assign y = sel ? b : a</code> 实现。参数化计数器通常定义 <code>parameter WIDTH</code>，时序优先级明确为 reset > load > enable，计满信号一般由 <code>count == {WIDTH{1'b1}}</code> 等条件产生。序列检测状态机的关键不是死记状态，而是用“当前已经匹配了目标串的最长前缀”来定义状态。检测 <code>1011</code> 且允许重叠时，可设 <code>S0/S1/S2/S3</code> 分别表示已匹配 <code>""、"1"、"10"、"101"</code>；在 <code>S3</code> 再收到 <code>1</code> 时完成一次检测，但下一状态必须回到 <code>S1</code>，因为最后这个 <code>1</code> 同时可能是下一次匹配的开头。若题目要求 <code>flag</code> 为寄存器输出，必须在时钟触发的 <code>always</code> 块中赋值；<code>output reg</code> 本身并不意味着一定综合成寄存器。</p>
+<h3 id="moore-不重叠-1101-检测">Moore 不重叠 1101 检测</h3>
+<p>Moore 型不重叠 <code>1101</code> 序列检测可用 5 个状态表示“未匹配、已匹配 1、11、110、1101”，只有最终检测状态输出为 1。关键转移包括：在“已匹配 11”状态继续收到 <code>1</code> 时仍保持“已匹配 11”，因为后两个 <code>1</code> 仍可作为新前缀；完整检测到 <code>1101</code> 后，若要求不重叠，则已参与本次匹配的最后一个 <code>1</code> 不能再次作为下一次序列的起点。Moore 输出只由当前状态决定，因此通常在完整序列最后一位被采样、状态进入检测态后才拉高。</p>
+<h3 id="round-robin-怎样保证握手与公平性">Round-Robin 怎样保证握手与公平性？</h3>
+<p>Round-Robin 仲裁器的核心是“从上一次服务位置的下一个请求者开始循环寻找第一个有效请求”，从而避免固定优先级导致的长期饥饿。若当前授权给 i，则下一轮优先级从 (i+1) 开始。关键实现点不是看到 request 就立刻更新指针，而是只有当前事务真正完成或 valid/ready 握手成功后才更新优先级；否则下游发生 backpressure 时 grant 可能在事务完成前跳变。验证时重点检查 one-hot grant、单请求、多请求、所有请求持续有效时是否轮转、无请求时无 grant、stall 时 grant 是否保持，以及持续请求者是否能在有限时间内获得服务。
+Round-Robin 仲裁的核心是保存“下一次从哪个 requester 开始检查”的优先级指针。初始化可为 <code>0>1>2>3</code>，若本次设备 1 获得授权，则下一轮从设备 2 开始，变为 <code>2>3>0>1</code>。组合逻辑按照当前指针循环扫描请求并产生 one-hot grant，时序逻辑根据本次 grant 更新下一轮起点。如果没有请求，优先级保持不变；如果只有一个 requester 持续请求，它虽然每次被授权后优先级降到最低，但扫描完整个环后仍只有它有效，因此可以连续得到授权，不需要人为插入空周期。</p>
+<h3 id="常数乘法位宽与平衡树">常数乘法、位宽与平衡树</h3>
+<p>常数乘法做 RTL 资源优化时，应尽量把常数拆成 2 的幂的加减。例如 8 位无符号数 <code>A × 251</code>，因为 <code>251 = 256 - 4 - 1</code>，可实现为 <code>(A&#x3C;&#x3C;8) - (A&#x3C;&#x3C;2) - A</code>，避免通用乘法器。需要注意先将 <code>A</code> 扩展到足够位宽再移位，否则可能因表达式位宽不足造成高位截断；<code>255×251=64005</code>，因此 16 bit 输出足够。
+最后，复杂组合逻辑如果按长链级联实现，逻辑深度是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mclose">)</span></span></span></span>，关键路径长、glitch 多、动态功耗高；若运算满足结合律，应尽量重构为 balanced tree，把逻辑深度降到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><msub><mrow><mi>log</mi><mo>⁡</mo></mrow><mn>2</mn></msub><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(\log_2 N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.0139em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mclose">)</span></span></span></span>。动态功耗中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>d</mi><mi>y</mi><mi>n</mi></mrow></msub><mo>=</mo><mi>α</mi><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup><mi>f</mi></mrow><annotation encoding="application/x-tex">P_{dyn}=\alpha C V^2f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0085em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span></span>，路径延迟不平衡产生的 glitch 会提高翻转因子 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span>，因此逻辑树平衡既是时序优化手段，也是功耗优化手段。对于位宽题则要先求真实数值范围再决定位宽，例如 8 bit signed 数算术右移 1 位后范围为 <code>[-64,63]</code>，平方再加 1 的最大值为 4097，因此结果至少需要 13-bit unsigned；若存入 signed 类型，则至少需要 14 bit；RTL 中有符号算术右移应明确使用 <code>>>></code>，不要与逻辑右移 <code>>></code> 混淆。</p>
+<h3 id="vhdl-乘法器应关注什么">VHDL 乘法器应关注什么？</h3>
+<p>VHDL 乘法器中，若直接写 <code>result &#x3C;= A * B;</code>，关键问题是 <code>std_logic_vector</code> 本身没有明确的数值和符号属性，应使用 <code>ieee.numeric_std</code>，并明确转换为 <code>unsigned</code> 或 <code>signed</code>。8 位乘 8 位完整结果需要 16 位。若只要求功能，可写为 <code>std_logic_vector(unsigned(A) * unsigned(B))</code>；若有高频要求，纯组合乘法器可能成为关键路径，应增加寄存器或流水级，并根据综合目标映射到 DSP 等硬件资源。所谓“优化”不能只看代码简短，还要考虑有符号性、位宽、时序、延迟、吞吐率、复位和有效控制。</p>
+<h3 id="top-downbottom-up-与-fpga-资源">Top-Down、Bottom-Up 与 FPGA 资源</h3>
+<p>这组题的核心可以归纳为几块。复杂数字系统设计通常不是纯 Top-Down 或纯 Bottom-Up，而是两者结合：顶层按功能逐级拆分，底层尽量复用成熟模块/IP。Verilog 中 <code>parameter</code> 可在实例化时通过 <code>#(...)</code> 覆盖，也可被 <code>defparam</code> 修改；<code>localparam</code> 是模块内部固定常量，不能被外部覆盖。FPGA/CPLD 方面，CPLD 的配置通常保存在 Flash/EEPROM 类非易失存储中；FPGA 常见配置方式包括 JTAG、主 SPI、从串、从并。FPGA 实现处理器时会综合使用 LUT、DFF、BRAM 和 DSP：LUT 做组合逻辑，DFF 保存状态，BRAM 做片上存储，DSP 适合乘加等算术。标准单输出 LUT4 可以实现任意不超过 4 输入的单输出组合函数，但一个普通单输出 LUT 无法同时产生半加器的 <code>Sum</code> 和 <code>Carry</code> 两个独立输出。三输入多数表决函数 <code>AB+AC+BC</code> 正好就是全加器的进位输出。</p>
+<h3 id="流水级数与-ipc">流水级数与 IPC</h3>
+<p>流水线级数增加主要有利于缩短单级组合延迟、提高时钟频率，并不意味着 IPC 自动增加；IPC 更受发射宽度、执行单元、乱序执行等影响。冯·诺依曼体系的关键特征之一是程序和数据都存放在存储器中并按地址访问。</p>
+<h2 id="时序cdc-与异步-fifo">时序、CDC 与异步 FIFO</h2>
+<p>setup/hold、复位释放、同步方案、FIFO 深度及验证边界。</p>
+<h3 id="从组合逻辑latchdff-理解时序">从组合逻辑、Latch、DFF 理解时序</h3>
+<p>组合逻辑本质上是门电路网络，输出只取决于当前输入；时序逻辑还依赖历史状态，因此需要 latch 或 flip-flop 保存信息。Latch 是电平敏感的，在使能有效期间具有“透明性”；Flip-Flop 是边沿敏感的，典型 DFF 可以理解为两个互补工作的 latch 组成，只在时钟边沿附近完成数据采样。真实门和触发器都不是理想器件，晶体管和互连存在传播延迟。组合路径有最大延迟和最小延迟：最大延迟主要决定 setup，最小延迟主要决定 hold。</p>
+<h3 id="同步时钟的判断条件">同步时钟的判断条件</h3>
+<p>同步时钟的本质是多个时钟之间存在确定的相位关系，通常频率相同或具有固定整数倍关系，并且这种关系可以被 STA 确定分析；仅仅“频率一样”还不够，若相位关系漂移则仍应按异步时钟处理。</p>
+<h3 id="setuphold-的完整约束skew-与修复">Setup/Hold 的完整约束、Skew 与修复</h3>
+<p>两个触发器之间的 setup/hold 分析要区分最大延时和最小延时。建立时间检查使用最大路径：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>t</mi><mrow><mi>c</mi><mi>q</mi><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>p</mi><mi>d</mi><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi>u</mi><mi>p</mi></mrow></msub><mo>≤</mo><mi>T</mi><mo>+</mo><msub><mi>t</mi><mrow><mi>s</mi><mi>k</mi><mi>e</mi><mi>w</mi></mrow></msub></mrow><annotation encoding="application/x-tex">t_{cq,\max}+t_{pd,\max}+t_{setup}
+\le T+t_{skew}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">q</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">a</span><span class="mtight">x</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">d</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">a</span><span class="mtight">x</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9221em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">se</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">p</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+<p>因此</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>T</mi><mi>min</mi><mo>⁡</mo></msub><mo>=</mo><msub><mi>t</mi><mrow><mi>c</mi><mi>q</mi><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>p</mi><mi>d</mi><mo separator="true">,</mo><mi>max</mi><mo>⁡</mo></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi>u</mi><mi>p</mi></mrow></msub><mo>−</mo><msub><mi>t</mi><mrow><mi>s</mi><mi>k</mi><mi>e</mi><mi>w</mi></mrow></msub></mrow><annotation encoding="application/x-tex">T_{\min}=t_{cq,\max}+t_{pd,\max}+t_{setup}-t_{skew}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mtight">m</span><span class="mtight">i</span><span class="mtight">n</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">q</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">a</span><span class="mtight">x</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">d</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">a</span><span class="mtight">x</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">se</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight">p</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+<p>再按需要加入 clock uncertainty。保持时间检查使用最小路径：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>t</mi><mrow><mi>c</mi><mi>q</mi><mo separator="true">,</mo><mi>min</mi><mo>⁡</mo></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>c</mi><mi>d</mi><mo separator="true">,</mo><mi>min</mi><mo>⁡</mo></mrow></msub><mo>≥</mo><msub><mi>t</mi><mrow><mi>h</mi><mi>o</mi><mi>l</mi><mi>d</mi></mrow></msub><mo>+</mo><msub><mi>t</mi><mrow><mi>s</mi><mi>k</mi><mi>e</mi><mi>w</mi></mrow></msub></mrow><annotation encoding="application/x-tex">t_{cq,\min}+t_{cd,\min}
+\ge t_{hold}+t_{skew}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9012em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">q</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">i</span><span class="mtight">n</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9221em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight">d</span><span class="mpunct mtight">,</span><span class="mop mtight"><span class="mtight">m</span><span class="mtight">i</span><span class="mtight">n</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≥</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">h</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight" style="margin-right:0.0197em;">l</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.7651em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight" style="margin-right:0.0315em;">k</span><span class="mord mathnormal mtight">e</span><span class="mord mathnormal mtight" style="margin-right:0.0269em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span>
+<p>若定义 <code>t_skew = t_capture − t_launch</code>，则正 skew 对 setup 有利、对 hold 不利。Setup 违例可通过降低频率、减少组合逻辑、流水化、使用更快单元等解决；Hold 违例通常通过增加数据路径延时、插 buffer 等解决。降低时钟频率通常不能修复 hold 违例，因为 hold 检查发生在同一个采样边沿附近，而不是下一个周期。</p>
+<h3 id="采样窗口库条件与最高频率">采样窗口、库条件与最高频率</h3>
+<p>时序方面，若 <code>Tsetup=1 ns</code>、<code>Thold=3 ns</code>，对某个采样沿而言，数据必须在采样沿前 1 ns 到后 3 ns 内保持稳定；在该窗口内变化可能导致采样错误或亚稳态。setup/hold 主要由触发器单元内部结构及 PVT、slew、load 等条件决定，通常由标准单元库提供。</p>
+<h3 id="为什么增加同步级数仍不能消除亚稳态">为什么增加同步级数仍不能消除亚稳态？</h3>
+<p>亚稳态的本质是触发器违反 setup/hold 或 recovery/removal 后，内部节点暂时进入不稳定模拟状态，最终随机解析为 0 或 1，而不是简单理解为“0、1之间持续振荡”。增加同步级数不能消除亚稳态，只能给第一级更多恢复时间，从而指数级降低亚稳态传播到后级的概率。单 bit 异步信号跨域通常用目的时钟域中的两级同步器；异步复位应采用“异步置位/复位、同步释放”，因为复位释放本身也可能违反 recovery/removal。慢域到快域同步一个稳定 level 一般不会“丢脉冲”，但如果源信号是窄 pulse，则即使有两级同步器也可能采不到，需要 pulse stretching、toggle synchronizer 或 handshake。异步 FIFO 的核心验证点是数据不丢失、不重复、不乱序，full/empty 与指针回绕正确，以及 Gray pointer 同步和 reset/CDC 行为正确。</p>
+<h3 id="不同类型的-cdc-应该采用什么结构">不同类型的 CDC 应该采用什么结构？</h3>
+<p>跨时钟域（CDC）的根本问题包括<strong>亚稳态、事件丢失以及多 bit 数据一致性</strong>，不同类型信号必须采用不同方案。单 bit 稳态/电平信号通常使用 <strong>2FF synchronizer</strong>：第一级可能发生亚稳态，第二级给其恢复时间，从而降低亚稳态继续传播的概率；但 2FF <strong>不能保证短脉冲一定被采到</strong>。短脉冲可以先展宽再 2FF，或者使用 <strong>Toggle Synchronizer</strong>：源域每发生一次事件就翻转一个 bit，目标域经过 2FF 同步后利用前后状态异或恢复单周期脉冲。Toggle 的限制是源事件不能快到目标域来不及观察状态变化，否则 <code>0→1→0</code> 可能被目标域完全漏掉；高频或不能丢失的事件应改用握手或 FIFO。
+多 bit 总线通常<strong>不能把每一位分别接 2FF</strong>，因为各 bit 的传播、采样和亚稳态恢复情况不同，在数据同时变化时可能得到源端从未产生过的混合值。低吞吐多 bit 数据可使用 <strong>Handshake/MCP（Multi-Cycle Path）</strong>：先保证数据稳定，再跨域同步 <code>req/valid</code> 等控制信号，目标域收到控制信号后采样已经稳定的数据，并可通过 <code>ack</code> 返回确认。需要持续、高吞吐地传输数据时，通常采用<strong>异步 FIFO</strong>：数据存储在双口 RAM 中，写端工作于写时钟域、读端工作于读时钟域，读写指针分别产生于各自时钟域，再跨域传递以判断 <code>full/empty</code>。
+异步 FIFO 的读写指针通常先从 Binary 转成 <strong>Gray Code</strong>，再经过 2FF 同步到另一个时钟域，因为相邻 Gray Code 理论上只改变 1 bit，可显著降低多 bit 指针跨域时采到不一致组合的风险。需要注意，<strong>Gray Code 本身并不能消除亚稳态</strong>，典型结构仍然是 <code>Binary Pointer → Gray Encode → 2FF → Destination Domain</code>。因此 CDC 可以归纳为：<strong>单 bit 电平用 2FF；短脉冲用展宽或 Toggle；低速多 bit 用 Handshake/MCP；高速连续数据用 Async FIFO；计数器/FIFO 指针等特殊多 bit 状态常用 Gray Code + 2FF。</strong></p>
+<h3 id="跨域计数器比较为什么不能逐-bit-同步">跨域计数器比较为什么不能逐 bit 同步？</h3>
+<p>双时钟域题的核心不是 <code>A==7 &#x26;&#x26; B==5</code> 这个比较，而是如何安全地将跨域信息送到目标域。单 bit 控制信号可通过两级触发器同步；多 bit 二进制计数器不能逐位各自做两级同步，因为多个 bit 可能同时变化，目标域可能采到不存在的组合值。连续单步递增的计数器可在源域转 Gray 码，再经过两级同步进入目标域，最后还原后比较。如果要求某个状态或事件绝不能漏掉，则仅做电平采样甚至 Gray 码都不一定够，应使用脉冲同步、toggle 同步、请求—应答握手或异步 FIFO。CDC 解题时要先判断传的是“电平、事件还是多 bit 数据”。</p>
+<h3 id="fifo-深度怎么计算">FIFO 深度怎么计算？</h3>
+<p>FIFO 深度的本质是求“任意时刻累计写入量减去累计读出量”的最大值：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>D</mi><mi>min</mi><mo>⁡</mo></msub><mo>=</mo><munder><mrow><mi>max</mi><mo>⁡</mo></mrow><mi>t</mi></munder><mo stretchy="false">[</mo><mi>W</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo>−</mo><mi>R</mi><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">D_{\min}=\max_t [W(t)-R(t)]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0278em;">D</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3175em;"><span style="top:-2.55em;margin-left:-0.0278em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mop mtight"><span class="mtight">m</span><span class="mtight">i</span><span class="mtight">n</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.45em;vertical-align:-0.7em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.4306em;"><span style="top:-2.4em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">max</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7em;"><span></span></span></span></span></span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mclose">)]</span></span></span></span></span>
+<p>不能只比较写、读频率。如果写端长期平均速率大于读端，又没有 backpressure 或空闲阶段，那么任何有限深度 FIFO 最终都会溢出。对于有限 burst，若写入 N 个数据，写频率 (f_w)，读频率 (f_r)，则写 burst 持续约 (N/f_w)，期间读出的数量可据此估算，最大积压量即所需理论深度。实际异步 FIFO 还要考虑读端启动延迟、时钟相位、Gray 指针同步延迟和裕量，工程上深度常向 2 的幂取整。异步 FIFO 通常使用二进制指针寻址、Gray 码跨时钟域，并通过同步后的读写指针判断 empty/full。</p>
+<h3 id="长期平均速率不匹配时fifo-能解决问题吗">长期平均速率不匹配时，FIFO 能解决问题吗？</h3>
+<p>FIFO 深度只能吸收短期的 burst 速率差，不能解决长期平均写入速率高于读取速率的问题。例如写侧 100 MHz、每 10 周期写 6 个，平均写速率为 60 Mdata/s；读侧 80 MHz、每 4 周期读 1 个，平均读速率为 20 Mdata/s，因此积压速度长期为 40 Mdata/s，任何有限深度 FIFO 最终都会溢出。FIFO 深度计算前必须先比较长期平均速率，再考虑最大 burst、最坏相位差和 CDC flag 延迟。</p>
+<h3 id="同步复位与异步复位怎样映射到硬件">同步复位与异步复位怎样映射到硬件？</h3>
+<p>同步复位只有在有效时钟沿到来时才生效；异步复位的 assert 不依赖时钟，可以立即复位触发器。但异步复位的 deassert 如果靠近时钟边沿，可能违反 recovery/removal timing，导致亚稳态，因此工程中常采用“<strong>异步置位/复位，同步释放</strong>”。同步复位通常表现为数据路径中的选择逻辑，异步复位则可能映射到触发器专用的异步 reset/preset 引脚，具体映射仍取决于 standard-cell library。</p>
+<h3 id="cdc-功能验证与时序验证的边界">CDC 功能验证与时序验证的边界</h3>
+<p>异步/CDC 功能验证的核心是覆盖两端时钟关系和跨域协议本身：两端 clock 要测试不同频率、不同频率比、不同相位，必要时覆盖不同占空比；脉冲/握手信号要检查最小有效宽度、是否会丢脉冲、重复传输或死锁；多 bit 数据跨域时要保证控制信号到达后数据仍保持稳定。这里要区分两类“保持时间”：CDC 协议要求的数据稳定时间属于功能验证，而触发器本身的 setup/hold violation 主要由 STA、门级时序验证处理，RTL 仿真不能真实模拟亚稳态。</p>
+<h3 id="slack-的符号与检查方向">Slack 的符号与检查方向</h3>
+<p>Setup slack 可理解为 required−arrival；Hold slack 按最早数据到达减去保持要求计算，不能把同一个减法方向直接套给两种检查。负 slack 表示违例。</p>
+<h3 id="补充gray-编码还需要哪些实现条件">补充：Gray 编码还需要哪些实现条件？</h3>
+<p>Gray 码的“一次只变一位”依赖源状态按相邻编码推进。应由源域寄存器输出稳定的 Gray 值，避免组合编码毛刺直接跨域；若二进制状态一次跳多个数，转换后不再保证只变一位。
+目标域可以跳过中间 Gray 状态，所以这适合传递“最新指针/计数状态”，不能代替对每个事件逐一确认的协议。
+物理实现还要约束各 bit 的路径差异。仅把时钟声明为异步、切掉普通 setup/hold 分析，不代表 Gray 总线可以任意布线；应按实现采用适当的 bus-skew / max-delay 等约束，并确认约束优先级和工具报告。不能不分结构地复制一个固定时钟周期数。
+参考：<a href="https://docs.amd.com/r/2024.1-English/ug903-vivado-using-constraints/About-Bus-Skew-Constraints">AMD：Gray 总线与 Bus Skew 约束</a>。</p>
+<h2 id="低功耗时钟树与实现约束">低功耗、时钟树与实现约束</h2>
+<p>门控、DVFS、电源域、时序修复、IR drop 和 ECO。</p>
+<h3 id="低功耗的六类主要方法">低功耗的六类主要方法</h3>
+<p>数字低功耗的核心是降低翻转率、电压、频率和漏电。常见方法包括：时钟门控，空闲时关闭时钟以降低动态功耗；电源门控，长期空闲时切断电源以降低漏电，并配合 isolation 和 retention；DVFS，根据负载动态调节电压和频率；多电压域，不同模块采用不同工作电压，并使用 level shifter；Multi-Vt，在关键路径使用低阈值单元、非关键路径使用高阈值单元；Operand Isolation，在结果不需要时阻止大型组合逻辑无效翻转。</p>
+<h3 id="ctsmulti-vt-与-ir-drop">CTS、Multi-Vt 与 IR Drop</h3>
+<p>数字后端和低功耗部分，CTS 的目标不是单纯把 clock latency 压到越小越好，而是同时控制 skew、latency、transition、fanout 和功耗；通常 skew 要尽量小，latency 只需落在合理目标范围。Multi-Vt 中 LVT 速度快但 leakage 大，HVT 速度慢但 leakage 小，因此 setup 紧张路径倾向使用 LVT，非关键路径可换 HVT 降低漏电；hold 紧张时反而可以用更慢的 HVT 或插 buffer 增加最短路径延迟。IR drop 会降低局部有效电压、减慢 cell、恶化 setup；加宽电源线可降低电阻和 IR drop，是直接的修复方法，而加去耦电容主要改善瞬态电压波动。</p>
+<h3 id="dvfs-的顺序与摄像头-soc-模式">DVFS 的顺序与摄像头 SoC 模式</h3>
+<p>DVFS 依赖动态功耗近似关系 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>d</mi><mi>y</mi><mi>n</mi></mrow></msub><mo>=</mo><mi>α</mi><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup><mi>f</mi></mrow><annotation encoding="application/x-tex">P_{dyn}=\alpha C V^2 f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0085em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span></span>，降低频率可近似线性降低动态功耗，降低电压则按 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>V</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">V^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> 更显著降低。降低工作点时应先降频再降压，因为电压降低会使门延迟增大，若先降压仍维持原高频率，可能立即产生 setup violation；升性能时顺序相反，应先升压再升频。待机模式若需要进一步降低功耗，比 DVFS 更激进的是 power gating，它通过切断电源显著降低 leakage，配合 retention register 可保存必要状态；clock gating 则主要降低动态功耗。摄像头 SoC 中，高清模式通常打开 MIPI、ISP、NPU、编码器、DDR、CPU；节能模式仍需视频链路，因此 MIPI、ISP、编码器、DDR、CPU 多数保持低频工作，NPU 可关闭；待机模式只保留运动检测及必要的低功耗输入通路，其余模块尽可能 power gate。</p>
+<h3 id="多电源域单元与电气风险">多电源域单元与电气风险</h3>
+<p>低功耗多电源域设计的核心单元包括：Level Shifter 用于不同电压域的电平转换；Isolation Cell 在某个域掉电时把其输出钳位到安全值，避免 X/浮空传播；Retention Cell 在断电前保存关键状态、上电后恢复；Power Switch 用于 power gating；相关控制通常由 Always-On 逻辑负责。0.9 V SoC 与 1.0 V FPGA/逻辑域通信时，应根据库和接口耐压能力配置升/降压 Level Shifter，并对“可能掉电的发送域 → 仍上电的接收域”配置 isolation。
+如果一个外部 1.0 V FPGA 在 0.9 V SoC 之前上电，还必须关注 FPGA→SoC 方向在 SoC 断电期间的反向灌电问题，实际实现应采用 power-off-tolerant I/O、always-on 隔离或库中专用跨域单元，而不是简单认为普通 isolation cell 在所有情况下都足够。</p>
+<h3 id="上下电顺序如何理解">上下电顺序如何理解？</h3>
+<p>不能把某一条固定箭头顺序套给所有设计。共同约束是：掉电前完成停流/状态保存并建立隔离；上电后等power-good和必要时钟稳定，按保留状态与复位策略完成恢复，再在输出可信且接收端允许时解除隔离。
+原笔记的两种“解除隔离与释放复位先后顺序”已合并为上述依赖条件；实际时序以UPF、电源控制规格和cell要求为准。
+外部1.0V域先于0.9V SoC上电时，还需检查掉电容忍和反向灌电，不能认为普通isolation自动覆盖所有I/O电气风险。</p>
+<h3 id="metal-eco-的能力边界">Metal ECO 的能力边界</h3>
+<p>芯片流片后待机功耗过高且只能做 metal ECO 时，优先考虑可由连线修复的问题，如 clock-gating enable、power-gating/sleep/isolation 控制、错误 wakeup 条件等；HVT/LVT 单元选型错误、power switch 数量不足这类需要改变晶体管或 base layer 的问题，通常无法仅靠 metal ECO 修复。</p>
+<h3 id="逻辑树平衡为什么同时影响时序和功耗">逻辑树平衡为什么同时影响时序和功耗？</h3>
+<p>最后，复杂组合逻辑如果按长链级联实现，逻辑深度是 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mclose">)</span></span></span></span>，关键路径长、glitch 多、动态功耗高；若运算满足结合律，应尽量重构为 balanced tree，把逻辑深度降到 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false">(</mo><msub><mrow><mi>log</mi><mo>⁡</mo></mrow><mn>2</mn></msub><mi>N</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">O(\log_2 N)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">O</span><span class="mopen">(</span><span class="mop"><span class="mop">lo<span style="margin-right:0.0139em;">g</span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.207em;"><span style="top:-2.4559em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2441em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.109em;">N</span><span class="mclose">)</span></span></span></span>。动态功耗中 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>d</mi><mi>y</mi><mi>n</mi></mrow></msub><mo>=</mo><mi>α</mi><mi>C</mi><msup><mi>V</mi><mn>2</mn></msup><mi>f</mi></mrow><annotation encoding="application/x-tex">P_{dyn}=\alpha C V^2f</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">P</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight" style="margin-right:0.0359em;">y</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0085em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">V</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span></span></span>，路径延迟不平衡产生的 glitch 会提高翻转因子 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi></mrow><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span></span></span></span>，因此逻辑树平衡既是时序优化手段，也是功耗优化手段。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/rtl/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>RTL</a></li><li><a data-astro-transition-scope="astro-bztu2lml-3" href="/tags/cdc/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>CDC</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-simulation-concurrency-sva/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（二）：仿真调度、并发与 SVA</div></div></a><a href="/posts/dv-uvm-platform/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（四）：UVM 验证平台</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

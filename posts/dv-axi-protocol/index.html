@@ -1,0 +1,689 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-axi-protocol/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（五）：AXI 协议 | DAWNMX</title><meta name="title" content="数字验证问答（五）：AXI 协议 | DAWNMX"><meta name="description" content="通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（五）：AXI 协议 | DAWNMX"><meta property="og:description" content="通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-axi-protocol/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-axi-protocol/"><meta property="twitter:title" content="数字验证问答（五）：AXI 协议 | DAWNMX"><meta property="twitter:description" content="通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（五）：AXI 协议 | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: axi; }@layer astro { ::view-transition-old(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-axi-protocol" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（五）：AXI 协议</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第五篇，整理自我的复习笔记。通道与 Burst、地址与 WSTRB、Outstanding、顺序与原子访问。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#axi%E9%80%9A%E9%81%93burst-%E4%B8%8E%E4%BA%8B%E5%8A%A1%E5%B1%9E%E6%80%A7">AXI：通道、Burst 与事务属性</a>
+<ul>
+<li><a href="#axi-%E5%8D%8F%E8%AE%AE%E4%B8%8E-soc-%E4%BA%92%E8%81%94%E6%8B%93%E6%89%91%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">AXI 协议与 SoC 互联拓扑有什么区别？</a></li>
+<li><a href="#%E8%AF%BB%E5%86%99%E4%B8%BA%E4%BB%80%E4%B9%88%E5%88%86%E5%88%AB%E9%9C%80%E8%A6%81%E4%B8%A4%E6%9D%A1%E4%B8%8E%E4%B8%89%E6%9D%A1%E9%80%9A%E9%81%93">读写为什么分别需要两条与三条通道？</a></li>
+<li><a href="#beatburst-%E5%92%8C-transaction-%E6%98%AF%E4%BB%80%E4%B9%88%E5%85%B3%E7%B3%BB">Beat、Burst 和 Transaction 是什么关系？</a></li>
+<li><a href="#axlenaxcache-%E4%B8%8E-axprot-%E5%88%86%E5%88%AB%E8%A1%A8%E7%A4%BA%E4%BB%80%E4%B9%88">AxLEN、AxCACHE 与 AxPROT 分别表示什么？</a></li>
+<li><a href="#aww-%E8%A7%A3%E8%80%A6%E5%90%8Eslave-%E6%80%8E%E6%A0%B7%E5%85%B3%E8%81%94%E6%95%B0%E6%8D%AE">AW/W 解耦后，Slave 怎样关联数据？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%86%99%E5%93%8D%E5%BA%94%E6%8C%89%E4%BA%8B%E5%8A%A1%E8%BF%94%E5%9B%9E%E8%AF%BB%E5%93%8D%E5%BA%94%E9%80%90-beat-%E8%BF%94%E5%9B%9E">为什么写响应按事务返回，读响应逐 Beat 返回？</a></li>
+<li><a href="#axi-%E5%85%81%E8%AE%B8%E6%8F%90%E5%89%8D%E7%BB%93%E6%9D%9F-burst-%E5%90%97">AXI 允许提前结束 Burst 吗？</a></li>
+<li><a href="#fixedincrwrap-%E5%92%8C%E6%8F%90%E5%89%8D%E7%BB%88%E6%AD%A2">FIXED、INCR、WRAP 和提前终止</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85wrap-%E7%9A%84%E9%95%BF%E5%BA%A6%E5%AF%B9%E9%BD%90%E4%B8%8E%E5%9C%B0%E5%9D%80%E8%AE%A1%E7%AE%97">补充：WRAP 的长度、对齐与地址计算</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85%E6%80%8E%E6%A0%B7%E6%A3%80%E6%9F%A5-incr-%E7%9A%84-4kb-%E8%BE%B9%E7%95%8C">补充：怎样检查 INCR 的 4KB 边界？</a></li>
+</ul>
+</li>
+<li><a href="#axi%E5%9C%B0%E5%9D%80%E7%AA%84%E4%BC%A0%E8%BE%93%E4%B8%8E-wstrb">AXI：地址、窄传输与 WSTRB</a>
+<ul>
+<li><a href="#%E5%9C%B0%E5%9D%80%E7%9A%84%E8%87%AA%E7%84%B6%E5%AF%B9%E9%BD%90%E8%BE%B9%E7%95%8C%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97">地址的自然对齐边界如何计算？</a></li>
+<li><a href="#%E7%89%A9%E7%90%86%E4%BD%8D%E5%AE%BD%E4%BC%A0%E8%BE%93%E5%A4%A7%E5%B0%8F%E4%B8%8E%E6%9C%89%E6%95%88%E5%AD%97%E8%8A%82">物理位宽、传输大小与有效字节</a></li>
+<li><a href="#wstrb-%E4%B8%8E%E5%9C%B0%E5%9D%80%E4%BF%A1%E6%81%AF%E5%90%84%E8%B4%9F%E8%B4%A3%E4%BB%80%E4%B9%88">WSTRB 与地址信息各负责什么？</a></li>
+<li><a href="#%E9%9D%9E%E5%AF%B9%E9%BD%90%E9%A6%96%E6%8B%8D%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E8%83%BD%E5%8F%AA%E6%9C%89%E4%B8%80%E4%B8%AA%E6%9C%89%E6%95%88%E5%AD%97%E8%8A%82">非对齐首拍为什么可能只有一个有效字节？</a></li>
+<li><a href="#128-bit-%E6%80%BB%E7%BA%BF%E4%B8%8A%E4%BA%94%E6%8B%8D%E9%9D%9E%E5%AF%B9%E9%BD%90%E4%BC%A0%E8%BE%93%E5%A6%82%E4%BD%95%E6%98%A0%E5%B0%84">128-bit 总线上，五拍非对齐传输如何映射？</a></li>
+<li><a href="#fixed-%E5%92%8C-incr-%E7%9A%84%E9%9D%9E%E5%AF%B9%E9%BD%90%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">FIXED 和 INCR 的非对齐有什么区别？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%83%A8%E5%88%86%E5%86%99%E4%B8%8D%E5%BA%94%E7%AE%80%E5%8D%95%E6%9B%BF%E6%8D%A2%E4%B8%BA%E5%A4%9A%E7%AC%94%E7%AA%84%E5%86%99">为什么部分写不应简单替换为多笔窄写？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B2%A1%E6%9C%89%E7%A8%80%E7%96%8F%E8%AF%BB%E6%8E%A9%E7%A0%81mmio-%E5%8F%88%E6%9C%89%E4%BB%80%E4%B9%88%E9%99%90%E5%88%B6">为什么没有稀疏读掩码？MMIO 又有什么限制？</a></li>
+</ul>
+</li>
+<li><a href="#axioutstanding%E9%A1%BA%E5%BA%8F%E4%B8%8E%E5%8E%9F%E5%AD%90%E8%AE%BF%E9%97%AE">AXI：Outstanding、顺序与原子访问</a>
+<ul>
+<li><a href="#outstanding-%E7%BB%9F%E8%AE%A1-transaction-%E8%BF%98%E6%98%AF-beat">Outstanding 统计 transaction 还是 beat？</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E5%BD%A2%E6%88%90%E5%A4%9A%E7%AC%94-outstanding-%E5%B9%B6%E8%87%AA%E5%8A%A8%E8%AE%A1%E6%95%B0">如何形成多笔 outstanding 并自动计数？</a></li>
+<li><a href="#outstanding%E4%B9%B1%E5%BA%8F%E4%B8%8E%E4%BA%A4%E7%BB%87%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">Outstanding、乱序与交织有什么区别？</a></li>
+<li><a href="#aridridawidwidbid-%E5%A6%82%E4%BD%95%E5%85%B3%E8%81%94">ARID、RID、AWID、WID、BID 如何关联？</a></li>
+<li><a href="#axi3-%E4%B8%8E-axi4-%E7%9A%84%E5%86%99%E5%93%8D%E5%BA%94%E4%BE%9D%E8%B5%96%E6%9C%89%E4%BD%95%E5%B7%AE%E5%BC%82">AXI3 与 AXI4 的写响应依赖有何差异？</a></li>
+<li><a href="#outstanding-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E5%BF%BD%E7%95%A5%E6%95%B0%E6%8D%AE%E4%BE%9D%E8%B5%96">Outstanding 为什么不能忽略数据依赖？</a></li>
+<li><a href="#master-%E7%94%A8%E4%BB%80%E4%B9%88%E7%A1%AC%E4%BB%B6%E7%BB%B4%E6%8A%A4%E5%A4%9A%E7%AC%94%E6%9C%AA%E5%AE%8C%E6%88%90%E4%BA%8B%E5%8A%A1">Master 用什么硬件维护多笔未完成事务？</a></li>
+<li><a href="#%E8%BF%9E%E7%BB%AD%E5%90%AF%E5%8A%A8-sequence-%E5%B0%B1%E8%83%BD%E5%BD%A2%E6%88%90-outstanding-%E5%90%97">连续启动 sequence 就能形成 outstanding 吗？</a></li>
+<li><a href="#exclusive-%E5%A6%82%E4%BD%95%E7%BB%B4%E6%8A%A4-reservation">Exclusive 如何维护 reservation？</a></li>
+<li><a href="#locked-%E4%B8%8E-exclusive%E9%94%81%E4%BD%8F%E8%B5%84%E6%BA%90%E8%BF%98%E6%98%AF%E6%A3%80%E6%9F%A5-reservation">Locked 与 Exclusive：锁住资源还是检查 Reservation？</a></li>
+<li><a href="#axi3-locked-sequence-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E7%94%A8-normal-%E4%BA%8B%E5%8A%A1%E8%A7%A3%E9%94%81">AXI3 Locked Sequence 为什么要用 NORMAL 事务解锁？</a></li>
+<li><a href="#exclusive-responder-%E4%B8%8D%E8%83%BD%E6%97%A0%E6%9D%A1%E4%BB%B6%E8%BF%94%E5%9B%9E-exokay">Exclusive Responder 不能无条件返回 EXOKAY</a></li>
+<li><a href="#%E7%BB%9F%E8%AE%A1%E5%92%8C%E7%8B%AC%E5%8D%A0%E8%AE%BF%E9%97%AE%E7%9A%84%E9%80%82%E7%94%A8%E6%9D%A1%E4%BB%B6">统计和独占访问的适用条件</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="axi通道burst-与事务属性">AXI：通道、Burst 与事务属性</h2>
+<p>握手、beat/transaction、响应、AXI4-Lite 与边界。</p>
+<h3 id="axi-协议与-soc-互联拓扑有什么区别">AXI 协议与 SoC 互联拓扑有什么区别？</h3>
+<p>AXI 本质上是<strong>点到点接口协议</strong>，规定的是两个接口之间的信号含义、VALID/READY 握手和时序，而不是整个 SoC 的互联拓扑。多个 Master/Slave 如何仲裁、地址译码、路由，是 Interconnect/Crossbar/NoC 的职责。AXI 的高性能来自通道解耦和 outstanding：读写通道彼此独立，多笔 transaction 可以同时未完成；协议通过 ID 区分不同逻辑事务流。可以把一个物理 AXI Port 看成多个由 ID 划分的 logical ports：<strong>同一 ID 的事务存在 ordering 约束，不同 ID 的事务通常允许乱序完成</strong>。乱序指 transaction 之间的完成顺序，不代表一个 burst 内部的 beat 可以任意乱序。</p>
+<h3 id="读写为什么分别需要两条与三条通道">读写为什么分别需要两条与三条通道？</h3>
+<p>AXI 读事务使用 <strong>AR 读地址通道 + R 读数据通道</strong>，写事务使用 <strong>AW 写地址通道 + W 写数据通道 + B 写响应通道</strong>。读操作中 Master 只需要通过 AR 告诉 Slave“从哪里、以什么 burst 和 size 读取”，数据由 Slave 从 R 通道返回；写操作则既要告诉 Slave“写到哪里”，又要提供“写什么数据”，所以地址和数据分别使用 AW、W 两个独立通道。AXI 各通道都采用 VALID/READY 握手：只有时钟沿上二者同时为 1 才完成一次传输；<strong>VALID 不能依赖 READY</strong>，否则双方都等待对方先拉高信号时可能产生死锁，而 READY 可以依赖 VALID。VALID 拉高后，在握手完成前 VALID 以及对应的地址、数据等 payload 必须保持稳定。</p>
+<h3 id="beatburst-和-transaction-是什么关系">Beat、Burst 和 Transaction 是什么关系？</h3>
+<p>AXI 中最容易混淆的是 <code>burst</code>、<code>beat</code>、<code>transaction</code> 和 <code>outstanding</code>。一笔完整 AXI 读/写 transaction 可以包含一个或多个数据 beat；完整 AXI 用 burst 机制描述这些 beat，因此 <code>AxLEN + 1</code> 就是该事务包含的 beat 数。<code>AxLEN=0</code> 表示只有 1 beat，可以理解为长度为 1 的 burst；<code>AxLEN=7</code> 表示 8-beat burst。<code>FIXED / INCR / WRAP</code> 描述的是同一 burst 内各 beat 地址如何变化。由此要特别注意：一个 16-beat burst 仍然只是一笔 transaction，并不是 16 笔 transaction。
+Outstanding 统计未完成的 transaction，与一笔 burst 的 beat 数是不同维度。一个 256-beat burst 仍只算一笔事务；详细计数、ID 和乱序关系见第 08 页。
+AXI4-Lite 则取消了 burst 能力，每笔 transaction 固定只有一个 data beat，所以没有 <code>AxLEN</code>、<code>AxBURST</code> 以及用于标识多 beat 结束的 <code>WLAST/RLAST</code>，通常称为 single-beat transfer / single-beat transaction，主要用于 CSR、控制寄存器等低带宽访问。完整 AXI 中则可以把单 beat 看作 burst length=1 的特殊情况。还要区分“没有 burst”和“没有并发能力”：burst 讨论的是“一笔事务内部有几个 beat”，outstanding 讨论的是“同时挂着几笔未完成事务”，两者不是同一概念。对于 AXI4-Lite，由于没有 AXI ID，若实现允许存在多笔未完成访问，也必须保证响应的顺序能够被正确对应，不能像完整 AXI 那样依赖 ID 进行任意乱序匹配。</p>
+<h3 id="axlenaxcache-与-axprot-分别表示什么">AxLEN、AxCACHE 与 AxPROT 分别表示什么？</h3>
+<p>AxLEN 使用的是 <strong>N−1 编码</strong>，实际 burst beat 数为 <code>AxLEN+1</code>，对 AXI4 INCR burst，8-bit AxLEN 用 <code>0~255</code> 正好表示 <code>1~256 beats</code>，既不浪费 0 编码，也便于硬件使用减计数器和零检测判断 burst 结束。AxCACHE 和 AxPROT 都属于地址通道上的事务属性：AxCACHE 描述缓存、buffer、allocate 等内存访问属性，AxPROT 描述特权/非特权、Secure/Non-secure、指令/数据访问等保护属性。单纯进行数据位宽转换并不会改变这些事务语义，因此 Bridge 通常直接继承或透传；只有跨协议、安全域或下游不支持相应属性时才需要映射。</p>
+<h3 id="aww-解耦后slave-怎样关联数据">AW/W 解耦后，Slave 怎样关联数据？</h3>
+<p>AW 和 W 是独立通道，独立的是握手时序，不是事务逻辑。Master 内部生成一笔写事务时，本身已经知道地址、SIZE、LEN、BURST，因此即使 W 通道先于 AW 通道完成传输，它也已经能够根据地址计算出正确的 WDATA 布局和 WSTRB。问题只在于 Slave 此时可能还没通过 AW 通道拿到地址。Slave 可以选择暂时拉低 <code>WREADY</code>，等 AW 握手、拿到地址后再接收 W；也可以先把 WDATA/WSTRB 缓存在 FIFO 中，等 AW 到来后再匹配处理。因此不能理解成“W 先来了就没人知道它属于哪个地址”，而应理解成“Master 知道，只是 Slave 可能尚未收到对应 AW 信息”。
+在 AXI4 中，W 通道没有 WID，因此不同写事务的 W burst 主要依靠事务顺序关联。假设先后接受 <code>AW1、AW2、AW3</code>，W 通道必须按对应事务顺序发送完整的 <code>W1 burst、W2 burst、W3 burst</code>，用 WLAST 标识每个 burst 的最后一个 beat，不能把不同写事务的数据 beat 任意穿插。AXI3 则曾经存在 WID，因此支持一定程度的 write data interleaving。写响应通道仍有 BID，用于把 BRESP 对应回 AWID。读通道则通过 <code>ARID→RID</code> 关联请求和返回数据，因此不同 ID 的读事务可以更灵活地乱序返回。</p>
+<h3 id="为什么写响应按事务返回读响应逐-beat-返回">为什么写响应按事务返回，读响应逐 Beat 返回？</h3>
+<p>AXI 中写事务和读事务的响应机制并不对称。一次 write burst 是一个完整 transaction：<code>AW + N 个 W beat + 1 个 B response</code>，因此无论有多少个 W beat，整个 burst 最终只有一个 <code>BRESP</code>；B 表示的是整笔 write transaction 的完成状态，而不是某一个 W beat 的状态。读事务则是 <code>AR + N 个 R beat</code>，每个 R beat 本来就必须从 Slave 返回给 Master，因此可以直接在 <code>RDATA</code> 旁边携带 <code>RRESP</code>，每拍都给出该 beat 的读状态。B 如果设计成每 beat 返回并非做不到，也不一定直接降低吞吐；真正原因是 AXI 选择了 <strong>write response 为 transaction-level completion</strong> 的抽象，而 per-beat B 会额外增加反向 transfer、response buffer、beat tracking 和关联状态。RRESP 则是附着在本来就存在的 RDATA transfer 上，几乎不需要额外的传输机制。</p>
+<h3 id="axi-允许提前结束-burst-吗">AXI 允许提前结束 Burst 吗？</h3>
+<p>关于 burst 提前结束，AXI 不支持 Early Burst Termination：<code>AxLEN</code> 在地址阶段已经声明了整笔 transaction 的 beat 数，后续必须按该长度完整完成，不能中途用 <code>WLAST</code> 提前结束。写事务如果后面不想真正修改数据，可以继续发送剩余 beat 并使用 <code>WSTRB=0</code> 屏蔽写入，但协议流程仍要走完。AHB 的 burst 模型不同，它是以连续 <code>NONSEQ/SEQ</code> transfer 组成 burst，并存在规范定义的 EBT 场景，例如 ERROR 或 interconnect 仲裁导致的提前终止；但这不等于固定长度的 <code>INCR4/8/16</code>、<code>WRAP4/8/16</code> 可以由 Master 任意中途停止。AHB 的 <code>INCR</code> 是不定长 burst，本身没有预先固定 beat 数。</p>
+<h3 id="fixedincrwrap-和提前终止">FIXED、INCR、WRAP 和提前终止</h3>
+<ul>
+<li>FIXED：每拍地址不变，适合 FIFO/外设端口；写普通内存时可能反复覆盖同一位置。</li>
+<li>INCR：按传输大小推进地址；非对齐首拍的后续推进见第 07 页。</li>
+<li>WRAP：在对应 wrap 边界回绕，需满足协议对起始地址、长度和大小的限制。
+AXI burst 不能跨 4KB 边界，不能用提前 WLAST 缩短已声明长度。后续写 beat 若不想修改数据，可在符合接口语义时以 WSTRB=0 继续完成剩余流程。</li>
+</ul>
+<h3 id="补充wrap-的长度对齐与地址计算">补充：WRAP 的长度、对齐与地址计算</h3>
+<p>WRAP burst 长度为 2、4、8 或 16 beats，首地址必须按每 beat 的传输大小对齐；首地址不必等于整个 wrap 窗口的起点。</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>B = 2^AxSIZE                    // Byte/beat</span></span>
+<span class="line"><span>N = AxLEN + 1</span></span>
+<span class="line"><span>Window = B × N</span></span>
+<span class="line"><span>WrapBase = floor(Start / Window) × Window</span></span>
+<span class="line"><span>Addr(i) = WrapBase + ((Start - WrapBase + i×B) mod Window)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Start=0x1038，B=4，N=4，Window=16</span></span>
+<span class="line"><span>WrapBase=0x1030</span></span>
+<span class="line"><span>四拍：0x1038 → 0x103C → 0x1030 → 0x1034</span></span></code></pre>
+<p>这个例子说明“按 beat 对齐”和“从 wrap 边界起步”是两个要求，不能混为一谈。规则参考：<a href="https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/IHI0022H_amba_axi_protocol_spec.pdf">Arm AXI 规范</a>。</p>
+<h3 id="补充怎样检查-incr-的-4kb-边界">补充：怎样检查 INCR 的 4KB 边界？</h3>
+<p>对合法的 INCR burst，先按传输大小对齐首地址，再算最后一拍可能覆盖的末字节：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>B = 2^AxSIZE，N = AxLEN+1</span></span>
+<span class="line"><span>AlignedStart = floor(Start / B) × B</span></span>
+<span class="line"><span>LastByte = AlignedStart + N×B - 1</span></span>
+<span class="line"><span>要求 floor(Start / 4096) == floor(LastByte / 4096)</span></span></code></pre>
+<p>这里使用 AlignedStart 是为了处理非对齐首拍，不能无条件写 Start+N×B−1。例如 Start=0xFFF、B=4、N=1，只访问当前自然边界内剩余的0xFFF，不会因 SIZE=4Byte 就自动跨到下一页；若 N=2，后续拍到0x1000～0x1003，就跨界了。
+Checker 的中间运算要扩位，避免地址溢出后错误判成同页。FIXED、WRAP 要按各自地址范围判断，不能套用 INCR 末地址公式。WSTRB=0 不会取消已声明的 burst 边界要求。</p>
+<h2 id="axi地址窄传输与-wstrb">AXI：地址、窄传输与 WSTRB</h2>
+<p>自然对齐、有效 byte lane、非对齐算例和部分读写。</p>
+<h3 id="地址的自然对齐边界如何计算">地址的自然对齐边界如何计算？</h3>
+<p>AXI 地址是 <strong>byte address</strong>，对齐边界取决于每个 transfer 的字节数：<code>Bytes = 2^AxSIZE</code>，要求 <code>AxADDR % Bytes == 0</code> 才是自然对齐。例如 32-bit transfer = 4 Byte，因此 <code>0x1000/0x1004/...</code> 对齐，<code>0x1001/0x1002/0x1003</code> 非对齐。之前文档里“32-bit 地址边界要求能被 <code>0x20</code> 整除”的表述应理解为笔误，32 bit 应转换成 4 Byte，而不是 32 Byte。</p>
+<h3 id="物理位宽传输大小与有效字节">物理位宽、传输大小与有效字节</h3>
+<p>AXI 的窄传输（Narrow Transfer）指的是：物理数据总线很宽，但一次 beat 实际只传其中一部分字节。真正决定“每个 beat 传多少字节”的不是 <code>WDATA</code> 位宽，而是 <code>AxSIZE</code>，每拍传输字节数为 <code>2^AxSIZE</code>。例如数据总线是 128 bit，即 16 Byte，如果 <code>AWSIZE=2</code>，每拍只传 4 Byte，因此这是 128-bit 总线上的 32-bit 窄传输。对于 INCR burst，beat 地址按传输大小递增，所以地址依次为 <code>0x1000、0x1004、0x1008、0x100C、0x1010...</code>，而不是因为总线是 128 bit 就每次加 <code>0x10</code>；只有 <code>AWSIZE=4</code>、每拍完整传 16 Byte 时，地址才会 <code>0x1000→0x1010</code>。
+128-bit 总线包含 16 个 byte lane，<code>WSTRB[15:0]</code> 每一位对应 <code>WDATA</code> 中一个字节。窄传输时，当前 beat 地址落在哪些 byte lane，就决定数据放在 <code>WDATA</code> 的哪一段。以 <code>AWSIZE=2</code>、从 <code>0x1000</code> 开始的 INCR burst 为例：<code>0x1000~0x1003</code> 使用 lane0~3，典型 <code>WSTRB=16'h000F</code>；下一拍地址 <code>0x1004</code>，使用 lane4~7，<code>WSTRB=16'h00F0</code>；再下一拍 <code>0x1008</code> 使用 lane8~11，<code>WSTRB=16'h0F00</code>；<code>0x100C</code> 使用 lane12~15，<code>WSTRB=16'hF000</code>；到了 <code>0x1010</code> 进入下一个 16-Byte 总线字，重新回到 lane0~3。也就是说，WSTRB 的“移动”本质上来自 beat 地址在物理总线 byte lane 中的位置变化。WSTRB 不是一个 burst 只发送一次，而是和 <code>WDATA</code> 一样，每个 W beat 都有一个独立的 WSTRB。需要注意，地址和 <code>AWSIZE</code> 决定本拍“允许使用”的 byte lane，而 WSTRB 决定其中哪些字节实际写入，因此部分写时 WSTRB 可以只使能合法 lane 中的一部分。读通道没有 RSTRB，因为 Master 可以由 <code>ARADDR + ARSIZE + ARBURST</code> 自己推导每拍哪一部分 <code>RDATA</code> 有效。</p>
+<h3 id="wstrb-与地址信息各负责什么">WSTRB 与地址信息各负责什么？</h3>
+<p><code>WSTRB</code> 的本质是写数据的 byte enable：<code>WSTRB[n]</code> 对应 <code>WDATA[8n+7:8n]</code>，为 1 表示该 byte lane 真正参与写入。它不是用来告诉 W 通道“这笔数据对应哪个地址”的。AXI 的 AW 和 W 是独立通道，AW 通道传输 <code>AWADDR/AWSIZE/AWLEN/AWBURST</code> 等地址和事务属性，W 通道只传 <code>WDATA/WSTRB/WLAST</code>。Master 在内部已经根据地址和 burst 信息计算好了每一拍应使用哪些 byte lane，再通过 <code>WSTRB</code> 告诉 Slave 哪些字节有效。因此应理解为“地址控制信息决定理论上的传输位置，WSTRB 表示这一拍实际写哪些字节”，而不是“W 通道根据 WSTRB 推算地址”。由于两个通道独立，W 甚至可能先于 AW 到达，Slave 或 Interconnect 需要负责正确缓冲和关联。</p>
+<h3 id="非对齐首拍为什么可能只有一个有效字节">非对齐首拍为什么可能只有一个有效字节？</h3>
+<p>非对齐传输是指起始地址没有按照传输大小自然对齐，即 <code>AWADDR % (2^AWSIZE) != 0</code>。例如 <code>AWSIZE=2</code> 表示 4 Byte transfer，则 <code>0x1000/0x1004</code> 是对齐地址，<code>0x1001/0x1002/0x1003</code> 都是非对齐地址。非对齐与窄传输是两个不同概念：窄传输描述“每拍传输大小小于总线宽度”，非对齐描述“首地址没有落在该传输大小的自然边界上”，二者可以同时出现。
+非对齐时尤其要注意：<code>AWSIZE=2</code> 并不意味着每个 beat 的 <code>WSTRB</code> 一定恰好有 4 个 <code>1</code>。例如 128 bit 总线、<code>AWADDR=0x1003</code>、<code>AWSIZE=2</code>、INCR burst，首拍从非对齐地址 <code>0x1003</code> 开始，到下一个 4 Byte 自然边界 <code>0x1004</code> 前只剩 1 Byte，因此首拍可能只有 byte lane 3 有效；之后地址进入对齐状态，下一拍从 <code>0x1004</code> 开始，可正常使用 4 个 byte lane。也就是说，<code>AWSIZE</code> 表示该 transfer 的最大字节跨度/传输规格，而 <code>WSTRB</code> 才表示这一拍实际写入的字节集合，非对齐首拍可能只使用其中一部分。</p>
+<h3 id="128-bit-总线上五拍非对齐传输如何映射">128-bit 总线上，五拍非对齐传输如何映射？</h3>
+<p>对于 <code>128-bit bus + 32-bit transfer + INCR + 起始地址 0x1001 + 5 beats</code>，这是同时具有 <strong>narrow + unaligned</strong>的传输。32-bit 即每拍最多 4 Byte，第一拍由于从 <code>0x1001</code> 开始，只能访问当前 4-Byte natural boundary 剩余的 <code>0x1001~0x1003</code>；之后恢复到自然边界，因此五拍分别为 <code>0x1001~0x1003</code>、<code>0x1004~0x1007</code>、<code>0x1008~0x100B</code>、<code>0x100C~0x100F</code>、<code>0x1010~0x1013</code>。在 128-bit 总线的 16 个 byte lane 上，对应 WSTRB 依次为 <code>16'h000E → 16'h00F0 → 16'h0F00 → 16'hF000 → 16'h000F</code>。所谓“WSTRB 滑动”，本质不是 WSTRB 自己存在特殊移位机制，而是随着 INCR 地址递增，有效 4-byte 窗口依次落到不同 byte lane，到 128-bit word 边界后重新回到低 lane。</p>
+<h3 id="fixed-和-incr-的非对齐有什么区别">FIXED 和 INCR 的非对齐有什么区别？</h3>
+<p><code>FIXED</code> burst 也存在对齐与非对齐的概念。是否非对齐取决于 <code>AxADDR</code> 是否满足 <code>2^AxSIZE</code> 的自然对齐，而不是取决于总线总宽度。例如 32-bit 总线，<code>AWADDR=0x02, AWSIZE=1</code> 表示 2 Byte/beat，0x02 对 2 Byte 是对齐的，可以使用 lane2~3；若 <code>AWADDR=0x03, AWSIZE=1</code>，才是非对齐。FIXED 的关键是每个 beat 地址都不变，因此有效 byte lane 的范围也不随 beat 移动；非对齐 FIXED 并不是“什么都写不进去”，而是可能只能使用剩余的部分 byte lane，效率较低。与之相比，INCR burst 的第一拍可以非对齐，后续 beat 会进入相应的递增地址。FIXED 常见于 FIFO 等固定地址端口。</p>
+<h3 id="为什么部分写不应简单替换为多笔窄写">为什么部分写不应简单替换为多笔窄写？</h3>
+<p>AXI 写通道有 <code>WSTRB</code>，其本质是 <strong>byte write enable</strong>。<code>AWADDR + AWSIZE</code> 定义当前 beat 所覆盖的传输范围，而 <code>WSTRB</code> 可以在这个合法范围内进一步指定哪些 byte 真正被修改。例如 32-bit 总线、4B 写，<code>WSTRB=1010</code> 表示只更新其中两个 byte，另外两个保持原值。没有 <code>WSTRB</code> 并不是 Slave“不知道数据是不是填充”，而是默认该 transfer 范围内的 byte 都应当写入，无法表达“一拍宽数据中只修改部分 byte”。部分写当然也能拆成多笔 narrow write，例如两个独立的 1B 写，但这样会增加地址、响应、仲裁和 outstanding 资源开销，而且多笔事务和“一笔事务内部分写”在有副作用的 MMIO 场景下未必语义等价，所以 AXI 专门保留了 <code>WSTRB</code>。</p>
+<h3 id="为什么没有稀疏读掩码mmio-又有什么限制">为什么没有稀疏读掩码？MMIO 又有什么限制？</h3>
+<p>AXI 读则没有与 <code>WSTRB</code> 对称的 sparse-read mask。<code>ARADDR + ARSIZE</code> 描述的是一个连续的地址范围，AXI 本身不能表达“1010 这种只读间隔 byte”的单笔读事务。如果 Master 只关心其中部分数据，而目标是普通 RAM/DDR，可以直接读一个更宽的连续范围，例如读 <code>1111</code>，收到 <code>RDATA</code> 后在 Master 内部只取需要的 byte，其余丢弃；如果要求总线上真的不能访问其他 byte，例如 MMIO 中某些寄存器具有 read-clear、FIFO pop 等读副作用，就必须拆成多笔 narrow read。严格来说，如果 AXI 要支持稀疏读，理论上更像需要一个请求侧的 <code>ARSTRB</code>，而不是返回侧的 <code>RSTRB</code>，但 AXI 没有设计这种机制。</p>
+<h2 id="axioutstanding顺序与原子访问">AXI：Outstanding、顺序与原子访问</h2>
+<p>ID、乱序与交织、跨读写依赖、Exclusive 和 AXI3 Locked。</p>
+<h3 id="outstanding-统计-transaction-还是-beat">Outstanding 统计 transaction 还是 beat？</h3>
+<p>AXI 中的 <strong>Outstanding</strong> 指“请求已经被对端接受，但事务尚未完成”的 transaction 数量。读事务通常以 <code>ARVALID &#x26;&#x26; ARREADY</code> 计入 outstanding，以 <code>RVALID &#x26;&#x26; RREADY &#x26;&#x26; RLAST</code> 完成；写事务常以 AW 握手计入、以 <code>BVALID &#x26;&#x26; BREADY</code> 完成。注意 outstanding 统计的是 <strong>transaction/burst</strong>，不是其中的 data beat。比如一笔 <code>ARLEN=3</code> 有 4 个 R beat，但直到 <code>RLAST</code> 握手才减少 1 个 read outstanding。</p>
+<h3 id="如何形成多笔-outstanding-并自动计数">如何形成多笔 outstanding 并自动计数？</h3>
+<p>制造 outstanding 的本质是让“请求进入速度 > 响应完成速度”：Master 连续快速发送多笔 AR/AW，同时 Slave 延迟 R/B response，就会积压多笔未完成事务。VIP 中配置 <code>max_outstanding=8</code> 通常表示最多允许同时存在 8 笔未完成 transaction；response delay 再大也不会无限增加，达到上限后 VIP 会通过停止继续发请求、降低 READY 或内部阻塞等方式限制深度，具体行为取决于 VIP 实现。波形上可直接统计：
+<code>read_outstanding = AR握手次数 - RLAST握手次数</code>；
+<code>write_outstanding ≈ AW握手次数 - B握手次数</code>。
+验证环境中最好由 monitor/scoreboard 自动维护计数器并记录最大值，而不是只靠看波形。</p>
+<h3 id="outstanding乱序与交织有什么区别">Outstanding、乱序与交织有什么区别？</h3>
+<p><strong>Outstanding、乱序和交织是三个不同概念。</strong> Outstanding 表示同时挂着多少笔未完成事务；Out-of-order 表示不同 transaction 的完成顺序是否可以与请求顺序不同；Interleaving 表示不同 transaction 的 data beat 是否可以穿插。不同 ID 的事务可以乱序返回，例如请求顺序 <code>ID0→ID1→ID2</code>，返回可以是 <code>ID2→ID0→ID1</code>；同一 ID 也可以有多笔 outstanding，但必须保持该 ID 内的事务顺序。读通道可以利用 <code>RID</code> 区分不同事务的数据并进行不同 ID 间的数据交织。AXI3 写通道还有 <code>WID</code>，因此支持 write-data interleaving；AXI4 删除了 <code>WID</code>，不再支持 AXI3 式的写数据交织。所以“8 outstanding、write interleave depth=1”完全合理：可以挂 8 笔写事务，但一旦开始发送某一笔的 W 数据，就要把该 burst 发完再切换下一笔。</p>
+<h3 id="aridridawidwidbid-如何关联">ARID、RID、AWID、WID、BID 如何关联？</h3>
+<p>ID 标识的是一整笔 transaction 所属的逻辑流，同一 transaction 的所有 transfer 都必须归属于同一个 ID。读事务中 <code>ARID</code> 对应返回的 <code>RID</code>；AXI3 写事务中，同一事务的 <code>AWID = WID = BID</code>，其中 WID 表示当前 W beat 属于哪笔 AW，因此 AXI3 可以进行 write-data interleaving；AXI4 删除了 WID，也取消了写数据交织。注意 WID 并不是简单等于“最近一次 AWID”，而是等于<strong>该 WDATA 所属事务的 AWID</strong>。</p>
+<h3 id="axi3-与-axi4-的写响应依赖有何差异">AXI3 与 AXI4 的写响应依赖有何差异？</h3>
+<p>AXI3 与 AXI4 写响应的关键差异是 B 通道的依赖关系。AXI3 要求写数据最后一拍已经完成后才能产生写响应，但协议并不强制 AW 地址此前已经握手；AXI4 则明确要求 <strong>AW 已完成 + 所有 W 数据已完成</strong>，之后才能产生 <code>BVALID</code>。因此 AXI4 中用 <code>AW handshake → outstanding++</code>、<code>B handshake → outstanding--</code> 很自然；AXI3 如果要严格统计协议意义上的 active write transaction，则不能无条件只看 AW/B，因为 write 可以从 leading W 或 AW 中先发生的那个开始，理论上 B 甚至可能早于 AW。实际 DUT 若额外保证 AW 一定先于 B，则仍然可以采用 AW/B 计数。无论 AXI3 还是 AXI4，都不能按每个 W beat 增加 outstanding，因为一个多拍 burst 仍然只是一笔 transaction。</p>
+<h3 id="outstanding-为什么不能忽略数据依赖">Outstanding 为什么不能忽略数据依赖？</h3>
+<p>Outstanding 的本质是允许多笔“已发出但尚未完成”的 transaction 同时存在，但 <strong>outstanding 不等于可以忽略数据依赖</strong>。RAR 通常没有数据 hazard；WAW、RAW、WAR 如果访问相同或重叠地址，就可能存在顺序依赖。AXI 的同 ID 顺序规则主要解决同方向事务的 ordering，例如同 ID 的 Read→Read、Write→Write；但读通道和写通道彼此独立，即使 <code>ARID == AWID</code>，也不能据此保证 Write→Read 或 Read→Write 的先后关系。因此 RAW 若要求“写完后再读到新值”，通常要等前一笔 B response 后再发 Read；WAR 若要求先完成读再覆盖，则等 <code>RLAST</code> 对应的最后一个 R beat 完成后再发 Write。高性能 Master 通常维护 outstanding table，记录 ID、读写类型、地址范围、burst 长度和状态，对新的 transaction 检查地址范围是否 overlap：有 RAW/WAR/WAW 依赖就 stall 或保序，没有依赖就继续 outstanding。真正高性能的原则不是“全部并发”，而是 <strong>只序列化有依赖的 transaction，无依赖事务尽可能并发</strong>。</p>
+<h3 id="master-用什么硬件维护多笔未完成事务">Master 用什么硬件维护多笔未完成事务？</h3>
+<p>真实 AXI Master 实现这些能力，核心依靠内部的 <strong>transaction tracking</strong>。支持 8 outstanding，意味着硬件必须有资源保存最多 8 笔未完成事务的上下文，例如 ID、地址、LEN、当前 beat、目标 buffer、完成状态等。请求发出后，AR/AW engine 不等待 response，而是继续处理下一笔；R/B engine 独立接收响应，再根据 <code>RID/BID</code> 找到对应 transaction。不同 ID 可以独立完成；同 ID 多笔 outstanding 时，通常按该 ID 维护 FIFO，利用 AXI 的同 ID ordering 保证返回属于队首事务。因此，真正决定 Master outstanding 能力的不是协议本身，而是内部 outstanding table/FIFO 的深度以及调度逻辑。
+可以把核心关系记成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>Outstanding能力</span></span>
+<span class="line"><span>= 保存多笔未完成事务的资源 + 请求/响应解耦</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>乱序能力</span></span>
+<span class="line"><span>= 多ID + 根据RID/BID匹配transaction</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>同ID多Outstanding</span></span>
+<span class="line"><span>= per-ID FIFO + 同ID顺序保证</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>AXI3写交织</span></span>
+<span class="line"><span>= WID + W-channel scheduler</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>AXI4</span></span>
+<span class="line"><span>= 无WID，不支持AXI3式write-data interleaving</span></span></code></pre>
+<h3 id="连续启动-sequence-就能形成-outstanding-吗">连续启动 sequence 就能形成 outstanding 吗？</h3>
+<p>最容易混淆的一点是：<strong>连续发了 8 笔 sequence 不等于总线上形成了 8 outstanding</strong>。只有前面的事务已经完成请求握手、且尚未完成响应，同时 VIP/DUT 的 outstanding 窗口又允许继续接收后续事务，才真正形成多笔 outstanding。</p>
+<h3 id="exclusive-如何维护-reservation">Exclusive 如何维护 reservation？</h3>
+<p>Exclusive access 可以并发存在多笔，但通常依靠<strong>不同 ID 维护不同 reservation</strong>。Slave 的 Exclusive Monitor 可以理解为按 ID 保存 <code>valid + address + transaction attributes</code>。同一笔 exclusive sequence 的 Exclusive Read 和 Exclusive Write 必须使用相同 ID，并匹配地址、size、length 等属性；Exclusive Write 必须在对应 Exclusive Read 完成后再发。如果同一 ID 又执行新的 Exclusive Read，通常会覆盖原来的 reservation，因此一个 ID 不适合同时维护多个独立 exclusive sequence。多个 ID 可以同时监控不同甚至相同地址；若某 reservation 对应的地址在期间被其他写操作修改，该 Exclusive Write 失败，返回 <code>OKAY</code> 且不能真正写入；若 reservation 仍有效，则返回 <code>EXOKAY</code>并完成写入。这正是 Exclusive 用于 semaphore、atomic update 等场景的基础机制。</p>
+<h3 id="locked-与-exclusive锁住资源还是检查-reservation">Locked 与 Exclusive：锁住资源还是检查 Reservation？</h3>
+<p>AXI3 的 Locked transaction 和 Exclusive access 都可用于解决原子访问，但机制完全不同。Locked 相当于悲观锁：一个 Manager 建立 locked sequence 后，相关目标资源会被限制给它使用，其他 Manager 的访问受到阻塞，直到最后一笔 normal transaction 完成并释放锁；锁属性在 <code>ARLOCK/AWLOCK</code> 地址通道上，而不在 W 通道。Locked 会降低并发度、影响 QoS 并增加 interconnect 实现复杂度，因此主要用于兼容 legacy AXI3 设备；AXI4 已经取消真正的 Locked transaction，只保留 Normal 和 Exclusive。Exclusive 更类似乐观并发：先做 Exclusive Read，Exclusive Monitor 记录 reservation；期间其他 Manager 仍然可以正常访问 Subordinate；最后 Exclusive Write 时检查 reservation 是否仍有效，未被破坏则写成功并返回 <code>EXOKAY</code>，若期间相关位置被其他访问破坏，则 Exclusive Write 失败，软件可以重试。这使得 semaphore、spinlock、atomic read-modify-write 等操作无需长期锁住总线。</p>
+<h3 id="axi3-locked-sequence-为什么要用-normal-事务解锁">AXI3 Locked Sequence 为什么要用 NORMAL 事务解锁？</h3>
+<p>AXI3 Locked sequence 中连续发送一笔 <code>LOCKED</code> 写和一笔 <code>NORMAL</code> 写并不是重复操作。Locked transaction 会使 interconnect 锁住目标 Slave region，使其他 Master 暂时不能访问；Locked sequence 必须以一笔非 Locked 的事务结束，这最后一笔 Normal transaction 本身也属于这个 Locked sequence，并在完成后解除锁。发送最终解锁事务之前，前面的 Locked transaction 必须已经完成；最终解锁事务也必须完成以后才能继续发新的事务，因此代码中两次 <code>get_response(rsp)</code> 是有意义的。AXI4 已取消 Locked transaction，但 AXI3 支持。<a href="https://documentation-service.arm.com/static/67ab5a186dbc975ccea91734?utm_source=chatgpt.com">文档服务</a>
+Locked sequence 有一个非常重要的强制条件：整个 sequence 中所有 transaction 必须使用相同的 <code>AxID</code>。因此类似：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">tr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">atomic_type</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#82AAFF"> LOCKED</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">tr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">id</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">           =</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 1</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">`</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_send</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">tr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">get_response</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">rsp</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">trn</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">atomic_type</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#82AAFF"> NORMAL</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">trn</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">id</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">          =</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 1</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">`</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_send</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">trn</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">get_response</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">rsp</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span></code></pre>
+<p>是典型的两事务 Locked sequence。协议并没有要求解锁事务的地址、<code>AxSIZE</code>、<code>AxLEN</code>、<code>AxBURST</code> 必须和之前完全相同；强制要求的是同一个 Master、同一个 Locked sequence 使用相同 <code>AxID</code>，并满足前后事务完成顺序。规范推荐但不强制整个 Locked sequence 保持在同一个 4KB region，并推荐最多两笔 transaction。因此实际验证中通常仍让前后两笔事务访问相同或至少同一 Slave 地址区域，这样更符合锁定目标 Slave region 的测试目的。<a href="https://documentation-service.arm.com/static/67ab5a186dbc975ccea91734?utm_source=chatgpt.com">文档服务</a>
+最容易混淆的三点是：<code>NORMAL</code> 解锁事务不是一个纯粹的“解锁命令”，它本身仍然是一笔真实 AXI transaction；Locked sequence 强制保持一致的是 <code>AxID</code>，不是必须把地址、size、length 全部复制；以及 <code>req_resp.bresp = OKAY</code> 不是多余约束，而正是 Slave VIP 获得“应该返回什么响应”的方式。</p>
+<h3 id="exclusive-responder-不能无条件返回-exokay">Exclusive Responder 不能无条件返回 EXOKAY</h3>
+<p>这里还要区分 Locked 和 Exclusive。Locked 是由 interconnect 阻止其他 Master 访问目标 Slave region，直到解锁；Exclusive 则依赖 exclusive monitor 判断 Exclusive Read/Write 是否仍然有效。因此简单写成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>EXCLUSIVE -> EXOKAY</span></span></code></pre>
+<p>只适合作为简化 responder。如果要真正验证 exclusive 语义，还需要检查 Exclusive Read/Write 的配对、ID/地址等属性，以及期间是否有其他写操作破坏独占状态。</p>
+<h3 id="统计和独占访问的适用条件">统计和独占访问的适用条件</h3>
+<p>AW/B 计数是以地址接受为起点的口径，AW 前已接受的 W 数据需另外跟踪。Exclusive 失败不写入的规则要在支持 Exclusive 的目标及对应操作语义下理解；目标不支持 Exclusive 时不能仅凭 OKAY 推断相同副作用。多 Master、缓存和可缓冲目标还需遵循系统可见性与同步规则。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/axi/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>AXI</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-uvm-platform/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（四）：UVM 验证平台</div></div></a><a href="/posts/dv-bridge-ahb-apb/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（六）：Bridge 验证与 AHB/APB</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

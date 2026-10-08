@@ -1,0 +1,690 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-bridge-ahb-apb/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（六）：Bridge 验证与 AHB/APB | DAWNMX</title><meta name="title" content="数字验证问答（六）：Bridge 验证与 AHB/APB | DAWNMX"><meta name="description" content="位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（六）：Bridge 验证与 AHB/APB | DAWNMX"><meta property="og:description" content="位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-bridge-ahb-apb/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-bridge-ahb-apb/"><meta property="twitter:title" content="数字验证问答（六）：Bridge 验证与 AHB/APB | DAWNMX"><meta property="twitter:description" content="位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（六）：Bridge 验证与 AHB/APB | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: axi; }@layer astro { ::view-transition-old(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(axi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-3"] { view-transition-name: ahb; }@layer astro { ::view-transition-old(ahb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(ahb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(ahb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(ahb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-4"] { view-transition-name: apb; }@layer astro { ::view-transition-old(apb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(apb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(apb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(apb) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-4"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-4"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-4"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-4"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-4"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-4"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-4"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-4"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-bridge-ahb-apb" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（六）：Bridge 验证与 AHB/APB</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第六篇，整理自我的复习笔记。位宽转换、VIP 验证、检查与覆盖，以及 AHB、AHB-Lite 和 APB。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#axi-bridge-%E4%B8%8E-vip-%E9%AA%8C%E8%AF%81">AXI Bridge 与 VIP 验证</a>
+<ul>
+<li><a href="#12864-%E4%BD%8D%E5%AE%BD%E8%BD%AC%E6%8D%A2%E6%98%AF%E5%90%A6%E4%B8%80%E5%AE%9A%E6%8B%86%E6%8B%8D">128→64 位宽转换是否一定拆拍？</a></li>
+<li><a href="#narrow-transfer-%E7%9A%84-wstrb-%E5%A6%82%E4%BD%95%E8%B7%A8%E4%BD%8D%E5%AE%BD%E9%87%8D%E6%98%A0%E5%B0%84">Narrow transfer 的 WSTRB 如何跨位宽重映射？</a></li>
+<li><a href="#%E5%86%99%E6%8B%86%E5%88%86%E6%98%AF%E5%90%A6%E5%BF%85%E9%A1%BB%E4%BD%BF%E7%94%A8%E5%86%85%E9%83%A8%E6%95%B0%E6%8D%AE%E7%BC%93%E5%AD%98">写拆分是否必须使用内部数据缓存？</a></li>
+<li><a href="#%E8%AF%BB%E5%90%88%E5%B9%B6%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E6%9C%BA%E6%A2%B0%E6%8B%BC%E6%8E%A5%E9%AB%98%E4%BD%8E%E5%8D%8A%E5%AD%97">读合并为什么不能机械拼接高低半字？</a></li>
+<li><a href="#vip-%E7%9A%84-outstanding-%E8%83%BD%E5%8A%9B%E5%BA%94%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE">VIP 的 outstanding 能力应如何配置？</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8D%95%E9%A1%B9%E8%A6%86%E7%9B%96%E7%8E%87%E6%BB%A1%E4%BA%86%E4%BB%8D%E9%9C%80%E8%A6%81-cross-coverage">为什么单项覆盖率满了仍需要 cross coverage？</a></li>
+<li><a href="#%E4%BA%8C%E7%BB%B4-32-bit-%E6%95%B0%E7%BB%84%E6%80%8E%E6%A0%B7%E7%BB%84%E7%BB%87-64-bit-beat">二维 32-bit 数组怎样组织 64-bit Beat？</a></li>
+<li><a href="#slave-vip-%E7%9A%84%E5%93%8D%E5%BA%94%E5%AD%97%E6%AE%B5%E6%98%AF%E6%80%8E%E6%A0%B7%E5%8F%98%E6%88%90%E6%80%BB%E7%BA%BF%E4%BF%A1%E5%8F%B7%E7%9A%84">Slave VIP 的响应字段是怎样变成总线信号的？</a></li>
+<li><a href="#fixed-burst-%E7%9A%84%E5%9C%B0%E5%9D%80%E7%BA%A6%E6%9D%9F%E4%B8%8E-reference-model">FIXED Burst 的地址约束与 Reference Model</a></li>
+<li><a href="#%E6%A3%80%E6%9F%A5%E4%B8%8E%E8%A6%86%E7%9B%96%E7%9A%84%E5%88%86%E5%B7%A5">检查与覆盖的分工</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85%E8%A6%86%E7%9B%96%E7%8E%87%E5%BA%94%E9%87%87%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0%E8%BF%98%E6%98%AF%E5%AE%9E%E9%99%85%E6%80%BB%E7%BA%BF%E8%A1%8C%E4%B8%BA">补充：覆盖率应采请求参数，还是实际总线行为？</a></li>
+</ul>
+</li>
+<li><a href="#ahbahb-lite-%E4%B8%8E-apb">AHB、AHB-Lite 与 APB</a>
+<ul>
+<li><a href="#apbahbaxi%E7%AE%80%E5%8D%95%E8%AE%BF%E9%97%AE%E6%B5%81%E6%B0%B4%E4%B8%8E%E4%BA%8B%E5%8A%A1%E5%B9%B6%E5%8F%91">APB、AHB、AXI：简单访问、流水与事务并发</a></li>
+<li><a href="#ahb-lite-%E7%9B%B8%E5%AF%B9-ahb-%E7%AE%80%E5%8C%96%E4%BA%86%E4%BB%80%E4%B9%88">AHB-Lite 相对 AHB 简化了什么？</a></li>
+<li><a href="#ahb-incr-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E9%9C%80%E8%A6%81%E9%A2%84%E5%85%88%E5%A3%B0%E6%98%8E%E9%95%BF%E5%BA%A6">AHB INCR 为什么不需要预先声明长度？</a></li>
+<li><a href="#ahb-%E7%9A%84-error-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E4%B8%A4%E6%8B%8D">AHB 的 ERROR 为什么需要两拍？</a></li>
+<li><a href="#axiahb-%E4%B8%8E-apb-%E7%9A%84%E5%86%99%E6%8E%A9%E7%A0%81%E6%9C%89%E4%BD%95%E5%8C%BA%E5%88%AB">AXI、AHB 与 APB 的写掩码有何区别？</a></li>
+<li><a href="#%E8%BE%B9%E7%95%8C%E4%B8%8E%E6%8F%90%E5%89%8D%E7%BB%93%E6%9D%9F">边界与提前结束</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="axi-bridge-与-vip-验证">AXI Bridge 与 VIP 验证</h2>
+<p>位宽转换、缓存、Slave responder、数据组织与交叉覆盖。</p>
+<h3 id="12864-位宽转换是否一定拆拍">128→64 位宽转换是否一定拆拍？</h3>
+<p>AXI 窄传输的本质是：<strong>总线物理位宽不变，但每个 transfer 的有效数据宽度由 <strong><code>AxSIZE</code></strong> 决定，再由地址决定有效数据落在哪些 byte lane 上。</strong> 例如 Master 数据总线 128 bit、<code>AWADDR=0x04</code>、<code>AWSIZE=2</code>（4 Byte/beat）、<code>AWLEN=3</code>、INCR burst，则一共 4 个 transfer，地址依次为 <code>0x04、0x08、0x0C、0x10</code>。虽然每拍只传 32 bit 有效数据，但 <code>WDATA</code>仍然是 128 bit，分别落在 <code>[63:32]、[95:64]、[127:96]、[31:0]</code>，对应 <code>WSTRB=00F0、0F00、F000、000F</code>。如果经过 128→64 bit width converter，由于原 transfer 只有 32 bit，小于 64 bit Slave 总线宽度，所以<strong>不需要拆拍，仍然是 4 个 32-bit transfer</strong>，只是重新映射到 64-bit 总线的上下半部分，<code>WSTRB</code> 交替为 <code>F0、0F、F0、0F</code>。只有当单个 transfer 本身宽于 Slave 总线，例如 128-bit transfer 进入 64-bit Slave，才需要拆成多个 beat。这里最容易混淆的是：<strong>窄传输 ≠ WDATA 物理位宽变窄，也 ≠ width converter 必然拆拍。</strong></p>
+<h3 id="narrow-transfer-的-wstrb-如何跨位宽重映射">Narrow transfer 的 WSTRB 如何跨位宽重映射？</h3>
+<p>AXI 的 <strong>narrow transfer</strong> 是 <code>2^AxSIZE</code> 小于总线字节宽度的传输。例如 128-bit 总线有 16 个 byte lane，<code>AxSIZE=2</code> 表示每 beat 只有 4 Byte 有效，WDATA 仍然是 128 bit，但具体有效字节由 WSTRB 指示。例如地址 <code>0x1004</code> 时，有效的是 lane 4~7，因此 <code>WSTRB=16'h00F0</code>。经过 128→64 Bridge 后，WSTRB 从 16 bit 变成 8 bit，但不能简单截取，而要根据<strong>地址、AxSIZE 和下游总线宽度重新映射 byte lane</strong>；同一例子在 64-bit 总线上对应 <code>WSTRB=8'hF0</code>。核心关系是：<strong>AxSIZE 决定每 beat 有多少有效字节，地址决定这些字节所在的 lane，WSTRB 在写操作中进一步指示哪些 byte lane 真正写入。</strong></p>
+<h3 id="写拆分是否必须使用内部数据缓存">写拆分是否必须使用内部数据缓存？</h3>
+<p>Bridge 位宽转换需要明确“上游何时完成握手”与“数据由谁保持”。对 128→64 的拆分，如果 Bridge 已经接受上游 128-bit beat，上游之后可以更换数据，Bridge 就必须保存尚未送出的部分，或使用其他可靠存储。
+如果设计把上游 READY 保持为低，直到两个下游 beat 都完成，则可以依靠上游在 VALID 未握手期间保持 WDATA/WSTRB，配合内部半拍进度状态完成拆分，不一定需要内部数据寄存器。代价是上下游耦合更强，吞吐和时序收敛可能更差，且必须检查 VALID/READY 依赖、重复发送和死锁。
+因此，协议要求数据在被需要时保持有效，并不强制某一种缓存微架构。FIFO、skid buffer 或寄存器缓存常用于接收后解耦和处理 backpressure。该结论依据 <a href="https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/IHI0022H_amba_axi_protocol_spec.pdf">Arm AXI 的握手与信息保持规则</a>，是否需要数据寄存器还取决于具体接收策略。</p>
+<h3 id="读合并为什么不能机械拼接高低半字">读合并为什么不能机械拼接高低半字？</h3>
+<p>64→128 读方向的合并原则同样是<strong>按地址映射 byte lane，而不是机械地按“第一拍低 64、第二拍高 64”拼接</strong>。16 Byte 对齐时，例如 <code>0x1000~0x1007</code> 通常进入 <code>RDATA[63:0]</code>，<code>0x1008~0x100F</code> 进入 <code>RDATA[127:64]</code>；如果起始地址存在 offset，则 Bridge 必须根据地址低位判断返回的 64-bit 数据属于哪个 128-bit 数据窗口、落在哪些 lane。特别是非对齐访问时，不能仅根据返回顺序拼接；读通道没有 RSTRB，有效 byte lane 需要根据 ARADDR、ARSIZE 和 burst 地址序列推导。</p>
+<h3 id="vip-的-outstanding-能力应如何配置">VIP 的 outstanding 能力应如何配置？</h3>
+<p>验证 DUT 的 outstanding 能力时，Master VIP 的 outstanding 上限应至少覆盖 DUT 的设计上限。例如 DUT 支持 4 笔，而 VIP 最多只能产生 2 笔，那么 DUT 永远无法进入 3～4 笔未完成事务同时存在的状态，内部 FIFO 深度、ID 上下文保存、同 ID 顺序、不同 ID 乱序、满状态 backpressure、计数器边界等逻辑都会形成覆盖空洞。通常更合理的做法是让 VIP 能力 <strong>≥ DUT 能力</strong>，甚至略高，让 DUT 自己通过 READY/内部流控暴露其真实容量限制。</p>
+<h3 id="为什么单项覆盖率满了仍需要-cross-coverage">为什么单项覆盖率满了仍需要 cross coverage？</h3>
+<p>功能覆盖率中，普通 coverpoint 只确认单个变量的取值是否出现，而 <strong>cross coverage 检查多个特征的组合是否出现</strong>。即使 AxLEN 和地址对齐方式各自都是 100%，也可能从未测试过“长 burst + 非对齐地址”。在 AXI Bridge 中，这类交叉场景尤其容易暴露地址递增错误、byte lane/WSTRB 映射错误、64/128-bit 拆分与合并错位、少发或多发 beat、WLAST/RLAST 位置错误，以及接近 4KB 边界时的 burst 拆分问题。核心思想是：<strong>单项覆盖证明功能点分别测过，cross 覆盖证明关键功能组合真正测过。</strong></p>
+<h3 id="二维-32-bit-数组怎样组织-64-bit-beat">二维 32-bit 数组怎样组织 64-bit Beat？</h3>
+<p><code>data_array</code> 定义为二维的 32-bit 动态数组，而实际 AXI transaction 设置的是 64-bit/beat：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">rand bit</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> [</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">31</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">] </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">data_array</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[][];</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">tr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">burst_size</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#1976D2;--shiki-dark:#C5E478"> svt_axi_transaction</span><span style="--shiki-light:#D32F2F;--shiki-dark:#7FDBCA">::</span><span style="--shiki-light:#24292EFF;--shiki-dark:#82AAFF">BURST_SIZE_64BIT</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span></code></pre>
+<p>因此每一个 64-bit beat 需要两个 32-bit 的 <code>data_array</code> 元素拼接：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>tr.data[j][63:32] = data_array[i][j*2 + 1];</span></span>
+<span class="line"><span>tr.data[j][31:0]  = data_array[i][j*2 + 0];</span></span></code></pre>
+<p>所以约束：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>foreach (data_array[i])</span></span>
+<span class="line"><span>    data_array[i].size() == length_array[i] * 2;</span></span></code></pre>
+<p>表示第 <code>i</code> 笔 burst 如果有 <code>length_array[i]</code> 个 64-bit beat，就必须准备 <code>2 × length_array[i]</code> 个 32-bit 数据。例如 burst length=4，就需要 8 个 32-bit 元素。外层 <code>data_array.size()==sequence_length</code> 表示一共有多少笔事务，内层 <code>data_array[i].size()</code> 表示某一笔事务需要多少数据。</p>
+<h3 id="slave-vip-的响应字段是怎样变成总线信号的">Slave VIP 的响应字段是怎样变成总线信号的？</h3>
+<p>下面是简化 responder 的示意，其中 EXCLUSIVE→EXOKAY 不能代替 reservation 检查，完整 Exclusive 场景需要按第 08 页实现成功与失败路径：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>case (req_resp.atomic_type)</span></span>
+<span class="line"><span>  NORMAL:    req_resp.bresp = OKAY;</span></span>
+<span class="line"><span>  EXCLUSIVE: req_resp.bresp = EXOKAY;</span></span>
+<span class="line"><span>  LOCKED:    req_resp.bresp = OKAY;</span></span>
+<span class="line"><span>endcase</span></span></code></pre>
+<p>不是在“额外约束”响应，而是在告诉 Slave VIP 最终应该在 AXI B/R 通道上驱动什么。Slave monitor 取得 Master 请求后形成 <code>req_resp</code>，Slave sequence 决定 <code>BRESP/RRESP/RDATA</code>，然后 Slave driver 再把这些 transaction 字段转换成接口信号。协议本身无法根据请求自动判断一笔访问究竟应该返回 <code>OKAY</code>、<code>SLVERR</code>、<code>DECERR</code> 还是 <code>EXOKAY</code>，因为这些结果取决于 Slave 模型和测试场景，所以必须由 responder/sequence 明确设置。对于普通和 Locked transaction 返回 <code>OKAY</code> 是正常的；<code>EXOKAY</code> 是 Exclusive access 成功时使用的响应，不是 Locked transaction 的响应。</p>
+<h3 id="fixed-burst-的地址约束与-reference-model">FIXED Burst 的地址约束与 Reference Model</h3>
+<p>对于 FIXED burst，起始地址当然可以随机，VIP 也能正常发送，但应限制在 DUT 的合法地址空间，通常还要考虑传输大小对应的对齐要求。例如 64-bit beat 可以约束：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>foreach (addr_array[i]) {</span></span>
+<span class="line"><span>    addr_array[i] inside {[32'h1000:32'h1FF8]};</span></span>
+<span class="line"><span>    addr_array[i][2:0] == 3'b000;</span></span>
+<span class="line"><span>}</span></span></code></pre>
+<p>不要简单把 32 位地址完全无约束随机，否则大量事务可能进入未映射区域而返回 <code>DECERR/SLVERR</code>。FIXED burst 的关键语义是每一个 beat 都访问同一个地址：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>FIXED，addr=0x1000，length=4</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>beat0 → 0x1000</span></span>
+<span class="line"><span>beat1 → 0x1000</span></span>
+<span class="line"><span>beat2 → 0x1000</span></span>
+<span class="line"><span>beat3 → 0x1000</span></span></code></pre>
+<p>所以普通内存模型中，多拍 FIXED 写可能不断覆盖同一个位置，最后留下最后一拍的数据；它更典型的应用场景是 FIFO 或外设数据端口，而不是连续 RAM 地址访问。验证时 scoreboard/reference model 必须按照 FIXED 的同地址语义处理，不能把它当成 INCR。</p>
+<h3 id="检查与覆盖的分工">检查与覆盖的分工</h3>
+<p>协议 checker 检查握手保持、beat 数、LAST、合法 lane、边界和 response 关联；reference model 按 byte 地址和写掩码建立期望值；scoreboard 检查转换后数据及顺序。
+重点交叉：LEN×对齐、SIZE×位宽转换、WSTRB×地址低位、burst×背压、ID×outstanding、接近 4KB 边界×拆分。不能仅以“发送了这些参数”替代“总线实际达到场景”。</p>
+<h3 id="补充覆盖率应采请求参数还是实际总线行为">补充：覆盖率应采请求参数，还是实际总线行为？</h3>
+<p>两者用途不同。Sequence 参数覆盖回答“打算发什么”，monitor 基于真实握手的覆盖回答“DUT 实际接收和执行了什么”。例如目标是8 outstanding，就应覆盖监测到的pending峰值或状态，不能只覆盖max_outstanding配置等于8。
+Cross 也要先定义合法组合。没有硬件支持的组合不应靠随机碰撞“补满”；确认规格后再说明排除理由。ignore_bins 用于不计入目标的组合，不能拿来掩盖仍需验证的场景。
+一次覆盖缺口的处理顺序可以是：确认可达性→确认采样事件和bins正确→检查激励约束/流控→增加针对性测试→检查覆盖命中时功能checker是否通过。覆盖100%不能代替数据正确性、协议断言和异常恢复检查。</p>
+<h2 id="ahbahb-lite-与-apb">AHB、AHB-Lite 与 APB</h2>
+<p>协议定位、流水、burst 边界、两拍 ERROR 和写掩码。</p>
+<h3 id="apbahbaxi简单访问流水与事务并发">APB、AHB、AXI：简单访问、流水与事务并发</h3>
+<p>APB、AHB、AXI 可以理解为 AMBA 体系中从“简单外设访问”到“高性能并发互连”的三个层次。APB 面向 UART、GPIO、Timer 等低速外设，一次传输主要经历 Setup 和 Access 两阶段，结构简单、功耗和面积低；AHB 面向 SRAM、DMA 等较高性能模块，核心改进是地址阶段和数据阶段流水，例如同一周期可以出现“上一笔的数据 + 下一笔的地址”，但对同一笔 transfer 永远是地址阶段先于数据阶段，不能先写数据再发地址；AXI 则进一步把读写拆成 AW、W、B、AR、R 五个独立 VALID/READY 通道，并支持 ID、multiple outstanding 和一定范围内的乱序，更适合 CPU、DDR、GPU、NPU、NoC 等高并发系统。最核心的演进主线可以概括为：<strong>APB 强调简单，AHB 强调流水吞吐，AXI 强调事务并发和通道解耦。</strong></p>
+<h3 id="ahb-lite-相对-ahb-简化了什么">AHB-Lite 相对 AHB 简化了什么？</h3>
+<p>AHB-Lite 可以看成 <strong>AHB 的单 Master 简化版</strong>。AHB 和 AHB-Lite 都保留地址/数据阶段流水、<code>HTRANS</code>、<code>HSIZE</code>、<code>HBURST</code>、<code>HREADY</code> 等核心传输机制；主要区别是 AHB-Lite 只允许一个 Master，因此删除了多 Master 仲裁相关的 <code>HBUSREQ/HGRANT/HMASTER</code> 等机制，同时不支持传统 AHB 中为多 Master 总线利用率服务的 <code>SPLIT/RETRY</code>，响应主要就是 <code>OKAY/ERROR</code>。所以 AHB-Lite 的“Lite”主要是<strong>去掉多 Master 仲裁复杂度，而不是去掉 burst 或流水传输能力</strong>。</p>
+<h3 id="ahb-incr-为什么不需要预先声明长度">AHB INCR 为什么不需要预先声明长度？</h3>
+<p>AHB 的 <code>HBURST=INCR</code> 是未定长度 burst，Master 不需要事先声明总 beat 数。第一拍通常是 <code>NONSEQ</code>，后续是 <code>SEQ</code>；想结束时，在当前有效传输完成后把 <code>HTRANS</code> 切到 <code>IDLE</code>，或者直接用新的 <code>NONSEQ</code> 开始下一笔事务。<code>BUSY</code> 只表示暂时暂停，之后仍可继续当前 burst。AHB 能这么做，是因为它更接近逐 beat 推进的流水总线，每拍都有地址/控制信息。AXI 则要求事务开始时就通过 <code>AxLEN/AxSIZE/AxBURST</code> 明确长度和形式，因为 AXI 支持独立通道、多个 outstanding、ID、乱序等机制，互连和 Slave 需要提前知道事务边界，以便分配 buffer、维护 ordering、判断何时结束和何时返回 response。因此 AXI 不支持 AHB 那种“不知道什么时候结束”的 INCR，但支持单拍传输：<code>AxLEN=0</code> 就是一拍，不需要单独的 <code>SINGLE</code> 类型。</p>
+<h3 id="ahb-的-error-为什么需要两拍">AHB 的 ERROR 为什么需要两拍？</h3>
+<p>AHB 的 <code>ERROR</code> 响应需要占两个周期，核心原因是 AHB 采用地址阶段和数据阶段重叠的流水线结构：当前传输进入数据阶段时，Master 往往已经把下一笔传输的地址放到总线上。如果 Slave 此时才发现当前传输出错，就必须给 Master 留出一个周期来取消或改变已经提前发出的下一笔传输，否则可能在 Master 得知错误之前，下一笔地址就已经被接受。
+两拍 ERROR 的含义不同。第一拍为 <code>HRESP=ERROR, HREADY=0</code>：Slave 已经通知 Master 当前传输出错，但由于 <code>HREADY=0</code>，这笔传输在协议意义上还没有结束，流水线被暂停，Master 可以据此把后续的 <code>HTRANS</code> 改成 <code>IDLE</code> 等，从而取消原本已经进入地址阶段的下一笔传输。第二拍为 <code>HRESP=ERROR, HREADY=1</code>：仍然表示当前传输的最终结果是 ERROR，同时 <code>HREADY=1</code> 表示当前数据阶段正式完成，因此这笔错误传输在这一拍才真正结束，总线之后才能继续处理新的有效传输。
+最容易混淆的一点是：“两拍 ERROR”并不是错误被报告了两次，也不是第二拍重新执行一次数据传输。应把 <code>HRESP</code> 和 <code>HREADY</code> 分开理解：<code>HRESP</code> 表示“这笔传输的结果是什么”，<code>HREADY</code> 表示“当前数据阶段是否已经完成”。因此第一拍是“已经知道出错，但暂不结束”，第二拍才是“以 ERROR 结果正式结束当前传输”。正常 <code>OKAY</code> 不需要这种两拍处理，因为正常情况下允许流水线中的下一笔传输继续进行。</p>
+<h3 id="axiahb-与-apb-的写掩码有何区别">AXI、AHB 与 APB 的写掩码有何区别？</h3>
+<p>写掩码要区分“地址/传输大小决定有效 lane”和“真正的 byte strobe”。传统 AHB/AHB-Lite 没有类似 AXI <code>WSTRB</code> 的任意字节掩码，只能通过 <code>HADDR + HSIZE</code> 选择连续有效 byte lane；较新的 AHB5 规范增加了可选 <code>HWSTRB</code>，才能进一步支持 byte-level sparse write。APB 则从 <strong>APB4</strong> 开始引入 <code>PSTRB</code>，一个 bit 对应 <code>PWDATA</code> 的一个 byte，因此可实现部分字节写和稀疏写；读操作不需要类似 strobe。可以统一记成：<strong>AXI 有 <strong><code>WSTRB</code></strong>，APB4+ 有 <strong><code>PSTRB</code></strong>，较新的 AHB5 可选 <strong><code>HWSTRB</code></strong>。</strong></p>
+<h3 id="边界与提前结束">边界与提前结束</h3>
+<p>AHB burst 不应跨 1KB 边界。固定长度 burst 的提前结束必须符合规范定义的场景，不能因未定长 INCR 能灵活结束，就让 INCR4/8/16 或 WRAP4/8/16 任意停止。与 AXI 的比较详见第 06 页。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/axi/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>AXI</a></li><li><a data-astro-transition-scope="astro-bztu2lml-3" href="/tags/ahb/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>AHB</a></li><li><a data-astro-transition-scope="astro-bztu2lml-4" href="/tags/apb/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>APB</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-axi-protocol/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（五）：AXI 协议</div></div></a><a href="/posts/dv-noc-chi-bandwidth/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（七）：NoC、CHI 与接口带宽</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

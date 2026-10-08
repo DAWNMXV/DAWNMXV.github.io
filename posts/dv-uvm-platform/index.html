@@ -1,0 +1,781 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-uvm-platform/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（四）：UVM 验证平台 | DAWNMX</title><meta name="title" content="数字验证问答（四）：UVM 验证平台 | DAWNMX"><meta name="description" content="Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（四）：UVM 验证平台 | DAWNMX"><meta property="og:description" content="Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-uvm-platform/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-uvm-platform/"><meta property="twitter:title" content="数字验证问答（四）：UVM 验证平台 | DAWNMX"><meta property="twitter:description" content="Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（四）：UVM 验证平台 | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: uvm; }@layer astro { ::view-transition-old(uvm) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(uvm) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(uvm) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(uvm) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-uvm-platform" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（四）：UVM 验证平台</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第四篇，整理自我的复习笔记。Phase、Objection、Factory、Config DB、TLM、Sequence、Monitor 与 RAL。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#uvm%E5%90%AF%E5%8A%A8phase-%E4%B8%8E-objection">UVM：启动、Phase 与 Objection</a>
+<ul>
+<li><a href="#run_test-%E5%A6%82%E4%BD%95%E5%88%9B%E5%BB%BA-uvm-%E7%BB%84%E4%BB%B6%E6%A0%91">Run_test 如何创建 UVM 组件树？</a></li>
+<li><a href="#phase-callback-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E8%87%AA%E5%8A%A8%E6%89%A7%E8%A1%8C">Phase Callback 为什么会自动执行？</a></li>
+<li><a href="#%E5%90%8C%E4%B8%80-task-phase-%E4%B8%AD%E7%9A%84%E7%BB%84%E4%BB%B6%E4%B8%BA%E4%BB%80%E4%B9%88%E5%B9%B6%E5%8F%91%E8%BF%90%E8%A1%8C">同一 Task Phase 中的组件为什么并发运行？</a></li>
+<li><a href="#%E8%B0%81%E5%BA%94%E8%AF%A5%E8%B4%9F%E8%B4%A3-objection">谁应该负责 Objection？</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E7%BB%93%E6%9D%9F%E5%89%8D%E5%BA%94%E8%AF%A5%E7%AD%89%E5%BE%85%E5%93%AA%E4%BA%9B%E6%9D%A1%E4%BB%B6">测试结束前应该等待哪些条件？</a></li>
+<li><a href="#uvm-phase-%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B">UVM Phase 的完整流程</a></li>
+<li><a href="#default-sequencestarting-phase-%E4%B8%8E-phase-jump">Default Sequence、Starting Phase 与 Phase Jump</a></li>
+<li><a href="#%E5%B1%82%E6%AC%A1%E9%81%8D%E5%8E%86%E9%A1%BA%E5%BA%8F%E4%B8%8D%E7%AD%89%E4%BA%8E%E8%BF%90%E8%A1%8C%E5%B9%B6%E5%8F%91%E9%A1%BA%E5%BA%8F">层次遍历顺序不等于运行并发顺序</a></li>
+</ul>
+</li>
+<li><a href="#uvmfactoryconfig-db-%E4%B8%8E-callback">UVM：Factory、Config DB 与 Callback</a>
+<ul>
+<li><a href="#uvm-%E5%9B%9B%E5%A5%97%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6%E5%88%86%E5%88%AB%E8%B4%9F%E8%B4%A3%E4%BB%80%E4%B9%88">UVM 四套核心机制分别负责什么？</a></li>
+<li><a href="#factory-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-wrapperoverride-%E5%A6%82%E4%BD%95%E5%8C%B9%E9%85%8D">Factory 为什么需要 wrapper，override 如何匹配？</a></li>
+<li><a href="#factory-override-%E7%9A%84%E7%94%9F%E6%95%88%E6%97%B6%E6%9C%BA">Factory Override 的生效时机</a></li>
+<li><a href="#config-db-%E5%A6%82%E4%BD%95%E8%A7%A3%E6%9E%90%E8%B7%AF%E5%BE%84%E5%92%8C%E9%85%8D%E7%BD%AE%E4%BC%98%E5%85%88%E7%BA%A7">Config DB 如何解析路径和配置优先级？</a></li>
+<li><a href="#%E9%85%8D%E7%BD%AE%E5%8C%B9%E9%85%8D%E5%92%8C%E4%BC%98%E5%85%88%E7%BA%A7%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%88%86%E5%BC%80%E7%90%86%E8%A7%A3">配置匹配和优先级为什么要分开理解？</a></li>
+<li><a href="#callback-%E4%B8%8E-factory-%E5%A6%82%E4%BD%95%E7%94%A8%E4%BA%8E%E5%BC%82%E5%B8%B8%E6%B3%A8%E5%85%A5">Callback 与 Factory 如何用于异常注入？</a></li>
+<li><a href="#vip-callback-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%BB%86%E8%8A%82">VIP Callback 的使用细节</a></li>
+</ul>
+</li>
+<li><a href="#uvmtlmsequence-%E4%B8%8E-monitor">UVM：TLM、Sequence 与 Monitor</a>
+<ul>
+<li><a href="#svuvm-%E4%B8%8E%E5%B9%B3%E5%8F%B0%E7%BB%84%E4%BB%B6%E7%9A%84%E5%AE%8C%E6%95%B4%E5%85%B3%E7%B3%BB">SV、UVM 与平台组件的完整关系</a></li>
+<li><a href="#portexportimp-%E5%92%8C-blocking-%E6%8E%A5%E5%8F%A3%E6%98%AF%E4%BB%80%E4%B9%88">Port、Export、Imp 和 blocking 接口是什么？</a></li>
+<li><a href="#portportexportexport-%E6%98%AF%E5%90%A6%E5%90%88%E6%B3%95">Port→Port、Export→Export 是否合法？</a></li>
+<li><a href="#analysis-%E5%B9%BF%E6%92%AD%E5%A6%82%E4%BD%95%E4%B8%8E%E8%80%97%E6%97%B6%E6%AF%94%E8%BE%83%E8%A7%A3%E8%80%A6">Analysis 广播如何与耗时比较解耦？</a></li>
+<li><a href="#sequence-%E6%80%8E%E6%A0%B7%E9%80%9A%E8%BF%87-sequencer-%E6%8A%8A-item-%E4%BA%A4%E7%BB%99-driver">Sequence 怎样通过 Sequencer 把 Item 交给 Driver？</a></li>
+<li><a href="#driver-%E5%92%8C-sequencer-%E7%9A%84%E7%AB%AF%E5%8F%A3%E5%A6%82%E4%BD%95%E8%BF%9E%E6%8E%A5">Driver 和 Sequencer 的端口如何连接？</a></li>
+<li><a href="#item-%E5%AE%8C%E6%88%90%E4%B8%8E%E6%80%BB%E7%BA%BF%E5%AE%8C%E6%88%90%E5%BF%85%E9%A1%BB%E5%8C%BA%E5%88%86">Item 完成与总线完成必须区分</a></li>
+<li><a href="#analysis-port-%E7%9A%84%E5%8F%A5%E6%9F%84%E6%89%80%E6%9C%89%E6%9D%83%E4%B8%8E%E5%8E%86%E5%8F%B2%E6%95%B0%E6%8D%AE%E6%B1%A1%E6%9F%93">Analysis Port 的句柄所有权与历史数据污染</a></li>
+<li><a href="#monitor-%E7%9A%84%E5%88%9B%E5%BB%BA%E7%AD%89%E5%BE%85%E5%92%8C%E9%87%87%E6%A0%B7%E8%A7%84%E5%88%99">Monitor 的创建、等待和采样规则</a></li>
+<li><a href="#320240-%E5%9B%BE%E5%83%8F%E6%8E%A5%E5%8F%A3%E5%A6%82%E4%BD%95%E6%8C%89%E6%9C%89%E6%95%88%E6%8F%A1%E6%89%8B%E9%87%87%E9%9B%86">320×240 图像接口如何按有效握手采集？</a></li>
+<li><a href="#%E5%93%AA%E4%BA%9B%E6%8E%A5%E5%8F%A3%E8%83%BD%E9%98%BB%E5%A1%9E">哪些接口能阻塞？</a></li>
+</ul>
+</li>
+<li><a href="#uvm-ral%E8%AE%BF%E9%97%AE%E9%95%9C%E5%83%8F%E4%B8%8E-prediction">UVM RAL：访问、镜像与 Prediction</a>
+<ul>
+<li><a href="#actualmirroreddesired-%E4%B8%8E-ral-api">Actual、Mirrored、Desired 与 RAL API</a></li>
+<li><a href="#auto-prediction-%E5%92%8C-explicit-prediction-%E7%9A%84%E5%8E%9F%E7%90%86%E4%B8%8E%E9%80%89%E6%8B%A9">Auto Prediction 和 Explicit Prediction 的原理与选择</a></li>
+<li><a href="#%E6%80%BB%E7%BA%BF-predictor-%E7%9A%84%E8%A7%82%E6%B5%8B%E8%8C%83%E5%9B%B4">总线 Predictor 的观测范围</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85w1cread-clear-%E4%B8%8E%E7%A1%AC%E4%BB%B6%E8%87%AA%E4%B8%BB%E6%9B%B4%E6%96%B0%E6%80%8E%E4%B9%88%E6%A3%80%E6%9F%A5">补充：W1C、Read-clear 与硬件自主更新怎么检查？</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="uvm启动phase-与-objection">UVM：启动、Phase 与 Objection</h2>
+<p>run_test、组件树、阶段并发、结束条件及 reset jump。</p>
+<h3 id="run_test-如何创建-uvm-组件树">Run_test 如何创建 UVM 组件树？</h3>
+<p>一个 UVM 验证平台的启动，本质上是“仿真器启动 → SystemVerilog 顶层执行 → <code>run_test()</code> 进入 UVM 世界 → 创建 test → phase 构建并运行整个平台”。<code>tb_top</code> 中的 DUT、interface 等属于静态 SystemVerilog 层次，在仿真 elaboration 阶段已经建立；UVM 的 class 层次则通常从 <code>initial begin run_test(); end</code> 开始启动。<code>run_test()</code> 会取得 UVM 的 <code>uvm_root</code> 单例并进入它的运行流程。<code>uvm_top</code> 本质上是指向这个 <code>uvm_root</code> 的全局句柄，而不是先有 <code>uvm_top</code> 再创建一个 <code>uvm_root</code>。最终典型组件树是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">uvm_root</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">└── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">uvm_test_top</span><span style="--shiki-light:#C2C3C5;--shiki-light-font-style:inherit;--shiki-dark:#637777;--shiki-dark-font-style:italic">          // type 可能是 axi_test</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">    └── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">env</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        ├── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">agent</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        │   ├── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">sequencer</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        │   ├── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">driver</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        │   └── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">monitor</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        └── </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">scoreboard</span></span></code></pre>
+<p>这里要特别区分“类型名”和“实例名”。例如命令行指定 <code>axi_test</code>，factory 创建的 class 类型是 <code>axi_test</code>，但顶层 test 的实例名通常固定为 <code>uvm_test_top</code>。<code>run_test()</code> 并不会一次性创建整个验证环境，它先通过 factory 创建 test，然后进入 UVM phase；test 在自己的 <code>build_phase</code> 创建 env，env 再创建 agent、scoreboard，agent 再创建 driver、sequencer、monitor，因此 UVM component hierarchy 是在 <code>build_phase</code> 中由上到下逐层建立的，之后 <code>connect_phase</code> 建立 TLM 等连接，<code>run_phase</code> 才真正开始产生和处理激励。
+test 名通常来自仿真器命令行的 <code>+UVM_TESTNAME=&#x3C;test_type></code>。UVM 内部通过命令行处理机制读取这个 plusarg，然后把字符串交给 factory，根据已经注册的类型创建对应 test。因此 test 必须通过类似 <code> uvm_component_utils(axi_test)</code> 注册到 factory。Makefile 本身与 UVM 没有直接关系，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>TEST = axi_test</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>run:</span></span>
+<span class="line"><span>	./simv +UVM_TESTNAME=$(TEST)</span></span></code></pre>
+<p>执行 <code>make run TEST=axi_write_test</code> 时，Make 只是做文本替换，最终真正执行的是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>./simv +UVM_TESTNAME=axi_write_test</span></span></code></pre>
+<p>所以 <code>TEST</code>、<code>TESTNAME</code> 等 Make 变量名完全是工程自己定义的；UVM 真正识别的是 <code>+UVM_TESTNAME=</code>。完整链路可以记成：<code>make变量 → shell命令 → 仿真器plusarg → run_test/uvm_root → factory → uvm_test_top</code>。<code>run_test("axi_test")</code> 也可以直接提供 test 名；存在 <code>+UVM_TESTNAME</code> 时，通常以命令行指定的 test 为准。</p>
+<h3 id="phase-callback-为什么会自动执行">Phase Callback 为什么会自动执行？</h3>
+<p>UVM 的 phase 本质上是框架提供的一套生命周期调度机制。<code>uvm_component</code> 中的 <code>build_phase()</code>、<code>connect_phase()</code>、<code>run_phase()</code>、<code>check_phase()</code>、<code>report_phase()</code> 等并不是因为“class 里的 task/function 会自动执行”，而是因为 UVM phase scheduler 会在规定时机主动调用这些 callback。普通 class 中自己定义的 <code>task</code>/<code>function</code> 不会自动执行，必须显式调用。类似地，<code>uvm_sequence</code> 的核心 <code>body()</code> 之所以会执行，是因为调用 <code>seq.start(sequencer)</code> 后，UVM 的 sequence 执行框架会进入 sequence 的生命周期并调用 <code>body()</code>；<code>body()</code> 用于描述这个 sequence 具体如何产生和组织 transaction，例如发多少笔、以什么顺序发、启动哪些子 sequence。可以简单理解为：<strong>transaction 描述“一笔数据长什么样”，sequence 的 <strong><code>body()</code></strong> 描述“这些数据怎么发”。</strong>
+Phase 要区分 function phase 和 task phase。<code>build/connect/check/report</code> 等属于 function phase，不能通过 <code>#delay</code>、<code>@event</code> 等消耗仿真时间，因此它们的生命周期不需要 objection 来维持；即使从 API 层面能够调用 <code>raise_objection()</code>，在这类 phase 中也没有正常的使用意义。<code>run_phase</code>、<code>reset_phase</code>、<code>configure_phase</code>、<code>main_phase</code>、<code>shutdown_phase</code> 等属于 task phase，可以耗时，objection 主要用于这些运行阶段。<strong>Objection 的作用不是让某个 component 获得执行资格，而是阻止整个相关 phase 过早结束。</strong> 因此一个 component 即使完全不 raise objection，只要其他 component 仍然持有 objection，它的耗时任务仍然能够正常运行。</p>
+<h3 id="同一-task-phase-中的组件为什么并发运行">同一 Task Phase 中的组件为什么并发运行？</h3>
+<p>同一个 task phase 中，各 component 的对应 phase task 是并发运行的。例如进入 <code>run_phase</code> 后，test、driver、monitor、scoreboard 等各自的 <code>run_phase()</code> 都会并发执行，而不是按照组件树一个执行完再执行另一个。Driver 和 monitor 通常写成长期后台线程：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">task</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic"> run_phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">uvm_phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    forever</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> begin</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        ...</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    end</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">endtask</span></span></code></pre>
+<p>它们通常<strong>不应该自己 raise objection</strong>，因为它们并不知道整个测试什么时候完成，而且 <code>forever</code> 本身通常也不会自然退出；如果 driver 一开始 raise，却把 drop 写在 <code>forever</code> 后面，drop 永远执行不到，phase 就可能无法结束。更合理的做法是由知道“测试何时完成”的 test、virtual sequence 或顶层场景控制逻辑管理 objection。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">task</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic"> run_phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">uvm_phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">raise_objection</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">this</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    seq</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">start</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">env</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">agent</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">sequencer</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    phase</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">drop_objection</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">this</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">endtask</span></span></code></pre>
+<p>在 <code>seq.start()</code> 执行期间，driver、monitor 即使没有 raise objection，也会继续运行。当最后一个 objection 被 drop、objection count 归零后，UVM 才允许运行阶段结束，并终止仍然运行在该 phase 中的后台线程。因此最重要的理解是：<strong>不 raise objection ≠ 不运行；objection 控制的是 phase 生命周期，不是 component 的线程开关。</strong></p>
+<h3 id="谁应该负责-objection">谁应该负责 Objection？</h3>
+<p>实际工程中，objection 一般集中在 test 或负责整体场景的 virtual sequence 中，而不是让 driver、monitor、scoreboard 各自管理。判断原则可以概括为：<strong>谁掌握“这个测试场景什么时候真正完成”，谁更适合管理 objection。</strong> Sequence 中也可以通过 <code>pre_body/post_body</code> 或 automatic phase objection 管理，但应避免多个层级随意重复 raise/drop，否则容易造成生命周期难以追踪。</p>
+<h3 id="测试结束前应该等待哪些条件">测试结束前应该等待哪些条件？</h3>
+<p>UVM 的 objection 应该围绕“测试是否真正完成”来管理，而不是单纯等到 timeout。正常结束通常要求：sequence 已经停止产生新激励、driver/DUT 中没有未完成 transaction、所有 response 已返回、reference model 已处理完、scoreboard 待比较队列为空，即整个环境达到 quiescent 状态后再 <code>drop_objection()</code>。Timeout 是 watchdog，用于发现 DUT 卡死、sequence 死锁等异常，不是正常结束条件。AXI 这类协议中尤其要注意，<code>finish_item()</code> 完成不代表 transaction 已经真正结束；可能还有 outstanding request、B/R response 或 scoreboard 比较尚未完成。</p>
+<h3 id="uvm-phase-的完整流程">UVM Phase 的完整流程</h3>
+<p>UVM 的整体 phase 流程可以粗略理解为：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>build</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>connect</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>end_of_elaboration</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>start_of_simulation</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>runtime</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>extract</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>check</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>report</span></span>
+<span class="line"><span>  ↓</span></span>
+<span class="line"><span>final</span></span></code></pre>
+<p>其中 runtime 还可以细分为：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>pre_reset → reset → post_reset</span></span>
+<span class="line"><span>          ↓</span></span>
+<span class="line"><span>pre_configure → configure → post_configure</span></span>
+<span class="line"><span>          ↓</span></span>
+<span class="line"><span>pre_main → main → post_main</span></span>
+<span class="line"><span>          ↓</span></span>
+<span class="line"><span>pre_shutdown → shutdown → post_shutdown</span></span></code></pre>
+<p>传统的 <code>run_phase()</code> 可以看作覆盖整个运行期的长期 task，而这些细分 runtime phases 用来进一步组织 reset、配置、主测试、收尾等阶段。简单环境经常只使用 <code>run_phase()</code>；复杂环境可能使用 <code>reset_phase/main_phase/shutdown_phase</code> 等细分阶段。</p>
+<h3 id="default-sequencestarting-phase-与-phase-jump">Default Sequence、Starting Phase 与 Phase Jump</h3>
+<p><code>default_sequence</code> 的隐式启动与 sequence 中使用 <code>phase</code> 是两套不同机制。<code>default_sequence</code> 通常通过 <code>uvm_config_db</code> 配置，例如把某个 sequence type 设置到 <code>sequencer.main_phase</code> 的 <code>"default_sequence"</code> 字段；当对应 task phase 到来时，UVM 会自动创建并启动该 sequence。相比之下，sequence 内部的 <code>starting_phase</code>/<code>get_starting_phase()</code> 是 <code>uvm_sequence_base</code> 自身维护的 phase 上下文，不是 sequence 再通过 <code>config_db</code> 去获取。由某个 phase 的 <code>default_sequence</code> 自动启动时，UVM 会把对应 phase 关联给 sequence；而如果直接 <code>seq.start(sequencer)</code> 显式启动，sequence 通常并不知道自己属于哪个 phase，<code>starting_phase</code> 可能为 <code>null</code>。实际工程中更常见的是由 test 或 virtual sequence 显式启动 sequence，并由 test 的 <code>run_phase/main_phase</code> 统一负责 <code>raise_objection()</code> / <code>drop_objection()</code>，这样生命周期和调试关系更清晰。
+UVM 中动态改变 phase 流程使用的是 <code>phase.jump(target_phase)</code>，而不是独立的 <code>jump_phase()</code> API。它最典型的用途是运行过程中发生系统级复位，例如 DUT 在 <code>main_phase</code> 处理中途收到 warm reset / soft reset，需要从 <code>main_phase</code> 跳回 <code>reset_phase</code>，然后重新经历 <code>reset → configure → main</code>，使 DUT 和验证环境重新初始化。也可以向后的 phase 跳，例如提前从 <code>main_phase</code> 跳到 <code>shutdown_phase</code>，但工程中最常见、最合理的应用仍然是运行时 reset/recovery，而不是把它当成普通流程跳转工具。
+<code>phase.jump()</code> 是 phase scheduler 级别的控制，不只是让调用它的某一个 component 改变执行位置。发生 jump 时，当前 phase 的 task 进程会被终止，相关 domain 转移到目标 phase，因此它属于比较“重”的控制机制。使用时必须特别处理尚未完成的 transaction、outstanding 请求、sequence、driver 状态、scoreboard 队列和 reference model 状态，否则虽然 phase 回到了 reset，验证环境内部仍可能残留复位前的数据。核心理解可以概括为：<strong><code>default_sequence</code></strong> 解决“某个 phase 自动运行哪个 sequence”，<strong><code>starting_phase</code></strong> 表示“这个 sequence 当前关联哪个 phase”，而 <strong><code>phase.jump()</code></strong> 解决“整个 UVM phase 流程运行过程中需要跳到哪个 phase”。</p>
+<h3 id="层次遍历顺序不等于运行并发顺序">层次遍历顺序不等于运行并发顺序</h3>
+<p>UVM phase 中，“层次遍历顺序”和“是否并发执行”是两个不同概念。<code>build_phase</code> 通常自顶向下，因为父组件需要先创建子组件；<code>connect_phase</code>、<code>end_of_elaboration_phase</code>、<code>check_phase</code>、<code>report_phase</code> 等多数 function phase 通常自底向上。而 <code>run_phase()</code> 是 task phase，各 component 的 <code>run_phase()</code> 会作为并发进程运行，例如 driver 发激励、monitor 采样、scoreboard 比对可以同时进行。即使框架内部存在组件访问或启动顺序，也不能依赖这个顺序把各个 <code>run_phase()</code> 当成串行执行。</p>
+<h2 id="uvmfactoryconfig-db-与-callback">UVM：Factory、Config DB 与 Callback</h2>
+<p>创建替换、配置匹配与优先级、局部行为扩展。</p>
+<h3 id="uvm-四套核心机制分别负责什么">UVM 四套核心机制分别负责什么？</h3>
+<p>UVM 的很多“高级机制”本质上都是在 SystemVerilog OOP 之上增加一层间接控制。Factory 解决“创建什么类型”，Config DB 解决“组件拿到什么配置”，Phase 解决“什么时候做什么”，TLM 解决“组件之间怎么以 transaction 级通信”。理解这四套机制时，不要把它们当成独立魔法，而要抓住共同底层：类继承与多态、对象句柄、参数化类、全局注册表、层次路径、方法转发以及并发 task。</p>
+<h3 id="factory-为什么需要-wrapperoverride-如何匹配">Factory 为什么需要 wrapper，override 如何匹配？</h3>
+<p>Factory 的核心是“类型注册 + wrapper/proxy + override”。<code>type_id::create()</code> 最终仍然会执行某个具体类的 <code>new()</code>，只是创建前先让 Factory 查 override 规则，决定到底调用谁的构造函数。UVM 之所以需要 <code>uvm_object_wrapper</code> / <code>uvm_component_registry</code> 这类代理，是因为 SystemVerilog 不能像普通数据一样把“类类型”直接存进表里，再运行时取出并动态 <code>new</code>；因此 UVM 为每个注册类型建立一个普通 proxy 对象，由 proxy 知道如何创建对应类。<code>by type</code> 直接使用 wrapper 句柄建立 <code>requested_wrapper → override_wrapper</code> 的映射，而 <code>by name</code> 先用 <code>"my_driver"</code> 这样的字符串查注册表再得到 wrapper，所以字符串拼写错误只能运行时发现，type-based 通常更安全。Type override 替换某类的所有创建请求；instance override 则额外匹配 instance path。Component 天然具有真实的 UVM hierarchy，因此路径容易确定；<code>uvm_object</code> 虽然也支持 Factory 和 instance override，但它不属于 component tree，需要创建时提供合适的 context 来构造用于匹配的“逻辑路径”。Singleton 则是“一种类型只维护一个共享实例”的设计，例如全局 Factory、resource pool、<code>uvm_root::get()</code>；它保证 test、env、driver 等访问的是同一份全局状态。</p>
+<h3 id="factory-override-的生效时机">Factory Override 的生效时机</h3>
+<p>Factory override 的关键条件不是“必须在哪个 phase 设置”，而是必须发生在目标对象的 <code>type_id::create()</code> 之前。component 通常在 build 阶段创建，因此 component override 一般要在对应 component 被创建前设置；到 run phase 才设置通常已经无法改变已创建的 env、agent、driver，但仍可影响之后才通过 factory 创建的 sequence 或 transaction。<code>set_type_override_by_type()</code> 是类型级全局替换：以后通过 factory 请求创建基类时，会改为创建指定派生类；<code>set_inst_override_by_type()</code> 则只针对指定实例路径。最重要的一句话是：<strong>override 只影响之后的 factory <strong><code>create()</code></strong>，不会把已经存在的对象“变成”派生类。</strong></p>
+<h3 id="config-db-如何解析路径和配置优先级">Config DB 如何解析路径和配置优先级？</h3>
+<p>Config DB 本质是建立在 resource mechanism 上的“全局资源池 + 层次路径匹配 + 优先级规则”。<code>set()</code> 不是把变量直接传给某个 component，而是把“类型、field name、scope、value”等信息存入 resource pool；<code>get()</code> 再根据类型、字段名和当前 component 路径进行查找。<code>cntxt</code> 可以理解为“相对路径从哪里开始解释”，最终解析出来用于匹配的范围就是 scope。例如 <code>set(this, "agent.drv", ...)</code> 中，若 <code>this</code> 是 <code>uvm_test_top.env</code>，最终 scope 类似 <code>uvm_test_top.env.agent.drv</code>；<code>null</code> 通常表示按绝对路径理解。Config DB 并不是只能存 component，它可以存 <code>int</code>、<code>virtual interface</code>、config object 等任意匹配的类型，但它的路径坐标系依赖 <code>uvm_component</code> hierarchy，因此 <code>set/get</code> 的 context 参数是 <code>uvm_component</code>。Sequence 属于 <code>uvm_object</code>，不能直接拿 <code>this</code> 当 config_db context，通常通过 <code>m_sequencer/p_sequencer</code>、显式传入配置对象等方式获取配置。</p>
+<h3 id="配置匹配和优先级为什么要分开理解">配置匹配和优先级为什么要分开理解？</h3>
+<p><code>uvm_config_db</code> 的核心要分成两件事理解：<strong>“能不能匹配到”</strong> 和 <strong>“多个匹配项里谁生效”</strong>。<code>set(cntxt, inst_name, field_name, value)</code> 中，<code>cntxt + inst_name</code> 一起决定配置的目标作用域，<code>field_name</code> 决定配置项名字；所以第 3 个参数相同并不代表冲突，只要实例路径不同，就可以分别配置不同组件。<code>get()</code> 时也是根据调用位置、目标路径和 <code>field_name</code> 去匹配对应配置。
+真正涉及多次 <code>set()</code> 冲突时，build 阶段的优先级主要由第 1 个参数 <code>cntxt</code> 的层次决定，而不是看第 2 个参数路径谁更深、更具体。使用 <code>this</code> 时，<code>cntxt</code> 就是当前 component，因此不同层次的设置会体现层次优先级：通常<strong>高层 component 的配置优先；同一 precedence 下，后一次 set 生效</strong>。例如 test/env/agent 都用 <code>this</code> 设置同一个最终目标时，高层设置可以压过低层设置。
+如果多次 <code>set()</code> 的第 1 个参数都写成 <code>uvm_root::get()</code>，虽然第 2 个参数仍然负责指定目标路径，但这些配置的 <code>cntxt</code> 都变成了 root，因此它们的 precedence 被拉平。若多条配置同时匹配同一个 <code>get()</code>，就按同优先级规则处理，即通常 <strong>last set wins</strong>。由于 UVM 的 <code>build_phase</code> 一般是父组件先执行、子组件后执行，所以表面上可能表现成“低层组件的 set 生效”，但本质不是低层优先，而是它执行得更晚。
+最容易混淆的一点是：<strong>前两个参数确实共同决定匹配范围，但并不是共同决定优先级。</strong> 可以记成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>能否匹配：</span></span>
+<span class="line"><span>cntxt + inst_name + field_name</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>多个匹配项谁生效：</span></span>
+<span class="line"><span>build 阶段主要看 cntxt 的 precedence</span></span>
+<span class="line"><span>precedence 相同 → 后 set 的生效</span></span></code></pre>
+<p>另外，高层优先这套规则主要针对 build-time 配置；build 阶段之后，各设置通常使用相同的默认 precedence，此时更接近单纯的“后写覆盖前写”。 <code>uvm_root::get()</code> 只是取得 UVM 根组件句柄，用作 <code>set()</code> 的 context，和 <code>uvm_config_db::get()</code> 不是一回事。</p>
+<h3 id="callback-与-factory-如何用于异常注入">Callback 与 Factory 如何用于异常注入？</h3>
+<p>UVM callback 机制与 phase callback 要区分。Phase callback 是 UVM 框架固定时机调用 <code>build_phase/run_phase</code>等；用户自定义 callback 则是某个 driver、monitor 等组件主动预留的扩展 hook，例如 <code>pre_drive/post_drive</code>。Component 作者定义 callback 基类并注册 callback，运行到 hook 点时遍历已注册 callback 对象并调用其方法，从而在“不替换整个 component”的情况下插入行为。异常注入常见方式包括：通过 sequence/transaction 生成非法或边界激励；通过 Factory Override 替换 transaction 或 driver；通过 callback 修改特定 transaction、延迟响应或翻转数据；通过 config knob 控制错误概率和模式；以及用 <code>uvm_hdl_force/deposit</code> 等方式直接破坏 DUT 内部寄存器、FIFO 指针、ECC 位等状态。Factory 更适合整体行为替换，callback 更适合局部 hook 式修改。</p>
+<h3 id="vip-callback-的使用细节">VIP Callback 的使用细节</h3>
+<p>UVM/VIP 的 Callback 本质是一种“局部扩展机制”：VIP 或组件在内部预留 hook point，例如 pre-drive、post-drive、response 等位置，用户可注册 callback，在不修改原 VIP 源码的情况下插入自定义逻辑。典型用途包括错误注入、延迟调整、修改 transaction、日志统计和异常场景构造。Callback 与 Factory Override 的区别是：Callback 只在预留位置追加或修改局部行为，而 Factory Override 是用新类替换原类的整体实现。第三方 VIP 中若只需改变少量行为，Callback 通常更合适；若组件整体行为都需要替换，则更适合使用 Factory Override。Callback 使用时还要注意多个 callback 的执行顺序、重复注册，以及修改 transaction 后是否会导致 scoreboard 的预期模型与实际激励不一致。</p>
+<h2 id="uvmtlmsequence-与-monitor">UVM：TLM、Sequence 与 Monitor</h2>
+<p>事务通信、握手完成、response、对象所有权和采样。</p>
+<h3 id="svuvm-与平台组件的完整关系">SV、UVM 与平台组件的完整关系</h3>
+<p>SystemVerilog（SV）是语言，UVM 是建立在 SV 之上的验证方法学和类库。SV 提供 <code>class</code>、继承、多态、<code>virtual</code>、随机化约束、interface、队列等语言能力；UVM 用这些能力规定了一套标准验证架构。典型 UVM 数据流是 <code>sequence → sequencer → driver → DUT → monitor → scoreboard/coverage</code>：<code>sequence_item</code> 描述一笔事务，sequence 产生事务，sequencer 做事务传递和仲裁，driver 把 transaction 转成接口时序，monitor 把接口信号重新还原成 transaction，scoreboard 做期望值与实际值比较。agent 通常封装 driver、sequencer、monitor，env 再组织多个 agent、参考模型和 scoreboard，test 位于顶层负责配置环境和启动 sequence。UVM 的 factory、phase、objection、TLM、config_db 等机制，本质上都建立在 SV 的面向对象机制之上，因此理解 class、句柄、继承、多态和虚方法是理解 UVM 的基础。</p>
+<h3 id="portexportimp-和-blocking-接口是什么">Port、Export、Imp 和 blocking 接口是什么？</h3>
+<p>TLM 的核心不是“端口上传输比特”，而是“组件之间通过标准化方法调用传递 transaction”。<code>put/get/peek/write/transport</code> 本质都是方法接口。Port、Export、Imp 的角色必须分清：Port 表示“我需要调用某个服务”，Imp 表示“这个 component 真正实现该方法”，Export 表示“我自己不实现，只把内部服务向外暴露/转发”。因此典型调用链是 <code>port → export(可选) → imp → component method</code>。<code>imp</code> 本质也是代理：它保存真正实现者的句柄，并把 <code>put()</code>、<code>write()</code> 等调用转发过去。Blocking 接口是 task，可以等待；nonblocking 接口是 function，必须立即返回，例如 <code>try_put()</code> / <code>can_put()</code>。<code>get</code> 会取走对象，<code>peek</code> 只查看不删除，<code>transport</code> 用于 request-response。</p>
+<h3 id="portportexportexport-是否合法">Port→Port、Export→Export 是否合法？</h3>
+<p>TLM 连接中，<code>port -> port</code> 和 <code>export -> export</code> 都可以合法存在，主要用于层次化透传，并不能仅凭“同类型相连”判断非法；常见的数据调用链最终是 <code>port -> export/imp</code>。判断是否合法要看 TLM 接口类型、调用方向和组件层次关系，而不是只看 port/export 名称。</p>
+<h3 id="analysis-广播如何与耗时比较解耦">Analysis 广播如何与耗时比较解耦？</h3>
+<p>Analysis Port 是 UVM 中最常见的 TLM 模式之一，典型用于 <code>monitor → scoreboard/coverage/ref_model</code>，特点是一对多广播。<code>ap.write(tr)</code> 会同步调用所有连接 subscriber 的 <code>write()</code>，因此 <code>write()</code> 是 function，不能阻塞。如果接收方需要等待另一条流、时钟或长期比较，通常在 Analysis Port 后接 <code>uvm_tlm_analysis_fifo</code>：monitor 用非阻塞的 <code>write()</code> 快速入 FIFO，scoreboard 在 <code>run_phase</code> 中通过 blocking <code>get()</code> 等待数据，从而完成“function 世界到 task 世界”的时间解耦。普通 <code>uvm_tlm_fifo</code> 则可理解为 queue 外面封装了 <code>put/get/peek/try_*</code> 等标准 TLM 接口，用于生产者—消费者解耦。</p>
+<h3 id="sequence-怎样通过-sequencer-把-item-交给-driver">Sequence 怎样通过 Sequencer 把 Item 交给 Driver？</h3>
+<p>Sequence 部分最容易混淆的一点是：<strong>真正沿数据通路传递的不是 sequence，而是 sequence_item/transaction。</strong> sequence 是一个行为过程，调用 <code>seq.start(seqr)</code> 的含义是让这个 sequence 在指定 sequencer 上执行，它的 <code>body()</code> 随后产生一个又一个 transaction。典型路径是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>test</span></span>
+<span class="line"><span>  │ seq.start(seqr)</span></span>
+<span class="line"><span>  ▼</span></span>
+<span class="line"><span>sequence.body()</span></span>
+<span class="line"><span>  │</span></span>
+<span class="line"><span>  │ start_item(req)</span></span>
+<span class="line"><span>  │ randomize / 填写 req</span></span>
+<span class="line"><span>  │ finish_item(req)</span></span>
+<span class="line"><span>  ▼</span></span>
+<span class="line"><span>sequencer</span></span>
+<span class="line"><span>  │</span></span>
+<span class="line"><span>  ▼</span></span>
+<span class="line"><span>driver.get_next_item(req)</span></span>
+<span class="line"><span>  │</span></span>
+<span class="line"><span>  │ transaction → pin-level 时序</span></span>
+<span class="line"><span>  ▼</span></span>
+<span class="line"><span>DUT</span></span>
+<span class="line"><span>  │</span></span>
+<span class="line"><span>driver.item_done()</span></span></code></pre>
+<p><code>start_item(req)</code> 的核心作用是向 sequencer 申请该 item 的发送资格并等待仲裁；获得 grant 后 sequence 才填写或随机化 transaction。<code>finish_item(req)</code> 会把 item 提交给 sequencer，并完成与 driver 的握手流程，通常会等待 driver 对该 item 调用 <code>item_done()</code>。driver 则不断执行 <code>get_next_item(req) → drive(req) → item_done()</code>。因此 sequence 不需要知道 driver 的具体位置，driver 也不需要知道是哪一个 sequence 产生了 item；双方都只与 sequencer 交互，这实现了激励描述和物理总线时序的解耦。
+Sequencer 的价值也不只是“中转”。多个 sequence 可以同时在同一个 sequencer 上请求发送 transaction，因此 sequencer 还承担 sequence 管理和仲裁。可以把三者职责概括为：sequence 描述“要做什么”，例如产生地址、数据、burst 等 transaction；sequencer 决定“谁现在可以发”，并完成 sequence 与 driver 之间的握手；driver 决定“在具体协议线上怎么做”，把 transaction 转换成 DUT 能看到的 pin-level 信号。Monitor 则执行相反转换，把 DUT/interface 上的信号重新整理成 transaction，再送给 scoreboard、coverage 等组件。由此形成 UVM 的核心数据闭环：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>sequence</span></span>
+<span class="line"><span>   ↓ 产生 transaction</span></span>
+<span class="line"><span>sequencer</span></span>
+<span class="line"><span>   ↓ 仲裁/传递</span></span>
+<span class="line"><span>driver</span></span>
+<span class="line"><span>   ↓ transaction → signal</span></span>
+<span class="line"><span>DUT</span></span>
+<span class="line"><span>   ↓ signal</span></span>
+<span class="line"><span>monitor</span></span>
+<span class="line"><span>   ↓ signal → transaction</span></span>
+<span class="line"><span>scoreboard / coverage</span></span></code></pre>
+<h3 id="driver-和-sequencer-的端口如何连接">Driver 和 Sequencer 的端口如何连接？</h3>
+<p>Sequencer 与 driver 之间通常不需要自己重新声明通信端口，因为 <code>uvm_driver</code> 已有 <code>seq_item_port</code>，<code>uvm_sequencer</code> 已有 <code>seq_item_export</code>，只需要在 agent 的 <code>connect_phase()</code> 中连接：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>drv.seq_item_port.connect(seqr.seq_item_export);</span></span></code></pre>
+<h3 id="item-完成与总线完成必须区分">Item 完成与总线完成必须区分</h3>
+<p>finish_item 返回说明 sequencer 侧的 item 完成协议已结束，含义取决于 driver 何时调用 item_done。流水 driver 可先接受 request，之后才收到 DUT 的 B/R，因此它不自动保证总线事务和 scoreboard 都已完成。
+Response 是独立机制，可通过 item_done(rsp) 一并返回，也可先 item_done 再 put_response(rsp)。使用 rsp.set_id_info(req) 保存 sequence/transaction 身份，sequence 通过 get_response 等待。整个 sequence 在 body 等生命周期流程返回后结束。</p>
+<h3 id="analysis-port-的句柄所有权与历史数据污染">Analysis Port 的句柄所有权与历史数据污染</h3>
+<p>UVM 的 TLM（Transaction-Level Modeling）强调组件之间传递“事务对象”，而不是逐根传递 DUT 引脚信号，更不是让所有组件共同访问某个全局变量。比如 monitor 通过 <code>analysis_port.write(tr)</code> 广播 transaction 时，多个 subscriber 通常收到的是指向<strong>同一个 transaction 对象的 handle</strong>，并不会自动为每个 subscriber <code>clone</code> 一份。因此 subscriber 一般应把收到的 transaction 当只读对象；如果需要修改，或需要独立、长期保存，应自行 <code>clone()/copy()</code>。同时还要区分“同一笔事务广播给多个组件”和“不同笔事务”：同一笔事务广播时可以共享同一个对象 handle，但 monitor 采集下一笔事务时通常应重新 <code>create</code> 新对象，否则如果不断复用同一 handle，而 scoreboard 又把 handle 存入 queue，就可能导致历史记录实际上全部指向最后被修改的那个对象。TLM 与共享全局变量的根本区别不在“内存里是不是同一个对象”，而在通信方式：TLM 是显式的消息/事务传递，生产者通过 port 把对象送给消费者；全局变量则是多个组件共同读写一个公共状态，耦合更强，也容易出现时序和所有权问题。</p>
+<h3 id="monitor-的创建等待和采样规则">Monitor 的创建、等待和采样规则</h3>
+<p>UVM monitor 中有三个常见陷阱。<code>uvm_analysis_port</code> 声明后必须 <code>new("ap", this)</code>；<code>forever</code> 中必须存在耗时操作，否则当条件不满足时会形成 zero-time infinite loop，把仿真卡死，因此通常写成“先 <code>@(posedge clk)</code>，再判断 valid/ready，再采样”；transaction 也不要只在循环外创建一次反复修改，因为 analysis port 传递的是对象句柄，并不会自动 deep copy，如果 subscriber 把句柄存起来，后续修改会污染之前的数据。稳妥写法是每采到一笔事务创建一个新的 transaction，再 <code>ap.write(tr)</code>。Monitor 的典型节奏可以记成：等待采样沿 → 判断握手 → 创建 transaction → 采字段 → 广播。</p>
+<h3 id="320240-图像接口如何按有效握手采集">320×240 图像接口如何按有效握手采集？</h3>
+<p>图像接口 monitor 的核心规则是：<code>VSYNC</code> 只表示一帧开始，<code>HSYNC</code> 只表示一行开始，真正的数据传输条件是 <code>valid &#x26;&#x26; ready</code>。320×240 图像可直接按“等 VSYNC → 循环 240 行；每行等 HSYNC → 循环 320 次有效握手”的方式采集。每次只有在 <code>valid &#x26;&#x26; ready</code> 时才执行 <code>data[y][x] = vif.data</code> 并推进计数，<code>ready=0</code> 时即使 <code>valid=1</code> 也不能认为传输了数据。二维数组 <code>data[240][320]</code> 比一维映射更直观；正式 UVM 环境中通常在一帧收满后封装成 transaction，再通过 analysis port 送到 scoreboard。</p>
+<h3 id="哪些接口能阻塞">哪些接口能阻塞？</h3>
+<p>UVM 中要区分事务对象和握手接口。<code>uvm_sequence_item</code> 主要承载事务数据，阻塞握手方法主要位于 sequence、sequencer 和 driver 交互中。Sequence 侧常见阻塞调用有 <code>start_item()</code>、<code>finish_item()</code>、<code>get_response()</code>、<code>wait_for_grant()</code> 和 <code>wait_for_item_done()</code>；driver 侧的 <code>get_next_item()</code>、<code>get()</code>、<code>peek()</code> 会等待事务，而 <code>try_next_item()</code> 无可用 item 时可返回 null，但它仍是 task，可能经历内部调度等待，不能当作可在 function 中调用的 try_get。<code>send_request()</code> 负责发送请求，本身不等价于“等待 driver 完成”。
+接口实现参考：<a href="https://github.com/accellera-official/uvm-core/blob/main/src/seq/uvm_sequencer.svh">Accellera uvm_sequencer</a>。</p>
+<h2 id="uvm-ral访问镜像与-prediction">UVM RAL：访问、镜像与 Prediction</h2>
+<p>actual/mirrored/desired、前后门及自动/显式预测。</p>
+<h3 id="actualmirroreddesired-与-ral-api">Actual、Mirrored、Desired 与 RAL API</h3>
+<p>UVM RAL 中，actual 是 DUT 的真实寄存器值，mirrored 是模型认为 DUT 当前具有的值，desired 是模型希望寄存器达到的值。</p>
+<ul>
+<li><code>mirror()</code> 读取 DUT，可通过 UVM_CHECK 将读回值与更新前的 mirror 比较，再更新模型。</li>
+<li><code>peek()/poke()</code> 通过后门读取或修改 DUT。</li>
+<li><code>set()</code> 按字段访问策略修改 desired，不访问 DUT；对于 W1C 等字段，不能直接把参数当作普通 RW 字段的最终值。</li>
+<li><code>update()</code> 根据 <code>needs_update()</code> 判断模型是否需要写入，再按访问策略构造写值。普通 RW 字段可用 desired 与 mirrored 的差异理解，但不能据此替代所有特殊字段语义。它不会先读取 actual 再作比较。
+参考：<a href="https://www.accellera.org/images/downloads/standards/uvm/UVM_Class_Reference_Manual_1.2.pdf">Accellera UVM 1.2 Class Reference</a>。</li>
+</ul>
+<h3 id="auto-prediction-和-explicit-prediction-的原理与选择">Auto Prediction 和 Explicit Prediction 的原理与选择</h3>
+<p>UVM RAL 中的 prediction 用来解决一个核心问题：<strong>DUT 中寄存器真实值变化后，RAL 中的 mirrored value 如何保持同步。</strong> <code>mirrored value</code> 表示寄存器模型“认为 DUT 当前是什么值”，而 prediction 的作用就是根据访问结果更新这个 mirror。</p>
+<ul>
+<li>**自动预测（auto prediction）**通过 <code>reg_model.default_map.set_auto_predict(1)</code> 开启。它适用于由 RAL 自己发起的访问，例如 <code>reg_model.ctrl.write(..., UVM_FRONTDOOR)</code>。这类访问会经过 <code>uvm_reg_map → adapter → bus sequencer/driver → AXI/AHB/APB → DUT</code>，因为 RAL 知道自己发起了什么操作，所以访问完成后可以自动更新 mirror。它结构简单，适合 block-level、寄存器基本功能测试、RAL bring-up，以及“所有寄存器访问基本都由 RAL API 发起”的环境。</li>
+<li><strong>显式预测（explicit prediction）<strong>则是根据外部实际观察到的访问主动更新 mirror，最典型结构是 <code>bus monitor → uvm_reg_predictor → RAL</code>。Monitor 捕获 AXI/AHB/APB 上真正发生的 transaction，predictor 借助 adapter 将 bus transaction 转成寄存器操作，再根据 reg map 找到目标寄存器并调用预测机制更新 mirror。直接调用 <code>reg.predict(value)</code> 本身也属于显式预测；<code>uvm_reg_predictor</code> 本质上就是把“监控总线并调用 predict”这件事自动化。它更适合 SoC、MCU、多 Master 环境，因为 CPU、DMA、其他 VIP 等都可能修改寄存器，而这些操作并不一定由 RAL 发起。
+这里最容易混淆的是：</strong>“前门/后门”和“自动/显式预测”是两个不同维度。</strong> 前门描述“怎样访问 DUT”，prediction 描述“RAL 如何知道 DUT 已经变化”。CPU 通过 AXI/AHB 写寄存器当然也是前门访问，只不过它绕过的是 <strong>RAL API</strong>，不是总线。因此：</li>
+</ul>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>RAL frontdoor：</span></span>
+<span class="line"><span>reg_model.write()</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>reg_map → adapter → bus → DUT</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>auto_predict 可以知道</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>CPU / DMA frontdoor：</span></span>
+<span class="line"><span>CPU / DMA → bus → DUT</span></span>
+<span class="line"><span>                 ↓</span></span>
+<span class="line"><span>              monitor</span></span>
+<span class="line"><span>                 ↓</span></span>
+<span class="line"><span>             predictor</span></span>
+<span class="line"><span>                 ↓</span></span>
+<span class="line"><span>             RAL mirror</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>auto_predict 不知道，因为访问没有经过 RAL API</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>RAL backdoor：</span></span>
+<span class="line"><span>RAL → HDL path → DUT register</span></span>
+<span class="line"><span>      不经过总线</span></span></code></pre>
+<p>因此选择原则可以概括为：<strong>如果寄存器访问基本全部通过 RAL 发起，自动预测最简单；如果存在 CPU、DMA、多 Master、firmware 或普通 bus sequence 等绕过 RAL API 的访问，就优先显式预测。</strong> 更进一步，如果希望 mirror 以“总线上实际观察到的行为”为准，而不是以 testbench“打算做什么”为准，显式预测也更可靠。正式复杂环境中常见做法是关闭 <code>auto_predict</code>，使用 <code>monitor + uvm_reg_predictor</code> 建立观测闭环。
+最后一个工程上的注意点：通常不要让 auto prediction 和 predictor 同时对同一笔访问重复负责更新 mirror。常见配置是使用 predictor 后执行：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>reg_model.default_map.set_auto_predict(0);</span></span></code></pre>
+<p>这样由总线 monitor 观察到的实际事务统一驱动 RAL mirror 更新。</p>
+<h3 id="总线-predictor-的观测范围">总线 Predictor 的观测范围</h3>
+<p>后门不经过总线，bus monitor 无法直接观察；硬件自主更新、复位以及寄存器读写副作用也需结合访问策略和模型同步机制处理。Prediction 维护模型状态，不等于替代寄存器功能检查。
+寄存器 update 的实际 needs_update 行为还受字段访问策略影响；desired 与 mirrored 不同是理解普通可读写寄存器的入门模型，不应替代特殊访问策略的定义。</p>
+<h3 id="补充w1cread-clear-与硬件自主更新怎么检查">补充：W1C、Read-clear 与硬件自主更新怎么检查？</h3>
+<p>W1C 的总线写入值是“清除掩码”，不是希望最终保存的普通数据。例如原值1011、写入0010，按W1C语义应得到1001；不能用普通RW的“写什么读回什么”检查。
+Read-clear 要同时检查本次读回的旧状态和读取后的状态变化。Predictor与mirror比较必须考虑访问策略，避免把清除后的镜像拿来错误比较本次返回的旧值。
+硬件自行置位的状态字段不能只靠写总线predictor同步。可在已知事件后主动读回/同步模型，或由专门观测机制预测；如果值本来异步变化，可对相应字段设置恰当的比较策略，再由独立功能检查验证其行为。关闭比较不等于该字段已验证。
+Reset测试应区分“对DUT施加真实复位”和“reg_model.reset()重置模型状态”；只调用模型reset并不会复位硬件。复位后应按规格检查默认值及保留字段。
+参考：<a href="https://www.accellera.org/images/downloads/standards/uvm/UVM_Class_Reference_Manual_1.2.pdf">Accellera UVM 寄存器字段访问策略</a>。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/uvm/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>UVM</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-rtl-timing-cdc/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（三）：数字设计、时序与 CDC</div></div></a><a href="/posts/dv-axi-protocol/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（五）：AXI 协议</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

@@ -1,0 +1,808 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-simulation-concurrency-sva/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（二）：仿真调度、并发与 SVA | DAWNMX</title><meta name="title" content="数字验证问答（二）：仿真调度、并发与 SVA | DAWNMX"><meta name="description" content="事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（二）：仿真调度、并发与 SVA | DAWNMX"><meta property="og:description" content="事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-simulation-concurrency-sva/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-simulation-concurrency-sva/"><meta property="twitter:title" content="数字验证问答（二）：仿真调度、并发与 SVA | DAWNMX"><meta property="twitter:description" content="事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（二）：仿真调度、并发与 SVA | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: systemverilog; }@layer astro { ::view-transition-old(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-3"] { view-transition-name: sva; }@layer astro { ::view-transition-old(sva) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(sva) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(sva) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(sva) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-simulation-concurrency-sva" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（二）：仿真调度、并发与 SVA</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第二篇，整理自我的复习笔记。事件区域、断言采样、并发进程、Clocking Block 与 Driver 复位。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#systemverilog%E4%BB%BF%E7%9C%9F%E8%B0%83%E5%BA%A6%E4%B8%8E-sva">SystemVerilog：仿真调度与 SVA</a>
+<ul>
+<li><a href="#%E4%B8%80%E4%B8%AA%E4%BB%BF%E7%9C%9F%E6%97%B6%E9%97%B4%E7%89%87%E5%8C%85%E5%90%AB%E5%93%AA%E4%BA%9B%E5%8C%BA%E5%9F%9F">一个仿真时间片包含哪些区域？</a></li>
+<li><a href="#%E9%98%BB%E5%A1%9E%E8%B5%8B%E5%80%BC%E5%92%8C-nba-%E5%88%86%E5%88%AB%E4%BD%95%E6%97%B6%E7%94%9F%E6%95%88">阻塞赋值和 NBA 分别何时生效？</a></li>
+<li><a href="#0-%E8%83%BD%E6%B6%88%E9%99%A4%E7%AB%9E%E4%BA%89%E5%90%97%E5%BB%B6%E8%BF%9F%E8%B5%8B%E5%80%BC%E4%BD%95%E6%97%B6%E9%87%87%E6%A0%B7">#0 能消除竞争吗？延迟赋值何时采样？</a></li>
+<li><a href="#sva-%E5%9C%A8%E5%93%AA%E9%87%8C%E9%87%87%E6%A0%B7%E5%9C%A8%E5%93%AA%E9%87%8C%E6%B1%82%E5%80%BC">SVA 在哪里采样、在哪里求值？</a></li>
+<li><a href="#reactivepostponed-%E4%B8%8E-uvm-%E6%9C%89%E4%BB%80%E4%B9%88%E5%85%B3%E7%B3%BB">Reactive、Postponed 与 UVM 有什么关系？</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E8%AE%B0%E4%BD%8F%E4%B8%BB%E8%A6%81%E8%B0%83%E5%BA%A6%E9%A1%BA%E5%BA%8F">如何记住主要调度顺序？</a></li>
+<li><a href="#%E4%B8%A4%E4%B8%AA%E5%B9%B6%E5%8F%91%E6%97%B6%E5%BA%8F%E5%9D%97%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E9%9D%9E%E9%98%BB%E5%A1%9E%E8%B5%8B%E5%80%BC">两个并发时序块为什么使用非阻塞赋值？</a></li>
+<li><a href="#assert-%E4%B8%8E-assume%E6%A3%80%E6%9F%A5%E8%AE%BE%E8%AE%A1%E5%92%8C%E7%BA%A6%E6%9D%9F%E7%8E%AF%E5%A2%83">Assert 与 Assume：检查设计和约束环境</a></li>
+<li><a href="#within%E9%87%87%E6%A0%B7%E8%BE%B9%E6%B2%BF%E4%B8%8E%E5%8F%82%E6%95%B0%E5%8C%96%E5%BB%B6%E8%BF%9F">Within、采样边沿与参数化延迟</a></li>
+<li><a href="#fell-%E5%9C%A8%E5%93%AA%E4%B8%80%E6%8B%8D%E6%88%90%E7%AB%8B">$fell 在哪一拍成立？</a></li>
+<li><a href="#%E5%BB%B6%E8%BF%9F%E7%AA%97%E5%8F%A3%E4%B8%8E%E8%BF%9E%E7%BB%AD%E9%87%8D%E5%A4%8D%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">延迟窗口与连续重复有什么区别？</a></li>
+<li><a href="#%E5%90%8C%E4%B8%80%E6%97%B6%E9%97%B4%E6%A7%BD%E5%86%85%E7%9A%84-nba-%E4%B8%8E%E9%87%87%E6%A0%B7%E6%89%93%E5%8D%B0">同一时间槽内的 NBA 与采样打印</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85disable-iff%E7%A9%BA%E6%88%90%E5%8A%9F%E4%B8%8E%E6%8F%A1%E6%89%8B%E6%96%AD%E8%A8%80">补充：Disable iff、空成功与握手断言</a></li>
+</ul>
+</li>
+<li><a href="#sv-%E5%B9%B6%E5%8F%91interface-%E4%B8%8E-driver-%E5%A4%8D%E4%BD%8D">SV 并发、Interface 与 Driver 复位</a>
+<ul>
+<li><a href="#forkjoin-%E7%9A%84%E8%BF%9B%E7%A8%8B%E8%AF%AD%E4%B9%89">Fork/Join 的进程语义</a></li>
+<li><a href="#semaphore-%E4%B8%8E-mailbox%E8%B5%84%E6%BA%90%E6%8E%A7%E5%88%B6%E5%92%8C%E4%BA%8B%E5%8A%A1%E4%BC%A0%E9%80%92">Semaphore 与 Mailbox：资源控制和事务传递</a></li>
+<li><a href="#%E5%8E%9F%E7%94%9F-event-%E4%B8%8E-uvm-event">原生 Event 与 UVM Event</a></li>
+<li><a href="#moduleinterface-%E4%B8%8E-virtual-interface-%E7%9A%84%E5%B1%82%E6%AC%A1%E5%85%B3%E7%B3%BB">Module、Interface 与 Virtual Interface 的层次关系</a></li>
+<li><a href="#clocking-block-%E7%9A%84-inputoutput-skew">Clocking Block 的 Input/Output Skew</a></li>
+<li><a href="#%E4%B8%BA%E4%BB%80%E4%B9%88-cb-%E5%8F%AF%E8%83%BD%E6%B2%A1%E6%9C%89%E8%AE%A9-time-%E5%8F%98%E5%8C%96">为什么 @cb 可能没有让 $time 变化？</a></li>
+<li><a href="#if-%E4%B8%8E%E4%BA%8B%E4%BB%B6%E7%AD%89%E5%BE%85%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E4%BA%92%E6%8D%A2">If 与事件等待为什么不能互换？</a></li>
+<li><a href="#reset-%E5%90%8E-driver-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BB%8D%E5%8F%AF%E8%83%BD%E5%A4%9A%E5%8F%91%E4%B8%80%E7%AC%94">Reset 后 Driver 为什么仍可能多发一笔？</a></li>
+<li><a href="#%E5%A4%8D%E4%BD%8D%E4%BB%A3%E7%A0%81%E7%9A%84%E5%B7%A5%E7%A8%8B%E8%BE%B9%E7%95%8C">复位代码的工程边界</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="systemverilog仿真调度与-sva">SystemVerilog：仿真调度与 SVA</h2>
+<p>事件区域、NBA、采样值、时序窗口及 assert/assume。</p>
+<h3 id="一个仿真时间片包含哪些区域">一个仿真时间片包含哪些区域？</h3>
+<p>SystemVerilog 仿真中的“时间片”不是简单的一个瞬间，而是同一个仿真时间点内部按固定顺序处理的一系列 event region。经典 Verilog 常用“四区模型”来理解：<code>Active → Inactive → NBA → Monitor/Postponed</code>。这个模型足以解释大多数 <code>=</code>、<code>#0</code>、<code>&#x3C;=</code>、<code>$display/$strobe</code> 的行为，但严格的 SystemVerilog 调度模型更细，完整 time slot 包含更多 region，其中 RTL/UVM/SVA 最需要掌握的是 <code>Preponed、Active、Inactive、NBA、Observed、Reactive、Re-Inactive、Re-NBA、Postponed</code>。</p>
+<h3 id="阻塞赋值和-nba-分别何时生效">阻塞赋值和 NBA 分别何时生效？</h3>
+<p>最核心的区别是：<code>Active</code> 用于执行当前被触发的过程、阻塞赋值以及非阻塞赋值 RHS 的计算；<code>Inactive</code> 主要处理 <code>#0</code> 事件，它不会让仿真时间前进，只是把执行推迟到当前时间片稍后；<code>NBA</code> 才真正更新 <code>&#x3C;=</code> 的左值。因此非阻塞赋值应理解为“Active 区读取 RHS，NBA 区更新 LHS”。这正是时序逻辑使用 <code>&#x3C;=</code> 的根本原因：同一时钟沿触发的寄存器先基于旧状态统一计算，再在 NBA 区统一更新，从而模拟真实触发器同时采样的行为。若在时序逻辑中使用阻塞赋值 <code>=</code>，后续语句可能立即看到刚更新的新值，形成仿真中的级联穿透。</p>
+<h3 id="0-能消除竞争吗延迟赋值何时采样">#0 能消除竞争吗？延迟赋值何时采样？</h3>
+<p>同一 <code>Active</code> 区中多个并行进程的先后顺序通常不能依赖，因此如果两个 <code>always/initial</code> 在同一时刻访问同一信号，可能出现 race condition。<code>#0</code> 只是把操作移到 <code>Inactive</code>，并不是可靠的通用消除竞争手段。类似地，<code>a &#x3C;= #5 b</code> 应区分“何时采样 RHS”和“何时更新 LHS”：通常当前时刻就计算 <code>b</code>，5 个时间单位后再更新 <code>a</code>，不能简单理解成 5ns 后才读取 <code>b</code>。</p>
+<h3 id="sva-在哪里采样在哪里求值">SVA 在哪里采样、在哪里求值？</h3>
+<p>对于 SVA，最重要的是 <code>Preponed</code> 和 <code>Observed</code>。Concurrent assertion 通常在 <code>Preponed</code> 区采样相关信号，在 <code>Observed</code> 区进行 property 求值。因此即使 <code>Observed</code> 位于 <code>NBA</code> 之后，assertion 判断使用的仍主要是之前采样到的值，而不是简单读取 NBA 后的新值。理解 <code>$rose/$fell/$past</code> 以及“断言看到哪一拍数据”时，必须以这种 sampled-value 语义为基础，而不是只看当前变量表面上的实时值。</p>
+<h3 id="reactivepostponed-与-uvm-有什么关系">Reactive、Postponed 与 UVM 有什么关系？</h3>
+<p><code>Reactive</code> 主要属于 testbench/program/assertion action 一侧，设计目的之一是让测试平台在 DUT 的主要设计更新之后再作响应，从而减少 testbench 与 DUT 之间的竞争；<code>Re-Inactive</code>、<code>Re-NBA</code> 可以看作 Reactive 域对应的 Inactive 和 NBA。现代 UVM 一般不依赖 <code>program block</code>，而更多通过 <code>interface</code> 和 <code>clocking block</code> 明确采样和驱动时序。最后的 <code>Postponed</code> 用于观察当前时间片已经稳定后的结果，典型是 $strobe、$monitor；因此 $display往往能看到 NBA 更新前的旧值，而 $strobe 能看到当前时间片最终稳定后的值。</p>
+<h3 id="如何记住主要调度顺序">如何记住主要调度顺序？</h3>
+<p>实际工程中可以优先记住这一条主链：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>Preponed</span></span>
+<span class="line"><span>  SVA/采样</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Active</span></span>
+<span class="line"><span>  RTL执行、阻塞赋值、计算NBA的RHS</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Inactive</span></span>
+<span class="line"><span>  #0</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>NBA</span></span>
+<span class="line"><span>  非阻塞赋值真正更新</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Observed</span></span>
+<span class="line"><span>  concurrent assertion求值</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Reactive</span></span>
+<span class="line"><span>  testbench / assertion action响应</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Re-Inactive / Re-NBA</span></span>
+<span class="line"><span>  Reactive域中的延迟和非阻塞更新</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>Postponed</span></span>
+<span class="line"><span>  观察当前时间片最终稳定状态</span></span></code></pre>
+<h3 id="两个并发时序块为什么使用非阻塞赋值">两个并发时序块为什么使用非阻塞赋值？</h3>
+<p>阻塞赋值 <code>=</code> 会在当前 procedural thread 中立即更新左值，所以同一个 <code>begin...end</code> 中后续语句能读到新值；组合逻辑通常使用阻塞赋值。非阻塞赋值 <code>&#x3C;=</code> 则先计算 RHS，再在 NBA region 更新 LHS，因此非常适合描述多个触发器在同一时钟沿同时采样旧状态的行为，时序逻辑通常使用非阻塞赋值。特别容易混淆的是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>always @(posedge clk) q   = d;</span></span>
+<span class="line"><span>always @(posedge clk) out = q;</span></span></code></pre>
+<p>两个 <code>always</code> 是独立并发进程，同一个时钟沿进入 Active region 后执行顺序没有保证。如果第一个先执行，<code>out</code> 可能读到新 <code>q=d</code>；如果第二个先执行，<code>out</code> 读到旧 <code>q</code>，所以仿真存在 race。改成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>always @(posedge clk) q   &#x3C;= d;</span></span>
+<span class="line"><span>always @(posedge clk) out &#x3C;= q;</span></span></code></pre>
+<p>后，两个 RHS 都在时钟沿读取旧状态，随后 NBA 更新，稳定得到 <code>q(n)=d(n)</code>、<code>out(n)=q(n-1)</code>。真实综合出来的两个触发器也是在同一边沿采样旧状态，所以“RTL 时序逻辑用阻塞赋值”容易产生仿真与硬件语义不一致的问题。</p>
+<h3 id="assert-与-assume检查设计和约束环境">Assert 与 Assume：检查设计和约束环境</h3>
+<p><code>assert</code> 和 <code>assume</code> 都属于 SystemVerilog Assertion（SVA），并不是 UVM 专有机制。核心区别是：<code>assert</code> 用来检查或证明 DUT 必须满足某个性质，性质失败通常表示 DUT 行为不符合预期；<code>assume</code> 用来约束验证环境，表示“只考虑满足这个前提的输入或环境行为”，主要用于 Formal Verification。典型关系是：环境输入用 <code>assume</code> 描述合法前提，DUT 输出和内部行为用 <code>assert</code> 检查。例如验证 AXI Slave 时，可以 <code>assume</code> Master 在 <code>VALID=1 &#x26;&#x26; READY=0</code> 时保持协议要求的信号稳定，同时 <code>assert</code> Slave 自己输出的 <code>BVALID</code>、<code>RVALID</code> 等满足协议要求。
+需要特别区分 Formal 和普通 UVM 仿真。在 Formal 中，<code>assume property</code> 会真正限制状态空间，工具只探索满足 assumption 的场景；而在普通 VCS/UVM 动态仿真中，<code>assume</code> 并不会像 <code>constraint</code> 一样控制 sequence 的随机激励，实际输入仍由 sequence、constraint 和 driver 决定，仿真器对 <code>assume</code> 的检查和报告方式还可能受工具选项影响。因此动态仿真中主要使用 <code>assert</code>，Formal 中才会大量组合使用 <code>assume + assert</code>。
+最重要的风险是 Formal 的过度约束（over-constraint）。如果 <code>assume</code> 写得过强，可能把本来需要验证的异常或边界场景全部排除，导致大量 assertion“证明通过”，但这个通过并不能说明 DUT 真正可靠。因此可以把两者概括为：<code>assert</code> 是“这个性质必须成立，我要检查/证明它”；<code>assume</code> 是“先把这个性质作为前提，只在该前提下分析系统”。</p>
+<h3 id="within采样边沿与参数化延迟">Within、采样边沿与参数化延迟</h3>
+<p>SVA 中 <code>A within B</code> 表示 <strong>A 这个 sequence 的整个匹配区间必须包含在 B 的匹配区间内部</strong>。<code>$rose(a)</code> 检测的是采样意义上的上升沿，不是高电平保持；<code>1 -> 1</code> 不算 $rose。严格按 SVA 四态语义，前一采样值为 <code>0/X/Z</code>、当前为 <code>1</code> 时也可判定 $rose。<code>##N</code> 的延迟通常必须是编译/elaboration 时可确定的常量，因此 <code>parameter int B=4; a ##B c</code> 可以，而普通运行时变量 <code>int b=4; a ##b c</code> 不能直接作为标准 SVA 延迟；动态延迟需要用其他 sequence/repetition 写法实现。</p>
+<h3 id="fell-在哪一拍成立">$fell 在哪一拍成立？</h3>
+<p>在 SVA 中，<code>$fell(sig)</code> 不是“实时监听信号下降沿”，而是在 property 指定的采样事件到来时，比较“上一次采样值”和“当前采样值”。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(posedge clk)</span></span>
+<span class="line"><span>$fell(reset_b) |-> (full == 0);</span></span></code></pre>
+<p>含义是：每个 <code>posedge clk</code> 都采样一次 <code>reset_b</code>；如果上一拍采到 <code>1</code>、当前拍采到 <code>0</code>，那么 <code>$fell(reset_b)</code> 就在当前这个时钟沿成立。由于使用的是重叠蕴含 <code>|-></code>，右侧 <code>(full == 0)</code> 也在同一个采样周期检查；若改成 <code>|=></code>，则在下一拍检查右侧。
+最容易混淆的是“信号恰好在当前时钟沿由时序逻辑更新”的情况。SVA 会在时钟沿的 Preponed 区域先采样，而 <code>always_ff @(posedge clk)</code> 中的非阻塞赋值要到后面的 NBA 区域才更新。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">always_ff</span><span style="--shiki-light:#D32F2F;--shiki-dark:#7FDBCA"> @</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">posedge</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> clk</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    reset_b</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> &#x3C;=</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span></code></pre>
+<p>若 <code>reset_b</code> 是在 A 时钟沿由这句代码从 <code>1</code> 更新成 <code>0</code>，那么 A 点 assertion 采样时仍看到旧值 <code>1</code>，A 点之后信号才变为 <code>0</code>，因此到 B 时钟沿才采到 <code>0</code>，此时 <code>$fell(reset_b)</code> 才成立。反之，如果 <code>reset_b</code> 在 A 沿采样之前就已经变为 <code>0</code>，那么 $fell 就在 A 沿成立。
+因此不要简单记成“同步信号 $fell 下一拍触发”。准确规则是：<strong>$fell 比较相邻采样值；对单 bit，前值为 1/X/Z、当前为 0 都可构成下降；到底是 A 拍还是 B 拍成立，取决于新值在 A 拍 SVA 采样之前是否已经可见。</strong></p>
+<h3 id="延迟窗口与连续重复有什么区别">延迟窗口与连续重复有什么区别？</h3>
+<p>SVA 中，如果要求“A 成立后的第 1～4 个时钟周期内，B 至少有一次为 1”，典型写法是 <code>A |-> ##[1:4] B</code>；如果要求后面连续 4 个周期 <code>B</code> 都为 1，则应使用类似 <code>A |=> B[*4]</code>。两者的本质区别是“时间窗口内出现一次”与“连续保持若干周期”。</p>
+<h3 id="同一时间槽内的-nba-与采样打印">同一时间槽内的 NBA 与采样打印</h3>
+<p>SystemVerilog/UVM 中，并发断言通常在时钟事件处对信号进行采样，并按断言调度区域求值；<code>$sampled()</code> 可在 assertion 的 action block 中取得本次断言实际采样到的值，适合调试打印。时序逻辑应使用非阻塞赋值 <code>&#x3C;=</code>；同一过程在同一时间槽内对同一变量多次 NBA 赋值时，最终通常由最后一次赋值决定，其更新发生在该时间槽的 NBA 区域，而不是“等到下一个时钟沿”。
+调度主链是教学简化，同一时间槽可能经历多轮区域调度。普通 UVM class 不会仅因属于 testbench 就自动在 Reactive 执行，实际取决于启动上下文与同步机制。
+$rose/$fell 对多 bit 表达式需注意最低有效位语义。以上复位例子按正常的 1→0 转换解释。</p>
+<h3 id="补充disable-iff空成功与握手断言">补充：Disable iff、空成功与握手断言</h3>
+<p>并发断言中的 disable iff 用于在复位等条件下中止当前断言尝试。它通常使用非采样的条件，具有异步禁用语义；不能把它当成普通的、只在 property 时钟沿判断的前件。用它屏蔽复位期间的协议检查，并不等于验证了复位本身正确。
+下面检查单通道的 valid/payload 在背压后仍保持：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>assert property (@(posedge clk) disable iff (!rst_n)</span></span>
+<span class="line"><span>  (valid &#x26;&#x26; !ready) |=> (valid &#x26;&#x26; $stable(payload)));</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>cover property (@(posedge clk) disable iff (!rst_n)</span></span>
+<span class="line"><span>  valid &#x26;&#x26; !ready);</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>cover property (@(posedge clk) disable iff (!rst_n)</span></span>
+<span class="line"><span>  (valid &#x26;&#x26; !ready) ##1 (valid &#x26;&#x26; ready));</span></span></code></pre>
+<p>payload 应包含该通道所有要求稳定的字段，例如数据、掩码和 LAST。若接口允许握手取消，需按该协议另写条件。X/Z 检查也要单独考虑，不能依赖普通真假判定发现全部未知态。
+A |-> B 在 A 不成立时可能“空成功”（vacuous success）。因此 assertion 没报错，不代表触发条件真的测过；需要覆盖前件、完整响应场景，并检查是否被 reset 长期禁用。Formal 中同样要确认 assumption 没把触发场景排除。
+参考：<a href="https://www.doulos.com/media/whbl2ydq/2409-27-qalog_sva_expert_in_one_hour.pdf">Doulos SVA 问答：disable iff 与 vacuity</a>。</p>
+<h2 id="sv-并发interface-与-driver-复位">SV 并发、Interface 与 Driver 复位</h2>
+<p>fork、同步原语、clocking block、事件等待和复位中断。</p>
+<h3 id="forkjoin-的进程语义">Fork/Join 的进程语义</h3>
+<p><code>fork...join</code> 的核心是“父进程创建并发子进程”。<code>fork</code> 中直接出现的每一条 statement 都是一个独立子进程；如果用 <code>begin...end</code> 包住多条语句，那么整个 <code>begin...end</code> 只算一个子进程，内部仍顺序执行。<code>join</code> 会等待所有子进程结束，<code>join_any</code> 只等任意一个子进程结束，剩余子进程仍继续运行；<code>join_none</code> 完全不等待，父进程继续向后执行。对于 <code>join_none</code>，创建出的子进程要等父进程发生阻塞或结束后才获得执行机会，因此在 <code>for</code> 循环里尤其容易出现“循环已经跑完，子线程才开始读变量”的问题。<code>wait fork</code> 用来等待当前进程仍未结束的直接子进程；<code>disable fork</code> 会终止当前进程仍存活的子进程，复杂环境中要注意误杀其他后台线程。
+经典问题是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">for</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">; </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> &#x3C;</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 3</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">; </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">++</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">) </span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">begin</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    fork</span></span>
+<span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#C5E478">        $display</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">%0d</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">, </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    join_none</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">end</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">wait</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> fork</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span></code></pre>
+<p>这里会创建 3 个 $display 子线程，所以一定打印 3 次；但它们共享同一个循环变量 <code>i</code>，等真正执行时循环已经结束，<code>i == 3</code>，因此通常打印 <code>3 3 3</code>。解决方法是每轮保存一份独立快照：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">for</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">; </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> &#x3C;</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 3</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">; </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">++</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">) </span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">begin</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    fork</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">        automatic</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> k</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#C5E478">        $display</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">%0d</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">, </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">k</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    join_none</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">end</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">wait</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> fork</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span></code></pre>
+<p>每次进入该 <code>fork</code> 作用域都会产生独立的 automatic <code>k</code>，分别保存 <code>0、1、2</code>，因此三个子线程最终分别打印这三个值，顺序不保证。这里 <code>automatic</code> 的本质是“每次作用域激活拥有独立存储”，不是让代码并行。还要特别注意：若改成 <code>fork begin automatic int k=i; ... end join_none</code>，<code>k=i</code> 位于子进程内部，要等子进程真正开始执行时才初始化，此时 <code>i</code> 可能已经变成 3，因此作用不同。
+<code>for + fork</code> 的组合要看谁包谁。<code>fork</code> 里放一个完整 <code>for</code>，只是“整个循环”与其他 fork 分支并行，循环内部仍顺序；<code>for</code> 每轮里使用 <code>fork...join</code>，每轮都会等子线程结束后才进入下一轮，因此通常没有跨迭代并行；只有 <code>for + fork...join_none</code> 才会快速创建多轮并发线程，这也是最需要 <code>automatic</code> 保存循环变量快照的场景。<code>join_any</code> 在 fork 中只有一个子线程时与 <code>join</code> 效果相同；有多个子线程时，任意一个结束父线程就继续，如果希望“谁先结束就终止其他分支”，常见模式是 <code>join_any</code> 后接 <code>disable fork</code>。</p>
+<h3 id="semaphore-与-mailbox资源控制和事务传递">Semaphore 与 Mailbox：资源控制和事务传递</h3>
+<p><code>semaphore</code>（旗语/信号量）和 <code>mailbox</code> 都用于 SystemVerilog 并发线程之间的同步，但解决的问题不同。<code>semaphore</code> 解决“共享资源访问控制”，本质是一个可计数的许可证池：<code>new(N)</code> 表示初始有 N 个 key，线程通过 <code>get(n)</code> 获取 key，资源不足时会阻塞；使用结束后通过 <code>put(n)</code> 归还。<code>try_get(n)</code> 是非阻塞版本，拿不到立即返回失败。<code>new(1)</code> 时可当作互斥锁使用，保证同一时刻只有一个线程进入临界区；<code>new(N)</code> 则可限制最多 N 个线程同时使用某类资源。要注意 semaphore 本质是计数型信号量，不只是 mutex。
+<code>mailbox</code> 解决“线程间数据传递”，本质是线程安全、支持阻塞操作的 FIFO，典型用于 producer-consumer 模型。<code>put()</code> 将数据放入 mailbox，<code>get()</code> 取出并删除最前面的数据；若 mailbox 为空，<code>get()</code> 会阻塞等待数据。<code>peek()</code> 只读取最前面的数据但不删除。<code>try_get()</code>、<code>try_put()</code>、<code>try_peek()</code> 是对应的非阻塞版本。<code>mailbox mbx = new()</code> 为不限容量，<code>new(N)</code> 为有界 mailbox；有界 mailbox 满时，<code>put()</code> 会阻塞，因此可以自然形成 backpressure。实际验证中优先使用类型化邮箱，如 <code>mailbox #(transaction)</code>，可避免错误类型的数据进入邮箱。
+两者最核心的判断方式是：如果问题是“谁能访问共享资源、同时允许几个线程访问”，用 <code>semaphore</code>；如果问题是“transaction 怎样从一个线程传给另一个线程”，用 <code>mailbox</code>。例如多个线程竞争同一资源时用 semaphore；monitor 向 scoreboard 传 transaction 时可用 mailbox。mailbox 与普通 queue 也不同：queue 只是数据结构，本身没有阻塞等待和线程同步语义，而 mailbox 同时承担数据存储和线程同步。
+在 UVM 中通常不会大量直接使用 mailbox 完成组件通信，而更多使用 TLM，例如 monitor 通过 <code>analysis_port.write()</code> 向 scoreboard 发送 transaction，sequence/sequencer/driver 之间也通过 TLM 接口通信。理解 mailbox 的 producer-consumer、阻塞/非阻塞语义，是理解 UVM TLM 通信机制的重要基础。</p>
+<h3 id="原生-event-与-uvm-event">原生 Event 与 UVM Event</h3>
+<p>UVM 事件机制中，SystemVerilog 原生 <code>event</code> 与 <code>uvm_event</code> 要严格区分：原生 <code>event</code> 用 <code>-> ev</code> 触发、<code>@ev</code> 等待，本身不能携带对象数据；<code>uvm_event</code> 是类对象，通过 <code>ev.trigger(data)</code> 触发，通过 <code>wait_trigger()</code>、<code>wait_trigger_data()</code> 等等待，并且 <code>trigger()</code> 可携带一个 <code>uvm_object</code>。因此“用 <code>-></code> 触发 <code>uvm_event</code>”是错误的。<code>uvm_event</code> 还提供 <code>wait_ptrigger()</code> 等更丰富的同步语义，可减少同一时间片内先触发、后等待导致错失事件的问题。</p>
+<h3 id="moduleinterface-与-virtual-interface-的层次关系">Module、Interface 与 Virtual Interface 的层次关系</h3>
+<p>核心关系可以直接记为：<strong>module 可以例化 interface，interface 不能例化 module。</strong> SystemVerilog 的 <code>interface</code> 主要用于封装一组相关信号、时序和协议行为，作为模块之间或 DUT 与验证环境之间的连接抽象。标准明确允许 interface 在 module 中声明和例化，但不允许 module 在 interface 中声明或例化。<a href="https://www.eda-twiki.org/sv-ec/3.0_LRM.pdf?utm_source=chatgpt.com">Eda Twiki</a>
+在 UVM 中，真实的 interface 通常仍然是在 <code>tb_top</code> 这类静态 <code>module</code> 中例化，然后通过 <code>uvm_config_db</code> 把它的 <strong>virtual interface 句柄</strong>传给 driver、monitor 等 class。需要特别区分：<code>virtual axi_if vif;</code> 并没有创建一个 interface 实例，只是声明了一个指向已有 interface 实例的句柄。典型关系是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>tb_top (module)</span></span>
+<span class="line"><span>├── DUT (module)</span></span>
+<span class="line"><span>└── axi_if (interface)</span></span>
+<span class="line"><span>       ↑</span></span>
+<span class="line"><span>       │ virtual interface</span></span>
+<span class="line"><span>       │</span></span>
+<span class="line"><span>   UVM driver / monitor</span></span></code></pre>
+<p>因此 UVM 可以理解为两个世界：<code>module/interface</code> 属于仿真开始前建立好的<strong>静态层次结构</strong>，UVM component、sequence、transaction 等属于运行时创建的 <strong>class 动态对象体系</strong>；两者最常用的桥梁就是 <code>virtual interface</code>。另外，interface 本身可以包含信号、task/function、clocking block、modport、断言以及一定的过程逻辑，甚至可以包含其他 interface，但它并不是用来替代 module 作为普通设计层次容器的。<a href="https://verificationacademy.com/forums/t/embeding-sva-modules-inside-interfaces/27897?utm_source=chatgpt.com">Verification Academy</a></p>
+<h3 id="clocking-block-的-inputoutput-skew">Clocking Block 的 Input/Output Skew</h3>
+<p>Clocking block 的核心作用是把 testbench 对 DUT 的“采样”和“驱动”在时间上错开，从而减少与 DUT 时序逻辑之间的 race。最重要的规律是：**input skew 表示在 clocking event 之前采样，output skew 表示在 clocking event 之后驱动。**例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>clocking cb @(posedge clk);</span></span>
+<span class="line"><span>    default input #1ps output #1ps;</span></span>
+<span class="line"><span>    input  rdata;</span></span>
+<span class="line"><span>    output valid;</span></span>
+<span class="line"><span>endclocking</span></span></code></pre>
+<p>若 <code>posedge clk</code> 发生在 100 ps，则 <code>input #1ps</code> 表示在 99 ps 对 <code>rdata</code> 取样，并把这个 sampled value 保存到 clocking variable 中；到 100 ps clocking event 发生、monitor 被唤醒时，读取 <code>cb.rdata</code> 得到的是刚才 99 ps 已经采好的值。这里容易混淆的是：<strong>“提前采样”不代表 monitor 的代码提前执行</strong>，只是采样动作提前完成，testbench 仍在 clocking event 时使用这个值。相反，<code>output #1ps</code> 表示 testbench 在 100 ps 通过 <code>cb.valid</code> 提交要驱动的值，但真正的 interface/DUT 信号要到 101 ps 才改变。
+因此 clocking block 中可以直接记住：**Input 往时钟沿左边采，Output 往时钟沿右边驱动。**例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>99 ps              100 ps              101 ps</span></span>
+<span class="line"><span>  |                   |                   |</span></span>
+<span class="line"><span>input #1ps         posedge clk        output #1ps</span></span>
+<span class="line"><span>  ↑                   ↑                   ↓</span></span>
+<span class="line"><span>提前采样          TB 被唤醒/使用值       DUT 信号改变</span></span></code></pre>
+<p>常见的 <code>default input #1step output #0;</code> 也是同一逻辑：<code>input #1step</code> 在当前 clocking event 前一个最小仿真时间步采样 DUT 信号，避免和 DUT 在该沿上的更新竞争；<code>output #0</code> 则表示不增加实际的 ps/ns 物理延迟，而是在该 clocking event 对应的 clocking block 输出调度区域驱动。<code>#1step</code> 和 <code>#1ps</code> 不同，前者表示一个仿真精度步长，后者是明确的物理时间。
+另一个常见误区是把波形中的 <code>cb.signal</code> 和真实 interface 信号 <code>signal</code> 当成同一个对象。它们语义不同：<code>cb.signal</code> 是 clocking variable，代表 clocking block 已经采样到或准备驱动的值；真实 <code>interface.signal</code> 才是 DUT 实际看到的信号。因此使用 <code>output #1ps</code> 时，波形中可能先看到 <code>cb.valid</code> 改变，之后 1 ps 才看到真正的 <code>valid</code> 改变，这不是“CB 提前驱动”，而是 <strong>clocking variable 先得到待驱动值，再经过 output skew 作用到真实信号上</strong>。
+最后，<code>#1</code> 本身不一定等于 1 ps，它取决于当前作用域的 <code>timeunit</code> 或 <code>timescale</code>。例如 <code>timeunit 1ns</code> 时，<code>output #1</code> 就是 1 ns。若希望明确表示 1 ps，应直接写 <code>input #1ps</code>、<code>output #1ps</code>。总体上，Clocking block 的设计思想可以概括为：<strong>边沿前采 DUT，边沿处或边沿后驱 DUT，用明确的采样/驱动时序消除 testbench 与 DUT 之间的竞争。</strong></p>
+<h3 id="为什么-cb-可能没有让-time-变化">为什么 @cb 可能没有让 $time 变化？</h3>
+<p><code>repeat(1) @(event)</code> 与 <code>@(event)</code> 完全等价，<code>repeat(1)</code> 不会额外增加一个周期。例如 <code>repeat(1) @(posedge clk)</code> 就是等待下一次 <code>posedge clk</code>。事件控制会阻塞当前线程，但“阻塞”不等于一定推进一个完整时钟周期；真正推进多少物理时间取决于下一次目标事件什么时候发生。
+对于普通的 <code>@(posedge clk)</code>，如果执行到这句时当前上升沿已经发生，那么只能等下一个上升沿。但 <code>@(vif.mst.cb_o)</code> 有一个容易混淆的特殊点。若 <code>cb_o</code> 定义为 <code>clocking cb_o @(posedge clk)</code>，那么 <code>@(cb_o)</code> 等待的是 <strong>clocking block 自己的 named event</strong>，而不是直接等待 <code>posedge clk</code>。SystemVerilog 会先处理该 clocking block 的采样值，然后触发这个 named event；因此存在这种情况：<code>posedge clk</code> 已经在当前 time slot 发生，但 <code>cb_o</code> 的 named event 尚未触发，此时代码执行到 <code>@(cb_o)</code>，仍然能在同一个 <code>$time/$realtime</code> 内被唤醒，只是跨过了仿真调度 region，而没有推进到下一拍。<a href="https://verificationacademy.com/forums/t/input-sampling-for-clocking-blocks/41134?utm_source=chatgpt.com">Verification Academy</a>
+因此下面这种现象是合法的：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>$display("%0t A", $time);</span></span>
+<span class="line"><span>@(vif.mst.cb_o);</span></span>
+<span class="line"><span>$display("%0t B", $time);</span></span></code></pre>
+<p>可能看到：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>100ns A</span></span>
+<span class="line"><span>100ns B</span></span></code></pre>
+<p>这并不意味着 <code>@(cb_o)</code> 被忽略了，而是 A 执行时当前 100ns 对应的 clocking-block event 尚未触发，线程随后在同一 time slot 被该 event 唤醒。反过来，如果代码执行到 <code>@(cb_o)</code> 时本次 named event 已经发生，就只能等待下一次 clocking event，此时 $time 才会推进到下一拍。
+这不会导致“有时多一拍、有时少一拍而乱套”，因为行为由仿真调度顺序确定，并非随机。真正容易制造混乱的是<strong>混用不同同步事件</strong>，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(posedge vif.clk);</span></span>
+<span class="line"><span>...</span></span>
+<span class="line"><span>@(vif.mst.cb_o);</span></span></code></pre>
+<p>由于 <code>posedge clk</code> 与 <code>cb_o</code> 属于同一时钟沿的不同调度阶段，第二个 <code>@(cb_o)</code> 有可能继续捕获当前这一拍的 clocking-block event。也正因此，使用 clocking block 后，通常应统一使用 <code>@(cb_o)</code> 作为 testbench 的同步事件，而不要在同一驱动流程里混用 <code>@(posedge clk)</code>、<code>wait(...)</code> 等同步方式。<a href="https://verificationacademy.com/forums/t/clocking-block-in-interface/29291/3?utm_source=chatgpt.com">Verification Academy</a>
+反之，<strong>连续两个 <strong><code>@(cb_o)</code></strong> 是明确相隔一拍的</strong>：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(vif.mst.cb_o);  // 第 N 次 cb_o event 唤醒</span></span>
+<span class="line"><span>@(vif.mst.cb_o);  // 第 N+1 次 cb_o event 才能唤醒</span></span></code></pre>
+<p>第一个 <code>@(cb_o)</code> 被第 N 次 event 唤醒后，第 N 次 event 已经过去，第二个不可能再次消费同一个 event，所以必须等下一次。因此 driver 中最好统一管理时钟同步，例如外层已经：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(vif.mst.cb_o);</span></span>
+<span class="line"><span>drive_metadata(req);</span></span></code></pre>
+<p>那么 <code>drive_metadata()</code> 内部就不要无意间再写：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(vif.mst.cb_o);</span></span></code></pre>
+<p>否则就是真正明确地又等待了一次 clocking event，通常会多一拍。
+最后，clocking block 中：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>clocking cb_o @(posedge clk);</span></span>
+<span class="line"><span>    default input #1step output #1;</span></span>
+<span class="line"><span>endclocking</span></span></code></pre>
+<p><code>input #1step</code> 和 <code>output #1</code> 是<strong>采样/驱动 skew</strong>，不能理解成 <code>@(cb_o)</code> 自己增加了这些延迟。尤其 <code>output #1</code> 表示通过 clocking block 写输出后，实际输出相对于 clocking event 的驱动偏移，而不是 <code>@(cb_o)</code> 会额外等待 1 个时间单位。
+最值得记住的一句话是：<strong><code>@(posedge clk)</code></strong> 等底层时钟边沿；<strong><code>@(cb_o)</code></strong> 等 clocking block 的 named event。使用 clocking block 后尽量始终用 <strong><code>@cb_o</code></strong> 做同步，不要把 <strong><code>@posedge clk</code></strong> 和 <strong><code>@cb_o</code></strong> 混在同一套 driver 时序里。</p>
+<h3 id="if-与事件等待为什么不能互换">If 与事件等待为什么不能互换？</h3>
+<p>在 SystemVerilog 中，<code>if (@(negedge clk))</code> 是非法语法。原因是 <code>if (...)</code> 中必须放一个能够求值得到真/假的表达式，而 <code>@(negedge clk)</code> 属于事件控制语句，用于“等待某个事件发生”，本身不是布尔条件。
+如果需求是“等待 <code>clk</code> 的下降沿到来后执行操作”，应直接写：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(negedge clk);</span></span>
+<span class="line"><span>driver = 0;</span></span></code></pre>
+<p>也可以写成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(negedge clk) begin</span></span>
+<span class="line"><span>    driver = 0;</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>若需要持续在每个下降沿执行，可使用：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>forever begin</span></span>
+<span class="line"><span>    @(negedge clk);</span></span>
+<span class="line"><span>    driver = 0;</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>需要特别区分事件检测和电平判断。<code>@(negedge clk)</code> 表示等待 <code>clk</code> 从高电平跳变到低电平，是“边沿事件”；而：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>if (!clk)</span></span>
+<span class="line"><span>    driver = 0;</span></span></code></pre>
+<p>只是检查执行到该语句时 <code>clk</code> 当前是否为 0，并不能判断刚刚是否发生了下降沿。
+因此可以记住：<code>if</code> 用来判断“当前条件是否成立”，<code>@(...)</code> 用来等待“某个事件何时发生”。需要检测时钟上升沿、下降沿等事件时，应使用 <code>@(posedge clk)</code>、<code>@(negedge clk)</code>，而不是把事件控制写进 <code>if</code> 条件中。</p>
+<h3 id="reset-后-driver-为什么仍可能多发一笔">Reset 后 Driver 为什么仍可能多发一笔？</h3>
+<p>在 SystemVerilog 中，<code>@(negedge vif.rst_n)</code> 是合法事件控制，等待执行到此处之后的下降沿。在正常二态复位波形中就是 1→0；四态语义还包括 1→X/Z、X/Z→0，不能假定只会由干净的 1→0 触发。它与 <code>if (vif.rst_n == 0)</code> 不同：if 检查当前电平，事件控制等待后续事件。如果进入等待时 rst_n 已为 0，不会立即通过。因此不能把下面的 if/else：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>if (vif.rst_n == 0) begin</span></span>
+<span class="line"><span>    ...</span></span>
+<span class="line"><span>end</span></span>
+<span class="line"><span>else begin</span></span>
+<span class="line"><span>    ...</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>简单替换成</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(negedge vif.rst_n) begin</span></span>
+<span class="line"><span>    ...</span></span>
+<span class="line"><span>end</span></span>
+<span class="line"><span>else begin</span></span>
+<span class="line"><span>    ...</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>因为 <code>else</code> 必须与 <code>if</code> 对应，而且这样还会让整个 task 卡在等待 reset 下降沿，正常 driver 流程无法继续。
+如果需求是“发送过程中 reset 异步拉低后立即停止驱动”，需要并发监听复位，并协调正常发送线程的退出与输出驱动所有权。若只要求在发送时钟点响应复位，也可以在每个 drive 点后检查 rst_n，但这是同步检查，不能替代异步立即响应。
+两种方案都必须阻止正常发送线程在清零后继续写出数据，否则 reset 分支刚清零，正常分支又执行一次 &#x3C;= data，波形就会出现复位后多发一笔。下面代码仅示意“发送点检查后退出当前 task”的方案：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>@(vif.mst.cb_o);</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>if (!vif.rst_n) begin</span></span>
+<span class="line"><span>    vif.mst.cb_o.strb_o       &#x3C;= 0;</span></span>
+<span class="line"><span>    vif.mst.cb_o.long_data_o  &#x3C;= 0;</span></span>
+<span class="line"><span>    vif.mst.cb_o.short_data_o &#x3C;= 0;</span></span>
+<span class="line"><span>    // 其他输出清零</span></span>
+<span class="line"><span>    drive_invalid(trans);</span></span>
+<span class="line"><span>    return;</span></span>
+<span class="line"><span>end</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>// 只有 reset 未生效时才继续正常发送</span></span>
+<span class="line"><span>vif.mst.cb_o.strb_o      &#x3C;= 1;</span></span>
+<span class="line"><span>vif.mst.cb_o.long_data_o &#x3C;= ...;</span></span></code></pre>
+<p>比较稳妥的完整思路是：task 刚进入时先用 <code>if (!rst_n)</code> 处理“已经处于 reset”的情况；正常运行期间再监控下降沿或在每个发送点检查 reset；一旦 reset 生效，清零输出并终止当前 drive 流程。还要注意，如果这些信号是通过 clocking block（如 <code>vif.mst.cb_o.xxx &#x3C;= ...</code>）驱动的，实际 DUT 引脚何时变化还受 clocking block 的 <code>output skew</code> 影响。即使 reset 下降沿已经出现，如果上一笔赋值此前已经被 clocking block 调度出去，也可能在波形上看到 reset 后仍出现最后一拍。因此分析这类“reset 后多一笔”的问题时，要同时检查两点：正常 driver 是否在 reset 后仍继续执行，以及 <code>cb_o</code> 的 <code>default output #...</code> / output skew 设置。</p>
+<h3 id="复位代码的工程边界">复位代码的工程边界</h3>
+<p>逐时钟发送点检查只能在该采样粒度响应，不能保证异步立即清零。上面的代码是局部控制流程示意，省略号不能直接编译；实际还需协调 item_done、已接受事务、输出驱动所有权和待生效的 clocking drive。disable fork 会影响当前进程的活动后代，应隔离作用域，避免误杀其他后台线程。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/systemverilog/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>SystemVerilog</a></li><li><a data-astro-transition-scope="astro-bztu2lml-3" href="/tags/sva/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>SVA</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-sv-basics/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（一）：SystemVerilog 语言基础</div></div></a><a href="/posts/dv-rtl-timing-cdc/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（三）：数字设计、时序与 CDC</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

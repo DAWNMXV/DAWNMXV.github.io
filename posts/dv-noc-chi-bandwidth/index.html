@@ -1,0 +1,654 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-noc-chi-bandwidth/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（七）：NoC、CHI 与接口带宽 | DAWNMX</title><meta name="title" content="数字验证问答（七）：NoC、CHI 与接口带宽 | DAWNMX"><meta name="description" content="路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（七）：NoC、CHI 与接口带宽 | DAWNMX"><meta property="og:description" content="路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-noc-chi-bandwidth/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-noc-chi-bandwidth/"><meta property="twitter:title" content="数字验证问答（七）：NoC、CHI 与接口带宽 | DAWNMX"><meta property="twitter:description" content="路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（七）：NoC、CHI 与接口带宽 | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: noc; }@layer astro { ::view-transition-old(noc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(noc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(noc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(noc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-3"] { view-transition-name: chi; }@layer astro { ::view-transition-old(chi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(chi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(chi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(chi) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-noc-chi-bandwidth" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（七）：NoC、CHI 与接口带宽</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第七篇，整理自我的复习笔记。路由、Flit、Credit、VC、一致性互联与高速接口的带宽和分层。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#nocchi-%E4%B8%8E%E4%B8%80%E8%87%B4%E6%80%A7%E4%BA%92%E8%81%94">NoC、CHI 与一致性互联</a>
+<ul>
+<li><a href="#nocchi-%E4%B8%8E-amba-%E7%9A%84%E5%85%B3%E7%B3%BB">NoC、CHI 与 AMBA 的关系</a></li>
+<li><a href="#endpointrouter%E5%9D%90%E6%A0%87hop-%E4%B8%8E-floor">Endpoint、Router、坐标、Hop 与 Floor</a></li>
+<li><a href="#%E4%B8%80%E7%AC%94-flit-%E7%A9%BF%E8%BF%87-router-%E7%9A%84%E5%AE%8C%E6%95%B4%E8%BF%87%E7%A8%8B">一笔 Flit 穿过 Router 的完整过程</a></li>
+<li><a href="#validready-%E4%B8%8E-credit-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF%E4%B8%8D%E5%90%8C">VALID/READY 与 Credit 为什么适用场景不同？</a></li>
+<li><a href="#vcwormhole-%E4%B8%8E-buffer-%E6%B5%81%E6%8E%A7">VC、Wormhole 与 Buffer 流控</a></li>
+<li><a href="#deadlocklivelockstarvation-%E4%B8%8E-forward-progress">Deadlock、Livelock、Starvation 与 Forward Progress</a></li>
+<li><a href="#noc-scoreboard-%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E5%90%88%E6%B3%95%E4%B9%B1%E5%BA%8F">NoC Scoreboard 如何处理合法乱序？</a></li>
+<li><a href="#%E6%B5%81%E9%87%8F%E5%9C%BA%E6%99%AF%E4%BA%A4%E5%8F%89%E8%A6%86%E7%9B%96%E4%B8%8E%E6%80%A7%E8%83%BD%E9%A5%B1%E5%92%8C">流量场景、交叉覆盖与性能饱和</a></li>
+<li><a href="#chi-atomic-%E4%B8%8E-far-atomic">CHI Atomic 与 Far Atomic</a></li>
+<li><a href="#%E5%AE%89%E5%85%A8%E5%B1%9E%E6%80%A7%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E5%BD%93%E4%BD%9C%E4%B8%80%E8%87%B4%E6%80%A7%E5%B1%9E%E6%80%A7">安全属性为什么不能当作一致性属性？</a></li>
+<li><a href="#%E5%90%84%E7%A7%8D%E5%8D%8F%E8%AE%AE%E4%B8%AD%E7%9A%84%E8%BE%B9%E7%95%8C%E6%98%AF%E4%B8%8D%E6%98%AF%E5%90%8C%E4%B8%80%E7%A7%8D%E7%BA%A6%E6%9D%9F">各种协议中的边界是不是同一种约束？</a></li>
+<li><a href="#%E8%B7%AF%E7%94%B1%E6%97%A0%E6%AD%BB%E9%94%81%E7%BB%93%E8%AE%BA%E7%9A%84%E5%89%8D%E6%8F%90">路由无死锁结论的前提</a></li>
+<li><a href="#%E8%A1%A5%E5%85%85%E5%85%AC%E5%B9%B3%E6%80%A7%E5%92%8C-forward-progress-%E7%9A%84%E7%BB%93%E8%AE%BA%E9%9C%80%E8%A6%81%E4%BB%80%E4%B9%88%E5%89%8D%E6%8F%90">补充：公平性和 Forward Progress 的结论需要什么前提？</a></li>
+</ul>
+</li>
+<li><a href="#%E9%80%9F%E7%8E%87%E5%B8%A6%E5%AE%BD%E4%B8%8E%E9%AB%98%E9%80%9F%E6%8E%A5%E5%8F%A3%E5%88%86%E5%B1%82">速率、带宽与高速接口分层</a>
+<ul>
+<li><a href="#%E9%A2%91%E7%8E%87%E4%BC%A0%E8%BE%93%E7%8E%87bits-%E4%B8%8E-bytes-%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">频率、传输率、bit/s 与 Byte/s 有什么区别？</a></li>
+<li><a href="#%E5%B9%B6%E8%A1%8C%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%B3%B0%E5%80%BC%E4%B8%8E%E5%AE%9E%E9%99%85%E5%B8%A6%E5%AE%BD%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97">并行接口的峰值与实际带宽如何计算？</a></li>
+<li><a href="#ddr-%E7%9A%84-mts-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%AD%89%E4%BA%8E%E6%97%B6%E9%92%9F-mhz">DDR 的 MT/s 为什么不等于时钟 MHz？</a></li>
+<li><a href="#%E4%B8%B2%E8%A1%8C%E6%8E%A5%E5%8F%A3%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E8%A6%81%E8%80%83%E8%99%91%E8%B0%83%E5%88%B6%E5%92%8C%E7%BC%96%E7%A0%81">串行接口为什么还要考虑调制和编码？</a></li>
+<li><a href="#%E5%A4%9A-lane-%E4%B8%8E%E5%85%A8%E5%8F%8C%E5%B7%A5%E5%B8%A6%E5%AE%BD%E5%A6%82%E4%BD%95%E8%AE%A1%E7%AE%97">多 lane 与全双工带宽如何计算？</a></li>
+<li><a href="#serdes%E9%AB%98%E9%80%9F%E4%B8%B2%E8%A1%8C%E7%89%A9%E7%90%86%E5%B1%82%E6%8A%80%E6%9C%AF">SerDes：高速串行物理层技术</a></li>
+<li><a href="#hbm%E8%B6%85%E5%AE%BD%E5%B9%B6%E8%A1%8C%E6%8E%A5%E5%8F%A3%E4%B8%8E%E5%A0%86%E5%8F%A0%E5%AD%98%E5%82%A8">HBM：超宽并行接口与堆叠存储</a></li>
+<li><a href="#uciepciecxl-%E4%B8%8E%E7%89%87%E5%86%85%E4%BA%92%E8%81%94%E7%9A%84%E5%B1%82%E7%BA%A7">UCIe、PCIe/CXL 与片内互联的层级</a></li>
+<li><a href="#%E5%B8%A6%E5%AE%BD%E4%B8%8D%E8%B6%B3%E6%9C%89%E5%93%AA%E4%BA%9B%E7%A1%AC%E4%BB%B6%E5%92%8C%E8%BD%AF%E4%BB%B6%E6%96%B9%E6%A1%88">带宽不足有哪些硬件和软件方案？</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="nocchi-与一致性互联">NoC、CHI 与一致性互联</h2>
+<p>Router、Flit、Credit、VC、前进性、乱序检查和原子事务。</p>
+<h3 id="nocchi-与-amba-的关系">NoC、CHI 与 AMBA 的关系</h3>
+<p>从体系结构演进上看，可以把 AHB 理解成共享总线/逐 beat 流水思维，AXI 转向明确事务边界、独立通道和 outstanding，CHI 则进一步进入 packet 化、分布式 cache coherence 和 NoC 场景。CHI 不是 NoC 的替代品，NoC 也不是 CHI/AXI/PCIe 的替代品：AXI/CHI 更偏事务语义，NoC 更偏片上传输、路由和流控基础设施。现代 NoC 常见拓扑包括 Ring、Mesh、Torus、Tree/Fat-tree、Crossbar、Clos/Butterfly 和各种 Hybrid；真正的设计难点集中在 routing、credit/backpressure、buffer/VC、HOL blocking、deadlock/livelock、QoS/starvation、ordering/coherence、CDC、时序和 PPA，而不只是“把 packet 从 A 转到 B”。</p>
+<h3 id="endpointrouter坐标hop-与-floor">Endpoint、Router、坐标、Hop 与 Floor</h3>
+<p>在 NoC 中，<code>SRCCOORD</code> 表示源节点坐标，<code>DSTCOORD/DSCOORD</code> 表示目的节点坐标，用于描述 packet 从哪里发出、要送到哪里。Router 会根据目的坐标执行路由选择，例如二维 Mesh 中常见的 XY Routing。规则 Mesh 采用最短路径时，Hop 数通常为 <code>|src_x-dst_x| + |src_y-dst_y|</code>。
+<code>Router</code> 是 NoC 中负责转发 packet/flit 的交换节点，典型功能包括路由计算、缓存/虚通道管理、仲裁和 Crossbar 转发；<code>Endpoint</code> 则是真正产生或消费事务的端点，例如 CPU、GPU、DMA、DDR Controller、NPU 等。两者要区分：Endpoint 是通信源/目的，Router 是中间转发节点，Endpoint 与 NoC Router 之间通常还会通过 Network Interface 进行协议转换。
+<code>Hop</code> 表示 packet 从一个 Router 到相邻 Router 的一次跳转，是衡量 NoC 路径长度的基本单位。Hop 越多，通常意味着路径更长，并可能带来更高延迟和更多网络资源占用。
+<code>Floor</code> 不是所有 NoC 都统一定义的标准术语，需要结合具体项目判断。它通常表示比 Router 坐标更高一级的拓扑层级、物理区域或 3D NoC 中的层，例如一个节点可以用 <code>{floor, router_coord, endpoint_id}</code> 来定位；也可能只是与芯片 floorplan 相关的物理区域概念。因此看到 <code>floor_id/src_floor/dst_floor</code> 等字段时，应以项目中的 packet header、拓扑定义或 RTL 代码为准。</p>
+<h3 id="一笔-flit-穿过-router-的完整过程">一笔 Flit 穿过 Router 的完整过程</h3>
+<p>NoC 可以理解为片上“分组交换网络”：上层 AXI/CHI 等事务进入 Network Interface 后被封装成 Packet，再拆成 Flit，通过多个 Router 转发，最后在目的端重组。理解 NoC 时最重要的主线是：<strong>一笔事务如何经过 Packetization → Routing → VC/Buffer → Flow Control → Arbitration → Crossbar/Link → Reassembly，最终正确到达目的端。</strong> Router 是核心，典型内部过程包括输入缓存、路由计算、VC 分配、交换仲裁和 Crossbar 转发。确定性路由如 XY Routing 路径唯一，参考模型容易预测；自适应路由可能存在多个合法下一跳，因此验证时通常检查“实际选择是否属于合法集合”，而不是强制预测唯一输出。</p>
+<h3 id="validready-与-credit-为什么适用场景不同">VALID/READY 与 Credit 为什么适用场景不同？</h3>
+<p><code>VALID/READY</code> 和 Credit 是两种不同的流控模型。AXI 的 <code>VALID/READY</code> 是逐拍握手：发送方用 <code>VALID</code> 表示当前数据有效，接收方用 <code>READY</code> 表示当前能够接收，二者同时为 1 时完成一次 transfer。它并不低效；只要双方连续保持 <code>VALID=READY=1</code>，AXI 同样可以做到每周期一个 beat。AXI 之所以采用这种方式，是因为它主要定义通用的点到点接口，机制简单、灵活，接收端可以随时通过 <code>READY</code> 施加 backpressure；实际 SoC 还会通过 FIFO、register slice、skid buffer 等切断过长的握手路径，并不是让一根 READY 信号跨越整个系统。
+Credit 流控则是接收端提前告诉发送端“我还有 N 个 Buffer，可以再收 N 个 flit”。发送方维护 <code>credit_count</code>，每发送一个消耗一个 credit，接收端释放 Buffer 后再返还 credit。它的核心是<strong>资源预授权</strong>，而不是逐拍询问是否可接收，因此更适合 CHI/NoC 这种多 Router、长流水、高频、packetized 的互连。Credit 与 VALID 也并不矛盾：Credit 决定“有没有资格发送”，VALID 仍可以表示“这一拍是否真的有有效 flit”；与 AXI 的区别主要是没有依赖远端 <code>READY</code> 对每一拍进行实时许可。可以概括为：<strong>AXI 的 VALID/READY 更适合局部接口级流控，CHI 的 Credit 更适合网络级 Buffer 资源管理。</strong></p>
+<h3 id="vcwormhole-与-buffer-流控">VC、Wormhole 与 Buffer 流控</h3>
+<p>NoC 的流控重点是 Buffer、Backpressure 和 Credit。Credit 本质上表示<strong>下游还能接收多少个 Flit 的可用缓存额度</strong>：发送一个 Flit 消耗一个 credit，下游释放 Buffer 后返回 credit；验证时不仅要检查 <code>0 &#x3C;= credit &#x3C;= depth</code> 和无 credit 时禁止发送，还要考虑 Flit 与 credit 的链路传播延迟，否则可能出现吞吐下降、重复/漏返 credit、Buffer overflow/underflow 等问题。Virtual Channel 是在同一物理链路上建立多个独立逻辑队列，并不是增加物理带宽；它可以降低 Head-of-Line Blocking，也可用于 QoS 和打破死锁。Wormhole Switching 允许一个 Packet 的不同 Flit 同时分布在多个 Router 中，因此缓存需求低、延迟小，但头 Flit 一旦阻塞，可能连带占用沿途资源。</p>
+<h3 id="deadlocklivelockstarvation-与-forward-progress">Deadlock、Livelock、Starvation 与 Forward Progress</h3>
+<p>NoC 的三个易混淆异常必须区分：<strong>Deadlock</strong> 是多个 Packet 占有资源并循环等待，根源是 Channel Dependency Graph 出现环；<strong>Livelock</strong> 是 Packet 一直移动但始终到不了目的地；<strong>Starvation</strong> 是网络整体仍在运行，但某条流长期抢不到资源。XY Routing 通过固定 X→Y 的资源依赖顺序避免形成循环依赖；自适应路由则常通过 Turn Restriction、Virtual Channel、Escape VC 等方法保证最终存在无死锁路径。因此 NoC 验证不仅要证明数据正确，还要验证 <strong>forward progress</strong>。</p>
+<h3 id="noc-scoreboard-如何处理合法乱序">NoC Scoreboard 如何处理合法乱序？</h3>
+<p>NoC 验证最大的特点是<strong>不能把所有事务简单放进一个 FIFO scoreboard 顺序比较</strong>。不同源、目的、ID、VC 或 ordering domain 的事务可能合法乱序，因此期望数据通常需要按 flow/ID/src/dst 等维度管理，只对规格要求有序的事务检查顺序。Packet/Flit 格式检查与端到端功能检查也应分层：局部 assertion/checker 检查 Head/Body/Tail、合法路由、grant/request、credit、overflow 等；end-to-end scoreboard 负责检查事务是否丢失、重复、数据错误或送错目的端。这样出现问题时能够定位到具体 Router/VC，而不是等最终 Packet 丢失后才报错。</p>
+<h3 id="流量场景交叉覆盖与性能饱和">流量场景、交叉覆盖与性能饱和</h3>
+<p>真正困难的 NoC 场景来自<strong>并发和网络状态组合</strong>。验证不能只发随机 Packet，而应主动制造 many-to-one、all-to-all、热点流量、多个输入竞争同一出口、长时间或随机 backpressure、多 VC 竞争、不同 priority/QoS 等情况。仲裁验证需要检查 grant one-hot、grant 必须对应有效请求、公平性和 starvation；若协议规定一个 Packet 获得通道后不可被其他 Packet 插入，还必须检查 Packet ownership。Coverage 也不能只覆盖 src、dst、packet length，而应重点做 <code>src×dst</code>、<code>input_port×output_port</code>、<code>VC×priority</code>、<code>packet_length×backpressure</code>、<code>route×congestion</code> 等状态交叉。
+最终可以用三个层次概括 NoC 验证目标：<strong>Correctness</strong>——路由、数据、ordering 是否正确；<strong>Safety</strong>——不能丢包、重包、非法发送、Buffer 溢出或 credit 失衡；<strong>Liveness</strong>——不能 deadlock、livelock 或长期 starvation，事务最终必须能够前进。在这三项成立后，再验证 Latency、Throughput、QoS 和网络饱和特性。性能上要特别理解 injection rate 增大后，网络会从低负载的稳定延迟进入拥塞区，并在 saturation point 后出现排队和延迟快速上升。对验证工程师而言，最核心的学习重点是彻底理解 <strong>Router 内一个 Flit 的完整生命周期，以及 Routing、VC、Buffer、Credit、Arbiter 之间如何共同决定它什么时候、从哪里被发送出去</strong>。</p>
+<h3 id="chi-atomic-与-far-atomic">CHI Atomic 与 Far Atomic</h3>
+<p>CHI 的原子事务本质上是把一组 <strong>Read-Modify-Write</strong> 操作作为不可分割的整体执行，用于多个 RN/CPU/DMA 并发访问共享状态时避免竞争和更新丢失。CHI 没有“只读不改”的 <code>AtomicRead</code>；<code>AtomicLoad</code> 也不是普通原子读，而是“修改数据并返回修改前的旧值”。<code>AtomicStore</code> 修改但不返回旧值，<code>AtomicLoad</code> 修改并返回旧值，<code>AtomicSwap</code> 无条件替换并返回旧值，<code>AtomicCompare</code> 实现 CAS：只有原值等于 CompareData 时才写入 SwapData，否则不修改。因此严格说原子事务都具有修改意图，但 <code>AtomicCompare</code> 比较失败时实际不会产生修改。典型应用包括锁/信号量、共享计数器、引用计数、状态位 SET/CLR、任务队列索引和无锁数据结构等；判断是否需要原子操作的关键是：<strong>多个请求者共享某个状态，并且后续修改依赖读取到的旧值。</strong>
+CHI 的 Far Atomic 进一步把这种操作“送到数据附近执行”。它不是把 CPU 的 CAS 指令发送给另一颗 CPU，而是 RN 发出包含地址、Atomic opcode、CompareData/SwapData 等信息的 CHI transaction，由靠近数据的 HN/SN/SLC 完成比较、修改和写回，再把旧值或完成响应返回 RN。传统做法更像“把数据取到 CPU → 本地计算 → 再写回”，Far Atomic 则是“把简单操作送到数据处”。这样在多个核频繁修改同一共享 Cache Line 时，可以减少 Cache Line 在各私有 Cache 间来回迁移以及 Exclusive 操作失败重试造成的一致性流量。需要注意，软件执行一条 CAS 指令并不保证微架构一定一一映射成一笔 CHI <code>AtomicCompare</code>，具体映射属于处理器实现。</p>
+<h3 id="安全属性为什么不能当作一致性属性">安全属性为什么不能当作一致性属性？</h3>
+<p>安全属性和缓存一致性有关，但不是同一种属性。CHI 中 Secure/Non-secure 可近似理解为地址的一部分，即 <code>{Address, Security}</code> 共同决定访问的是哪个逻辑地址空间；缓存一致性在各自安全地址空间内部维护，而不能简单认为同一物理地址的 Secure 与 Non-secure 副本天然互相一致。因此 <code>NS</code> 是安全/地址空间属性，<code>MemAttr</code>、<code>SnpAttr</code> 等才描述内存和一致性相关行为，不要把“安全属性”直接等同于“缓存一致性属性”。</p>
+<h3 id="各种协议中的边界是不是同一种约束">各种协议中的边界是不是同一种约束？</h3>
+<p>AHB、AXI、CHI、PCIe、DDR 中所谓的“边界”并不完全是同一种概念。AHB 规定 burst 不能跨 1KB，AXI 和 PCIe 常见的是 4KB 边界，本质上都是为了避免单个事务跨越地址译码、Slave 或页面边界，使互连、解码和资源管理更简单。CHI 已经转向面向 cache line 和一致性事务的 packet 化设计，通常以 64B cache line 等粒度工作，不再强调 AXI 那种长 burst；DDR 则是存储器接口，重点是 Channel/Rank/Bank/Row/Column、burst length、row boundary、bank conflict 等，不能简单问“DDR 是多少 KB 边界”。</p>
+<h3 id="路由无死锁结论的前提">路由无死锁结论的前提</h3>
+<p>XY 的无循环依赖结论依赖相应拓扑与资源模型；协议级资源还可能引入额外依赖，不能仅凭“使用 XY”宣称整个系统无死锁。</p>
+<h3 id="补充公平性和-forward-progress-的结论需要什么前提">补充：公平性和 Forward Progress 的结论需要什么前提？</h3>
+<p>若目的端永远不接收，任何仲裁器都无法保证请求最终完成。因此检查“持续请求者在K周期内获服务”时，必须明确下游可接收、包长/占用有上限、优先级策略等前提。Round-Robin公平通常针对成功的服务机会，不自动等于固定墙钟周期上限。
+仿真timeout可以发现当前场景停滞，但单次长时间未超时不能证明全状态空间无死锁。应结合资源依赖分析、局部assertion、压力场景，以及适用范围内的Formal性质。</p>
+<h2 id="速率带宽与高速接口分层">速率、带宽与高速接口分层</h2>
+<p>单位换算、有效吞吐、SerDes、HBM、UCIe 与互联层级。</p>
+<h3 id="频率传输率bits-与-bytes-有什么区别">频率、传输率、bit/s 与 Byte/s 有什么区别？</h3>
+<p>高速接口中的“速率”和“带宽”本质上是在描述两个不同层次：<strong>速率描述每秒发生多少次传输，带宽描述每秒真正能搬多少数据</strong>。常见单位里，<code>MHz/GHz</code> 表示时钟周期数，<code>MT/s、GT/s</code> 表示每秒多少次 Transfer，<code>Gb/s、Tb/s</code> 表示每秒多少 bit，<code>GB/s、TB/s</code> 表示每秒多少 Byte。必须注意大小写：<code>1 Byte = 8 bit</code>，因此 <code>8 Gb/s = 1 GB/s</code>，<code>8 Tb/s = 1 TB/s</code>。其中 <code>MT/s</code> 的 <code>T</code> 是 <strong>Transfer</strong>，不是 Tera，例如 <code>3200 MT/s = 3.2×10^9 transfers/s</code>。</p>
+<h3 id="并行接口的峰值与实际带宽如何计算">并行接口的峰值与实际带宽如何计算？</h3>
+<p>对于并行接口，理论峰值带宽的核心公式是：
+<code>Bandwidth (bit/s) = Transfer Rate (transfer/s) × 每次传输位宽 (bit)</code>
+若结果要换算成 Byte/s，再除以 8。例如 128-bit 总线、1000 MT/s：
+<code>1000 × 10^6 × 128 / 8 = 16 × 10^9 Byte/s = 16 GB/s</code>
+如果接口是“每个时钟传一次”，也可以写成：
+<code>Bandwidth (bit/s) = Clock Frequency × 每周期传输次数 × Data Width</code>
+例如 128-bit AXI、500 MHz，每周期最多完成一次数据握手，单方向理论峰值为 <code>8 GB/s</code>；若只有 80% 的周期发生有效 <code>VALID &#x26;&#x26; READY</code> 握手，则实际数据带宽约为 <code>6.4 GB/s</code>。</p>
+<h3 id="ddr-的-mts-为什么不等于时钟-mhz">DDR 的 MT/s 为什么不等于时钟 MHz？</h3>
+<p>**时钟频率和 Transfer Rate 不一定相等。**典型例子是 DDR：DDR 在一个时钟周期的上升沿和下降沿各传一次，因此 <code>1600 MHz</code> 时钟对应 <code>3200 MT/s</code>。DDR4-3200 的“3200”表示 <code>3200 MT/s</code>，不是 3200 MHz。对于 64-bit 单通道：
+<code>3200 MT/s × 64 bit / 8 = 25.6 GB/s</code></p>
+<h3 id="串行接口为什么还要考虑调制和编码">串行接口为什么还要考虑调制和编码？</h3>
+<p>高速串行接口要区分 transfer rate、symbol rate（baud）和 bit rate。GT/s 的具体计数含义应按协议定义，不能一概当成 Gbaud，也不能仅看到 PAM4 就把标称 GT/s 再乘 2。NRZ 每符号携带 1 bit、PAM4 每符号携带 2 bit，是调制层面的关系；协议标称 transfer rate 可能已经按其定义计入这种差别。
+例如 PCIe 6.0 使用 PAM4 达到 64 GT/s，其标称速率不能再因为 PAM4 而额外翻倍。参见 <a href="https://pcisig.com/blog/why-did-pcie%C2%AE-60-specification-adopt-pam4-there-are-many-reasons">PCI-SIG 对 PAM4 的说明</a>。
+计算有效载荷带宽时，先由具体规范确定每 lane 的原始 bit rate，再考虑 lane 数、编码、FEC、包头和实际利用率，最后换算 Byte/s。</p>
+<h3 id="多-lane-与全双工带宽如何计算">多 lane 与全双工带宽如何计算？</h3>
+<p>另一个易混淆点是多 lane 和双向带宽。比如 16 lane、每 lane 单方向 <code>32 Gb/s</code>，聚合后的单方向原始带宽是：
+<code>16 × 32 Gb/s = 512 Gb/s = 64 GB/s</code>
+如果接口是全双工，收、发方向可以同时各达到 <code>64 GB/s</code>，有些资料会把两方向相加称为 <code>128 GB/s aggregate bandwidth</code>，但这并不意味着单方向可以达到 128 GB/s。因此看到“接口带宽”时，应确认它描述的是<strong>单 lane 还是所有 lane、单方向还是双向汇总、理论物理速率还是有效载荷带宽</strong>。</p>
+<h3 id="serdes高速串行物理层技术">SerDes：高速串行物理层技术</h3>
+<p>高速接口需要先按层级区分。<strong>SerDes（Serializer/Deserializer）不是协议，而是一类高速串行物理层技术</strong>：发送端把并行数据串行化，经少量高速差分 Lane 发送，接收端再完成均衡、CDR 时钟恢复和解串。PCIe、Ethernet、USB、SATA、CXL 等都大量依赖 SerDes。它的核心价值是用“少量引脚 + 极高单 Lane 速率”替代大量高速并行线，关键技术包括 PLL、CDR、FFE/Pre-emphasis、CTLE、DFE、Eye Diagram、Jitter 和 BER。Lane 可以理解为一条高速串行通道，PCIe x4/x8/x16 就是并行使用多条 Lane 增加总带宽。</p>
+<h3 id="hbm超宽并行接口与堆叠存储">HBM：超宽并行接口与堆叠存储</h3>
+<p><strong>HBM（High Bandwidth Memory）与 PCIe/SerDes 的思路相反。</strong> HBM 是 JEDEC 定义的高速存储器接口和堆叠 DRAM 技术，属于 DDR/LPDDR 一类，而不是普通高速串行协议。它通过 TSV、micro-bump、interposer 等 2.5D/3D 封装技术，用上千根短距离并行 I/O 获得巨大带宽，即“单 pin 速率不极端，但总线极宽”。不同代际的每 pin 速率与总线宽度不同，应按具体器件计算总带宽。不能拿 HBM 的 Gb/s/pin 和 PCIe 的 GT/s/lane 直接比较数字大小。</p>
+<h3 id="uciepciecxl-与片内互联的层级">UCIe、PCIe/CXL 与片内互联的层级</h3>
+<p><strong>UCIe（Universal Chiplet Interconnect Express）解决的是封装内 Chiplet 之间的 Die-to-Die 互联。</strong> 可以粗略建立层级关系：AXI/CHI/NoC 主要负责一个 Die 内部的 IP 和缓存一致性互联；UCIe 负责一个 Package 内不同 Die/Chiplet 之间的连接；PCIe/CXL 更多负责芯片、设备或系统之间的高速互联；HBM 则负责 Memory Controller 与 HBM DRAM Stack 之间的高速存储连接。HBM 和 UCIe 可以同时出现在一个系统中，例如 <code>Compute Chiplet → UCIe → Memory/I/O Chiplet → HBM Controller/PHY → HBM Stack</code>，但这不等于“HBM 协议跑在 UCIe 上”。
+速率应按所用标准版本查询，再区分每 lane/pin 速率、编码开销和总宽度。AXI、CHI、NoC 没有统一的固定协议速率，吞吐取决于频率、位宽、并发能力和利用率。
+最容易混淆的一点是：<strong>协议、PHY 技术、存储接口和片上互联不是同一层概念。</strong> PCIe/CXL/UCIe 是互联标准，SerDes 是底层高速串行实现技术，HBM 是超宽并行高速存储接口，AXI/CHI/NoC 是片内互联体系。把它们放在“片内互联 → Chiplet 互联 → 芯片外互联 → 高速存储”这条层级链上理解，会比统一称为“高速接口”更准确。</p>
+<h3 id="带宽不足有哪些硬件和软件方案">带宽不足有哪些硬件和软件方案？</h3>
+<p>带宽不足时有两类基本解法：硬件上增加 DDR 带宽、增加片上 SRAM/cache/line buffer、优化 NoC/DDR QoS，让 ISP/NPU 少访问 DDR，代价是面积、功耗和复杂度增加；软件上通过 tiling、double buffering、DMA 调度和错峰访问削峰，成本低但可能增加 latency、降低峰值吞吐。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/noc/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>NoC</a></li><li><a data-astro-transition-scope="astro-bztu2lml-3" href="/tags/chi/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>CHI</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-bridge-ahb-apb/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（六）：Bridge 验证与 AHB/APB</div></div></a><a href="/posts/dv-soc-engineering/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（八）：SoC 验证与工程工具</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

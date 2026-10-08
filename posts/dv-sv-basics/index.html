@@ -1,0 +1,774 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-sv-basics/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（一）：SystemVerilog 语言基础 | DAWNMX</title><meta name="title" content="数字验证问答（一）：SystemVerilog 语言基础 | DAWNMX"><meta name="description" content="类型、四态逻辑、面向对象、对象复制、数组与随机约束。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（一）：SystemVerilog 语言基础 | DAWNMX"><meta property="og:description" content="类型、四态逻辑、面向对象、对象复制、数组与随机约束。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-sv-basics/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-sv-basics/"><meta property="twitter:title" content="数字验证问答（一）：SystemVerilog 语言基础 | DAWNMX"><meta property="twitter:description" content="类型、四态逻辑、面向对象、对象复制、数组与随机约束。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（一）：SystemVerilog 语言基础 | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: systemverilog; }@layer astro { ::view-transition-old(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(systemverilog) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-sv-basics" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（一）：SystemVerilog 语言基础</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第一篇，整理自我的复习笔记。类型、四态逻辑、面向对象、对象复制、数组与随机约束。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#systemverilogrtl%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%9B%9B%E6%80%81%E9%80%BB%E8%BE%91">SystemVerilog：RTL、类型与四态逻辑</a>
+<ul>
+<li><a href="#wirereglogic-%E4%B8%8E%E9%A9%B1%E5%8A%A8%E6%96%B9%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">wire、reg、logic 与驱动方式有什么区别？</a></li>
+<li><a href="#%E9%98%BB%E5%A1%9E%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9E%E8%B5%8B%E5%80%BC%E5%86%B3%E5%AE%9A%E7%A1%AC%E4%BB%B6%E7%B1%BB%E5%9E%8B%E5%90%97">阻塞与非阻塞赋值决定硬件类型吗？</a></li>
+<li><a href="#%E6%80%8E%E6%A0%B7%E5%88%A4%E6%96%AD-latch%E6%95%8F%E6%84%9F%E5%88%97%E8%A1%A8%E4%B8%8E%E5%8F%AF%E7%BB%BC%E5%90%88%E8%AF%AD%E4%B9%89">怎样判断 Latch、敏感列表与可综合语义？</a></li>
+<li><a href="#%E5%AF%84%E5%AD%98%E5%99%A8%E8%83%BD%E7%94%B1%E4%B8%A4%E4%B8%AA%E6%97%B6%E9%92%9F%E9%A9%B1%E5%8A%A8%E5%90%97">寄存器能由两个时钟驱动吗？</a></li>
+<li><a href="#%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9E%8B%E5%A6%82%E4%BD%95%E5%A3%B0%E6%98%8E%E5%92%8C%E5%A4%8D%E7%94%A8">枚举类型如何声明和复用？</a></li>
+<li><a href="#%E4%BA%8C%E6%80%81%E5%9B%9B%E6%80%81%E5%92%8C%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%BD%8D%E5%AE%BD">二态、四态和表达式位宽</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E6%8A%8A-xz-%E8%AF%AF%E5%88%A4%E4%B8%BA%E6%A3%80%E6%9F%A5%E9%80%9A%E8%BF%87">如何避免把 X/Z 误判为检查通过？</a></li>
+<li><a href="#casecasezcasex-%E6%9C%89%E4%BB%80%E4%B9%88%E4%B8%8D%E5%90%8C">Case、Casez、Casex 有什么不同？</a></li>
+<li><a href="#%E5%9B%9B%E6%80%81%E9%80%BB%E8%BE%91%E6%9C%89%E5%93%AA%E4%BA%9B%E6%98%93%E9%94%99%E7%82%B9">四态逻辑有哪些易错点？</a></li>
+<li><a href="#%E6%B5%81%E6%93%8D%E4%BD%9C%E7%AC%A6%E6%80%8E%E6%A0%B7%E5%8F%8D%E8%BD%AC%E5%AD%97%E8%8A%82">流操作符怎样反转字节？</a></li>
+</ul>
+</li>
+<li><a href="#systemverilog-oop-%E4%B8%8E-uvm-%E5%AF%B9%E8%B1%A1%E5%A4%8D%E5%88%B6">SystemVerilog OOP 与 UVM 对象复制</a>
+<ul>
+<li><a href="#%E7%BB%A7%E6%89%BF%E9%87%8D%E5%86%99%E4%B8%8E%E5%A4%9A%E6%80%81%E5%88%86%E5%88%AB%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98">继承、重写与多态分别解决什么问题？</a></li>
+<li><a href="#static-%E6%96%B9%E6%B3%95%E4%B8%BA%E4%BB%80%E4%B9%88%E6%B2%A1%E6%9C%89-this">Static 方法为什么没有 This？</a></li>
+<li><a href="#virtual-classvirtual-method-%E4%B8%8E-virtual-interface">Virtual Class、Virtual Method 与 Virtual Interface</a></li>
+<li><a href="#%E5%8F%A5%E6%9F%84%E8%B5%8B%E5%80%BC%E6%B5%85%E6%8B%B7%E8%B4%9D%E5%92%8C%E6%B7%B1%E6%8B%B7%E8%B4%9D%E7%9A%84%E5%8C%BA%E5%88%AB">句柄赋值、浅拷贝和深拷贝的区别</a></li>
+<li><a href="#copydo_copyclone-%E5%90%84%E8%B4%9F%E8%B4%A3%E5%93%AA%E4%B8%80%E5%B1%82">Copy、Do_copy、Clone 各负责哪一层？</a></li>
+<li><a href="#transaction-%E5%AD%97%E6%AE%B5%E7%B1%BB%E5%9E%8B%E4%B8%8E-field-automation">Transaction 字段类型与 Field Automation</a></li>
+<li><a href="#clone-%E7%9A%84%E8%BF%94%E5%9B%9E%E7%B1%BB%E5%9E%8B">Clone 的返回类型</a></li>
+</ul>
+</li>
+<li><a href="#systemverilog-%E6%95%B0%E7%BB%84%E4%B8%8E%E9%9A%8F%E6%9C%BA%E7%BA%A6%E6%9D%9F">SystemVerilog 数组与随机约束</a>
+<ul>
+<li><a href="#%E5%9B%9B%E7%B1%BB%E6%95%B0%E7%BB%84%E4%B8%8E-queue-%E6%8F%92%E5%85%A5%E5%88%A0%E9%99%A4">四类数组与 Queue 插入删除</a></li>
+<li><a href="#%E5%85%B3%E8%81%94%E6%95%B0%E7%BB%84%E4%B8%AD%E8%BF%98%E8%83%BD%E6%94%BE%E6%95%B0%E7%BB%84%E5%92%8C-queue-%E5%90%97">关联数组中还能放数组和 Queue 吗？</a></li>
+<li><a href="#constraint-%E8%81%94%E7%AB%8B%E6%B1%82%E8%A7%A3%E4%B8%8E%E7%BB%A7%E6%89%BF%E8%A6%86%E7%9B%96">Constraint 联立求解与继承覆盖</a></li>
+<li><a href="#%E6%9C%89%E7%AC%A6%E5%8F%B7%E8%8C%83%E5%9B%B4%E4%B8%8E-foreach-%E7%BA%A6%E6%9D%9F">有符号范围与 Foreach 约束</a></li>
+<li><a href="#dist-%E7%9A%84--%E5%92%8C--%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">Dist 的 := 和 :/ 有什么区别？</a></li>
+<li><a href="#solve-before-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%94%B9%E5%8F%98%E5%88%86%E5%B8%83">Solve Before 为什么改变分布？</a></li>
+<li><a href="#%E6%A6%82%E7%8E%87%E4%B8%8E%E5%8F%96%E6%A8%A1%E7%BA%A6%E6%9D%9F%E7%BB%BC%E5%90%88%E4%BE%8B%E5%AD%90">概率与取模约束综合例子</a></li>
+<li><a href="#%E4%BB%BB%E6%84%8F%E8%BF%9E%E7%BB%AD%E4%BA%94%E6%AC%A1%E9%9A%8F%E6%9C%BA%E9%83%BD%E4%B8%8D%E9%87%8D%E5%A4%8D">任意连续五次随机都不重复</a></li>
+<li><a href="#%E5%9C%B0%E5%9D%80%E8%8C%83%E5%9B%B4%E5%AF%B9%E9%BD%90%E4%B8%8E%E8%BF%9B%E5%88%B6%E6%8D%A2%E7%AE%97%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3">地址范围、对齐与进制换算如何理解？</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="systemverilogrtl类型与四态逻辑">SystemVerilog：RTL、类型与四态逻辑</h2>
+<p>类型与驱动方式、可综合语义、位宽、X/Z 和 case。</p>
+<h3 id="wirereglogic-与驱动方式有什么区别">wire、reg、logic 与驱动方式有什么区别？</h3>
+<p>SystemVerilog 里要把几个层次分开理解：<code>wire/reg/logic</code> 是“信号/变量类型”，<code>assign/always</code> 是“驱动方式”，<code>=/&#x3C;=</code> 是“过程块中的赋值语义”，组合逻辑/时序逻辑才是“最终描述出的硬件”。传统 Verilog 中，<code>wire</code> 通常由 <code>assign</code> 或模块连接驱动，<code>reg</code> 用于 <code>always/initial</code> 中的过程赋值，但 <code>reg</code> 不等于物理寄存器；例如 <code>reg y; always @(*) y = a &#x26; b;</code> 综合出来仍只是组合门。SystemVerilog 中一般优先用 <code>logic</code>，组合逻辑推荐 <code>always_comb</code>，时序逻辑推荐 <code>always_ff @(posedge clk)</code>。<code>assign y = ...</code> 是连续赋值，RHS 变化时持续驱动 LHS；<code>always @(*)</code>/<code>always_comb</code> 是过程式描述组合逻辑。组合块必须保证所有路径都给输出赋值，否则输出需要保持旧值，会推导出 latch。</p>
+<h3 id="阻塞与非阻塞赋值决定硬件类型吗">阻塞与非阻塞赋值决定硬件类型吗？</h3>
+<p>阻塞赋值 <code>=</code> 是“当前语句先更新完，再执行下一句”，适合表达组合逻辑内部逐级数据传播；非阻塞赋值 <code>&#x3C;=</code> 是“当前时刻计算 RHS，稍后统一更新 LHS”，对应真实触发器在同一个时钟边沿并行采样的行为，因此时序逻辑通常使用 <code>&#x3C;=</code>。不过 <code>=</code>/<code>&#x3C;=</code> 本身并不决定硬件类型，真正决定组合还是时序的是描述语义：<code>always @(posedge clk)</code> 本质上描述边沿触发存储，即使用 <code>=</code> 仍会综合成触发器，只是容易产生仿真竞争；<code>always @(*)</code> 即使用 <code>&#x3C;=</code> 通常仍描述组合逻辑，只是不推荐。最实用的编码准则就是“组合用 <code>always_comb + =</code>，时序用 <code>always_ff + &#x3C;=</code>”。</p>
+<h3 id="怎样判断-latch敏感列表与可综合语义">怎样判断 Latch、敏感列表与可综合语义？</h3>
+<p>Verilog/SystemVerilog 中，组合逻辑产生 latch 的根本原因不是简单的“没有 <code>else</code>”或“<code>case</code> 没写全”，而是某个输出在部分执行路径上没有被赋值。如果提前提供默认赋值，即使没有 <code>else/default</code> 也可以避免 latch。编码上通常遵循“时序逻辑用非阻塞 <code>&#x3C;=</code>，组合逻辑用阻塞 <code>=</code>”；组合敏感列表漏信号会造成 RTL 仿真与真实组合逻辑不一致，而多写冗余信号通常只会增加无意义触发。SystemVerilog 中更推荐 <code>always_ff</code> 和 <code>always_comb</code>。综合能力方面，<code>always</code>、<code>function</code>、<code>generate</code> 本身都可以综合；<code>#delay</code>、$time 等仿真时间控制不可综合。<code>initial</code> 在传统 ASIC RTL 语境下通常按不可综合处理，但某些 FPGA 工具允许用它初始化寄存器或 ROM。</p>
+<h3 id="寄存器能由两个时钟驱动吗">寄存器能由两个时钟驱动吗？</h3>
+<p>Verilog/SystemVerilog 中，时序触发器通常由单一功能时钟边沿驱动，例如 <code>always @(posedge clk)</code>；<code>always @(posedge clk or negedge rst_n)</code> 是合法且常见的可综合写法，因为 <code>rst_n</code> 是异步复位，不是第二个功能时钟。若同一寄存器同时由 <code>clk1</code>、<code>clk2</code> 两个独立时钟边沿触发，通常不能映射为普通触发器，因此一般不可综合。还要区分“<code>reg</code>/变量类型”和“硬件寄存器”：变量也可以在 <code>always @(*)</code> 中描述组合逻辑，并不一定需要时钟。</p>
+<h3 id="枚举类型如何声明和复用">枚举类型如何声明和复用？</h3>
+<p>SystemVerilog 枚举中，枚举值默认从 <code>0</code> 开始依次递增，但完全可以显式指定，例如 <code>typedef enum {A=1, B=5, C=6} state_t;</code>。匿名枚举如 <code>enum {IDLE, RUN, DONE} state;</code> 没有类型名，因此通常只能在定义时直接声明一个或多个变量，后续无法像 <code>typedef enum</code> 那样复用这个类型；如果需要多处声明同类变量，应使用 <code>typedef</code> 定义命名枚举类型。</p>
+<h3 id="二态四态和表达式位宽">二态、四态和表达式位宽</h3>
+<p>bit 只保存 0/1；logic 可保存 0/1/X/Z。硬件字段按接口位宽声明；delay/count 等非负验证参数可用 int unsigned。
+signed 扩位做符号扩展，unsigned 扩位做零扩展。混合运算先统一符号和位宽；对关键中间结果显式扩位，避免移位、乘法和截断造成溢出。算术右移用 >>>，且左操作数必须具有期望的 signed 属性。
+4'bx、4'bz 分别填满 4 位 X/Z；'x、'z 按上下文宽度填满。越界读取的结果取决于数组和元素类型，不能一概认为都会返回 X；应显式检查索引范围。</p>
+<h3 id="如何避免把-xz-误判为检查通过">如何避免把 X/Z 误判为检查通过？</h3>
+<p>在 SystemVerilog 四态逻辑中，关系运算如 <code>a > b</code>、<code>a &#x3C;= b</code> 遇到参与比较的 <code>X/Z</code> 时，结果可能是 <code>X</code>。而 <code>if</code> 只有在条件明确为 <code>1</code> 时才进入 true 分支；条件为 <code>0/X/Z</code> 都会走 else。因此下面这种写法有风险：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">a</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> ></span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> b</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">    `</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_error</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(...)</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">else</span></span>
+<span class="line"><span style="--shiki-light:#C2C3C5;--shiki-light-font-style:inherit;--shiki-dark:#637777;--shiki-dark-font-style:italic">    // pass</span></span></code></pre>
+<p>如果 <code>a</code> 为 <code>X</code>，<code>a > b</code> 可能得到 <code>X</code>，最终反而进入 <code>else</code>，把未知态误判为通过。
+如果需求是“只有明确满足条件才 pass，其余情况都 error”，推荐用四态不等运算符 <code>!==</code> 对比较结果再做一次判定：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> ((</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">a</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> ></span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> b</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">) </span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">!==</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 1'b0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">) </span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">begin</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">    `</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_error</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#22863A;--shiki-dark:#ECC48D">DELAY_CHECK</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">, </span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#22863A;--shiki-dark:#ECC48D">delay check failed</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">end</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">else</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> begin</span></span>
+<span class="line"><span style="--shiki-light:#C2C3C5;--shiki-light-font-style:inherit;--shiki-dark:#637777;--shiki-dark-font-style:italic">    // pass</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">end</span></span></code></pre>
+<p>这里的含义是：只有 <code>a > b</code> 明确等于 <code>0</code> 才 pass；如果结果为 <code>1</code> 或 <code>X</code>，都报错。等价地也可以写成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> ((</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">a</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> &#x3C;=</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> b</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">) </span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">!==</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 1'b1</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">    `</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_error</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(...)</span></span></code></pre>
+<p>关键区别是：<code>!=</code> 属于普通四态逻辑比较，遇到 <code>X</code> 后结果仍可能是 <code>X</code>；而 <code>!==</code> 是 case inequality，最终结果一定是明确的 <code>0/1</code>，因此适合这种“未知态也应视为失败”的验证判定。若希望单独区分“超限”和“出现 X/Z”两类问题，则使用 <code>$isunknown()</code> 更利于定位；但如果只是要求 error 分支在前、且不想显式写 X 检查，<code>!==</code> 是更简洁的写法。</p>
+<h3 id="casecasezcasex-有什么不同">Case、Casez、Casex 有什么不同？</h3>
+<p><code>case</code>、<code>casez</code>、<code>casex</code> 的关键区别在通配规则：普通 <code>case</code> 不把任何状态当通配；<code>casez</code> 将 <code>Z/?</code> 当作 don't-care；<code>casex</code> 将 <code>X/Z/?</code> 都当作 don't-care。由于 <code>casex</code> 可能把真实的 <code>X</code> 异常掩盖掉，因此 RTL 设计中一般应谨慎使用，优先考虑普通 <code>case</code> 或合适的 <code>casez</code>。</p>
+<h3 id="四态逻辑有哪些易错点">四态逻辑有哪些易错点？</h3>
+<ul>
+<li>0 &#x26;&#x26; X = 0；1 &#x26;&#x26; X = X；1 || X = 1；0 || X = X；!X = X。</li>
+<li>==、!= 可能返回 X；===、!== 做四态精确比较，返回确定的 0/1。</li>
+<li>if 仅在条件判为真时进入分支。单 bit 条件为 X/Z 时不会进入 true 分支，因此未知态可能被错误地当成通过。</li>
+<li>case 精确匹配；casez 把 Z/? 当通配；casex 把 X/Z/? 当通配，容易掩盖未知态。</li>
+<li>遇到混合运算符时加括号。相关优先级为 ! 高于 ==，再高于 |、&#x26;&#x26;、||。</li>
+</ul>
+<h3 id="流操作符怎样反转字节">流操作符怎样反转字节？</h3>
+<p>{>>{data}} 按相应流方向排列；{&#x3C;&#x3C;{data}} 默认按 bit 反转。指定 8-bit slice 后，{&#x3C;&#x3C;8{32'h12345678}} 的结果是 32'h78563412，相当于反转四个 byte 的顺序。</p>
+<h2 id="systemverilog-oop-与-uvm-对象复制">SystemVerilog OOP 与 UVM 对象复制</h2>
+<p>句柄、virtual/static、浅深拷贝、clone 和 field automation。</p>
+<h3 id="继承重写与多态分别解决什么问题">继承、重写与多态分别解决什么问题？</h3>
+<p>面向对象部分同样要区分继承、重写和多态。<code>class B extends A</code> 表示 B 继承 A 的成员；若 B 重新定义父类方法，就是 override，函数原型应保持匹配。父类函数中的局部变量只在该函数调用期间存在，不是类成员，子类不能直接访问。多态的关键是“父类句柄可以指向子类对象 + 父类方法声明为 <code>virtual</code>”：例如 <code>A a; B b = new(); a = b; a.mul()</code>，若 <code>mul()</code> 是 virtual，则运行时根据实际对象类型调用 <code>B::mul()</code>；如果不是 virtual，则通常按句柄声明类型解析。可以概括为：继承解决“B 拥有 A 的能力”，重写解决“B 提供自己的实现”，多态解决“用 A 类型的统一接口操作不同派生对象”。这正是 UVM 中大量父类句柄、factory 和虚函数机制的基础。</p>
+<h3 id="static-方法为什么没有-this">Static 方法为什么没有 This？</h3>
+<p>在 SystemVerilog/UVM 的 class 中，<code>static</code> 方法属于类本身，而不是某个具体对象，因此它没有隐含的 <code>this</code> 句柄。正因为没有 <code>this</code>，静态方法不能直接访问类中的非静态成员变量或非静态方法，因为这些成员必须依附于某个具体对象；而静态成员属于整个类共享，所以静态方法可以直接访问静态成员。
+例如，<code>static function void func(); a = 1; endfunction</code> 中，如果 <code>a</code> 是普通成员变量，则非法，因为无法确定这里的 <code>a</code> 属于哪个对象；如果 <code>a</code> 是 <code>static</code> 成员，则合法。普通非静态方法则不同，它运行在某个对象上，隐含拥有 <code>this</code>，因此既可以直接访问非静态成员，也可以访问静态成员。
+需要注意的是，“静态方法不能访问非静态成员”更准确的说法是：<strong>静态方法不能直接访问非静态成员</strong>。如果静态方法显式拿到了某个对象句柄，例如参数 <code>obj</code>，那么完全可以通过 <code>obj.a</code> 访问这个对象的非静态成员。也就是说，限制的根本原因不是 static 代码本身不能操作对象数据，而是 static 方法没有默认的当前对象。
+可概括为：普通方法有 <code>this</code>，因此可以直接访问 static 和 non-static 成员；static 方法没有 <code>this</code>，所以只能直接访问 static 成员，但可以通过显式对象句柄访问 non-static 成员。UVM 中常见的 <code>uvm_config_db#(...)::set()</code>、<code>get()</code> 等就是典型的类级静态方法调用形式。</p>
+<h3 id="virtual-classvirtual-method-与-virtual-interface">Virtual Class、Virtual Method 与 Virtual Interface</h3>
+<p>SystemVerilog 中几个 <code>virtual</code> 的含义要区分。<code>virtual interface</code> 是指向已经存在的 interface 实例的句柄，主要解决 UVM class 如何访问 DUT/interface 信号；interface 本身是 elaboration 阶段确定的静态结构。<code>virtual class</code> 是抽象基类，不能直接实例化，适合定义框架和公共接口；<code>pure virtual function/task</code> 只声明接口，强制派生类实现。<code>virtual function/task</code> 则用于多态：父类句柄指向子类对象时，调用 virtual 方法会根据实际对象类型动态绑定；不带 virtual 时则属于静态绑定。Class object 是通过 <code>new()</code> 动态创建的，但不能简单说“class 就是 automatic”。</p>
+<h3 id="句柄赋值浅拷贝和深拷贝的区别">句柄赋值、浅拷贝和深拷贝的区别</h3>
+<p>SV 类变量本质上是“对象句柄”，不是对象本身。<code>packet p;</code> 只是声明句柄，<code>p = new();</code> 才创建对象。<code>p2 = p1</code> 只复制句柄，因此两个句柄指向同一个对象，这甚至不能算真正的对象拷贝；修改 <code>p2</code> 就是在修改 <code>p1</code> 指向的同一个对象。SV 的 <code>p2 = new p1;</code> 会创建新的外层对象，并逐成员复制，这属于浅拷贝：<code>int</code>、<code>bit</code> 等值类型成员得到独立副本，但如果成员本身也是 class 句柄，那么复制的仍只是该句柄，两个外层对象仍会共享同一个内部对象。深拷贝则要求把嵌套对象也重新创建并递归复制，最终形成完全独立的对象树。因此判断深浅拷贝的关键不是“外层对象是否新建”，而是“内部对象句柄指向的对象是否也被复制”。
+例如 <code>packet</code> 中包含 <code>header hdr</code> 时，浅拷贝相当于：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>dst = new src;</span></span></code></pre>
+<p>结果概念上是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>src ──> packet1 ──┐</span></span>
+<span class="line"><span>                  ├──> 同一个 header</span></span>
+<span class="line"><span>dst ──> packet2 ──┘</span></span></code></pre>
+<p>深拷贝则应当重新创建 <code>header</code>：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>dst = new();</span></span>
+<span class="line"><span>dst.data = src.data;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>if (src.hdr != null) begin</span></span>
+<span class="line"><span>    dst.hdr = new();</span></span>
+<span class="line"><span>    dst.hdr.id = src.hdr.id;</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>结果变成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>src ──> packet1 ──> header1</span></span>
+<span class="line"><span>dst ──> packet2 ──> header2</span></span></code></pre>
+<p>这一区别在验证平台中非常重要。例如 monitor 如果不断复用同一个 transaction，再把它通过 analysis port 发给 scoreboard，那么 scoreboard 保存下来的可能只是同一个对象句柄；后续 monitor 修改 transaction 时，以前保存的数据也会“跟着变化”。常见做法是每笔事务重新创建对象，或者在需要保存独立快照时进行深拷贝/克隆。</p>
+<h3 id="copydo_copyclone-各负责哪一层">Copy、Do_copy、Clone 各负责哪一层？</h3>
+<p>UVM 中的 <code>copy()</code>、<code>do_copy()</code>、<code>clone()</code> 不应简单理解成“一个浅拷贝、一个深拷贝”。三者职责不同。<code>dst.copy(src)</code> 是标准复制入口，要求 <code>dst</code> 已经存在；它内部最终会调用对象的 <code>do_copy()</code>。<code>do_copy()</code> 是子类真正定义“哪些成员怎么复制”的地方，所以最终是深拷贝还是浅拷贝，主要由这里决定。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">virtual</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> function</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> void</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic"> do_copy</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">uvm_object</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> rhs</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">    packet</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> rhs_pkt</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">    super</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">do_copy</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">rhs</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">!</span><span style="--shiki-light:#6F42C1;--shiki-dark:#C5E478">$cast</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">rhs_pkt</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">, </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">rhs</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">))</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">        `</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">uvm_fatal</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#22863A;--shiki-dark:#ECC48D">COPY</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">, </span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#22863A;--shiki-dark:#ECC48D">type mismatch</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    data</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> rhs_pkt</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">data</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    hdr</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> rhs_pkt</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">hdr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">endfunction</span></span></code></pre>
+<p>其中 <code>hdr = rhs_pkt.hdr</code> 只是复制句柄，所以内部对象是浅拷贝。若改成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>if (rhs_pkt.hdr == null)</span></span>
+<span class="line"><span>    hdr = null;</span></span>
+<span class="line"><span>else begin</span></span>
+<span class="line"><span>    if (hdr == null)</span></span>
+<span class="line"><span>        hdr = header::type_id::create("hdr");</span></span>
+<span class="line"><span>    hdr.copy(rhs_pkt.hdr);</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>则对 <code>hdr</code> 继续递归复制，可以实现深拷贝。一般不直接调用 <code>do_copy()</code>，而应调用标准入口 <code>copy()</code>；<code>do_copy()</code> 是给派生类重写复制行为用的。
+<code>clone()</code> 可以近似理解为“创建新对象 + <code>copy()</code>”：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>src.clone()</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>create()</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>new destination object</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>destination.copy(src)</span></span>
+<span class="line"><span>    ↓</span></span>
+<span class="line"><span>destination.do_copy(src)</span></span></code></pre>
+<p>所以 <code>copy()</code> 和 <code>clone()</code> 最核心的区别是：<code>copy()</code> 把内容复制到一个已经存在的对象中，而 <code>clone()</code> 会先创建新的外层对象。由于 <code>clone()</code> 最终仍然依赖 <code>copy()/do_copy()</code>，它并不天然保证嵌套对象是深拷贝。如果 <code>do_copy()</code> 中对内部对象仍写 <code>hdr = rhs.hdr</code>，那么 clone 后虽然两个外层 <code>packet</code> 不同，但它们依然共享同一个 <code>header</code>。因此最准确的记忆方式是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>p2 = p1</span></span>
+<span class="line"><span>    → 句柄赋值，根本没有新对象</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>p2 = new p1</span></span>
+<span class="line"><span>    → SV 浅拷贝，外层对象新建，内部对象句柄可能共享</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>dst.copy(src)</span></span>
+<span class="line"><span>    → 复制到已有 UVM 对象，深浅由 do_copy 决定</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>do_copy()</span></span>
+<span class="line"><span>    → 真正定义各字段如何复制，是决定深浅拷贝的核心</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>src.clone()</span></span>
+<span class="line"><span>    → 创建新外层对象后执行 copy，内部是否深拷贝仍由 do_copy 决定</span></span></code></pre>
+<p>如果使用 UVM field automation，普通对象字段通常会递归参与复制，例如 <code>uvm_field_object(hdr, UVM_ALL_ON)</code>；若明确指定 <code>UVM_REFERENCE</code>，则该对象字段按引用处理，只复制句柄，相当于共享内部对象。实践中应始终先明确“我需要共享这个对象，还是需要一个独立快照”，再决定使用引用、浅拷贝还是深拷贝。</p>
+<h3 id="transaction-字段类型与-field-automation">Transaction 字段类型与 Field Automation</h3>
+<p><code>uvm_sequence_item</code> 中的 transaction 字段通常分为两类：一类是与 DUT 接口直接对应的数据字段，如 <code>addr/data/write</code>，通常按真实硬件位宽声明为 <code>bit [N:0]</code>；另一类是验证环境控制参数，如 <code>delay/count/repeat_times</code>，通常声明为 <code>int unsigned</code>，因为它们本质上表示非负整数，不需要对应具体硬件位宽。例如 <code>rand int unsigned delay;</code> 配合 <code>delay inside {[0:10]};</code> 表示随机延迟 0～10 个周期；当然也可以写成 <code>bit [3:0] delay</code>，只是工程中 <code>int unsigned</code> 更方便。<code>bit</code> 是二态类型，只能表示 0/1；若需要保留 X/Z，应使用 <code>logic</code> 等四态类型。
+<code>uvm_field_int</code> 中的 <code>int</code> 并不要求成员变量必须声明成 SystemVerilog 的 <code>int</code>，而是表示“integral type（整型类型）字段”。因此 <code>bit</code>、<code>logic</code>、<code>byte</code>、<code>int</code>、<code>longint</code> 以及 packed array 如 <code>bit [31:0] data</code> 都可以使用 <code>uvm_field_int</code>。尤其要区分 packed 和 unpacked array：<code>bit [31:0] data</code> 本质上仍是一个 32-bit 整数，用 <code>uvm_field_int</code>；而 <code>bit [31:0] data[8]</code> 后面的 <code>[8]</code> 是 unpacked 静态数组，因此应使用 <code>uvm_field_sarray_int</code>。
+Field automation 宏的基本命名规律可以理解为 <code>uvm_field_[容器类型]_[元素类型]</code>。单个整型字段使用 <code>uvm_field_int</code>，字符串使用 <code>uvm_field_string</code>，对象使用 <code>uvm_field_object</code>，枚举使用 <code>uvm_field_enum</code>；静态数组 <code>a[10]</code> 使用 <code>uvm_field_sarray_*</code>，动态数组 <code>a[]</code> 使用 <code>uvm_field_array_*</code>，队列 <code>a[$]</code> 使用 <code>uvm_field_queue_*</code>。例如 <code>bit [7:0] a[4]</code> 用 <code>uvm_field_sarray_int</code>，<code>bit [7:0] a[]</code> 用 <code>uvm_field_array_int</code>，<code>bit [7:0] a[$]</code> 用 <code>uvm_field_queue_int</code>；若数组元素本身是 <code>uvm_object</code>，则对应换成 <code>*_object</code>。枚举宏通常还需要显式提供枚举类型。
+实际大型项目中通常不会无条件大量使用 <code>uvm_field_*</code>。它的优点是代码短，可以自动支持 <code>copy/compare/print/pack/record</code> 等操作；缺点是宏展开和通用自动化机制会带来额外运行开销，而且复杂 transaction 对各字段的处理需求往往不同。例如 <code>delay</code>、<code>timestamp</code> 可能不应参与 scoreboard compare，而 Bridge 验证中的位宽转换、WSTRB 重映射、burst 拆分、大小端转换等也不能通过简单的逐字段相等比较完成。此时手写 <code>do_copy()</code>、<code>do_compare()</code>、<code>do_print()</code> 往往性能更高、行为更明确，也更便于输出针对性的 mismatch 信息和调试。
+因此工程中常见的做法是只使用 <code>uvm_object_utils(my_trans)</code> 完成 factory 注册，再根据实际需要实现 <code>do_copy/do_compare/do_print</code>。要特别注意：不用 <code>uvm_field_*</code> 并不意味着不能使用 factory，<code>type_id::create()</code> 仍然正常；区别只是 UVM 不再自动知道每个成员变量该如何参与 copy、compare、print 等操作，需要用户自行定义。简单 transaction、学习代码或小规模环境使用 field automation 很方便，而复杂 VIP、大规模回归和高性能 scoreboard 更倾向显式实现这些行为。</p>
+<h3 id="clone-的返回类型">Clone 的返回类型</h3>
+<p>clone() 返回 uvm_object 句柄，赋给具体 transaction 类型时通常需要 $cast。复制语义由 do_copy 和字段自动化共同决定，不能把 clone 本身当成深拷贝保证。
+实现参考：<a href="https://github.com/accellera-official/uvm-core/blob/main/src/base/uvm_object.svh">Accellera uvm_object</a>。</p>
+<h2 id="systemverilog-数组与随机约束">SystemVerilog 数组与随机约束</h2>
+<p>容器、locator、dist、solve before、历史约束和地址范围。</p>
+<h3 id="四类数组与-queue-插入删除">四类数组与 Queue 插入删除</h3>
+<p>SystemVerilog 常见数组包括固定数组、动态数组、队列和关联数组。动态数组通过 <code>new[n]</code> 分配空间，<code>new[n](old_array)</code> 可以扩容并保留原数据，<code>size()</code> 返回元素个数，<code>delete()</code> 释放内容。队列 <code>int q[$]</code> 可以动态从两端插入和删除，常用 <code>push_back()</code>、<code>push_front()</code>、<code>pop_back()</code>、<code>pop_front()</code>。<code>q.insert(index, value)</code> 会在指定下标处插入元素，原位置及之后的元素整体右移；<code>q.delete(index)</code> 删除当前该下标对应的元素，后面的元素左移。例如 <code>q={5,10,20}</code>，执行 <code>q.insert(1,100)</code> 后变成 <code>{5,100,10,20}</code>，再执行 <code>q.delete(2)</code>，删除的是当前下标 2 的 <code>10</code>，最终得到 <code>{5,100,20}</code>。
+数组 locator method 里，<code>find()</code> 和 <code>find_index()</code> 要区分清楚：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>int a[] = '{1, 5, 8, 3, 10};</span></span>
+<span class="line"><span>int q[$];</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>q = a.find(x) with (x > 5);</span></span></code></pre>
+<p>返回满足条件的“元素值”：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>'{8, 10}</span></span></code></pre>
+<p>而：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>q = a.find_index(x) with (x > 5);</span></span></code></pre>
+<p>返回满足条件元素的“下标”：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>'{2, 4}</span></span></code></pre>
+<p>这里 <code>x</code> 代表当前遍历到的元素值，<code>x.index()</code> 才表示当前元素的下标。其他常用数组方法还包括 <code>sum()</code>、<code>product()</code>、<code>min()</code>、<code>max()</code>、<code>sort()</code>、<code>rsort()</code>、<code>reverse()</code>、<code>shuffle()</code>、<code>unique()</code> 等。注意 <code>min()</code> 和 <code>max()</code> 返回的是队列，而不是普通标量。</p>
+<h3 id="关联数组中还能放数组和-queue-吗">关联数组中还能放数组和 Queue 吗？</h3>
+<p>SystemVerilog 关联数组的核心特点是：<strong>索引不要求连续，并且只为实际存在的元素分配存储空间</strong>，因此特别适合“索引空间很大但实际只使用少量位置”的稀疏数据场景。其基本声明格式是 <code>data_type array_name[index_type];</code>，例如 <code>int a[int];</code>、<code>int score[string];</code>。索引可以是 <code>int</code>、<code>string</code> 等类型，所以也可以把关联数组理解成一种 key-value 映射。
+关联数组的“value”不一定只是单个普通变量，也可以继续是其他数组或容器。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>int a[int][10];       // 关联数组 -> 固定数组</span></span>
+<span class="line"><span>int a[int][];         // 关联数组 -> 动态数组</span></span>
+<span class="line"><span>int a[int][$];        // 关联数组 -> 队列</span></span>
+<span class="line"><span>int a[int][string];   // 关联数组 -> 关联数组</span></span></code></pre>
+<p>因此 <code>transaction pending[int][$];</code> 的含义是：<strong>先用 int 类型的 key 找到一个元素，而这个元素本身是一个 transaction queue</strong>。例如一个 AXI ID 可以对应多笔 outstanding transaction：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>ID=0 -> [tr0, tr1, tr2]</span></span>
+<span class="line"><span>ID=3 -> [tr3]</span></span>
+<span class="line"><span>ID=8 -> [tr4, tr5]</span></span></code></pre>
+<p>动态数组和队列都可以作为关联数组的元素，但使用方式不同。<code>int a[int][];</code> 中，每个 key 对应的动态数组需要显式 <code>new[]</code> 分配长度；而 <code>int a[int][$];</code> 中的 queue 不需要预先确定大小，可以直接 <code>push_back()</code> / <code>pop_front()</code>，因此在验证中处理每个 ID 下数量动态变化的 transaction 时，<strong>关联数组 + queue</strong> 通常更方便。
+最容易混淆的一点是：<code>[int][$]</code> 不是“二维关联数组”，而是<strong>第一维为关联数组，第二维为 queue</strong>。判断数组类型时直接看每一维的括号形式：<code>[10]</code> 固定数组、<code>[]</code> 动态数组、<code>[$]</code> 队列、<code>[int]</code>/<code>[string]</code> 关联数组。</p>
+<h3 id="constraint-联立求解与继承覆盖">Constraint 联立求解与继承覆盖</h3>
+<p>SystemVerilog 约束需要区分“多个约束块共同生效”和“继承时同名约束覆盖”。同一个类里的多个 <code>constraint</code> 默认是联立求解，而不是后写覆盖前写；例如 <code>x>10</code> 和 <code>x&#x3C;20</code> 会同时成立。父类和子类中<strong>同名</strong> constraint block 才存在子类覆盖父类的规则。<code>inside</code> 可直接描述取值集合，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>x inside {[1:10]};</span></span></code></pre>
+<p>如果所有约束无解，<code>randomize()</code> 返回 0，不会得到一个新的合法随机结果，因此验证代码应检查返回值。</p>
+<h3 id="有符号范围与-foreach-约束">有符号范围与 Foreach 约束</h3>
+<p>SystemVerilog 约束中，限定变量范围通常用 <code>inside</code>。例如 <code>PARI</code> 要随机在 <code>-128~127</code>：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">rand int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#82AAFF"> PARI</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">constraint</span><span style="--shiki-light:#6F42C1;--shiki-dark:#D6DEEB"> c_pari</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#82AAFF">    PARI</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> inside</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">-</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">128</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">127</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span></span></code></pre>
+<p>如果变量本身就是 8 位有符号数，可以直接声明 <code>rand logic signed [7:0] PARI;</code>，其天然取值范围就是 <code>-128~127</code>。若是数组，则用 <code>foreach</code> 对每个元素约束，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">rand int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> a</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">10</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">];</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">constraint</span><span style="--shiki-light:#6F42C1;--shiki-dark:#D6DEEB"> c_a</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    foreach</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">a</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">])</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">        a</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">] </span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">inside</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">127</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">128</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span></span></code></pre>
+<h3 id="dist-的--和--有什么区别">Dist 的 := 和 :/ 有什么区别？</h3>
+<p><code>dist</code> 用于给随机变量的不同取值设置“相对权重”，权重不要求总和为 100，只看比例。最容易混淆的是 <code>:=</code> 和 <code>:/</code>。<code>:=</code> 对范围中的每一个值分别赋予该权重，例如 <code>[0:3] := 40</code> 等价于 0、1、2、3 每个值的权重都是 40；而 <code>:/</code> 是整个范围共享该权重，例如 <code>[0:3] :/ 40</code> 表示整个 <code>[0:3]</code> 区间总权重为 40，再由区间内的值共同分配。因此如果想让某个区间整体占固定概率，应优先用 <code>:/</code>。<code>dist</code> 控制的是统计分布倾向，不保证有限次随机后严格满足比例，随机次数足够多时才会逐渐接近期望比例。</p>
+<h3 id="solve-before-为什么改变分布">Solve Before 为什么改变分布？</h3>
+<p><code>solve a before b;</code> 用于指定随机变量的求解顺序：先确定 <code>a</code>，再在满足全部约束的前提下求解 <code>b</code>。它不会改变合法解集合，也不是用来解决约束冲突的，主要作用是影响随机结果的概率分布。典型情况是前一个变量的不同取值对应不同数量的后续合法解，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">rand bit</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> mode</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">rand int</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> length</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">constraint</span><span style="--shiki-light:#6F42C1;--shiki-dark:#D6DEEB"> c</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    solve</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> mode</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> before</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> length</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">mode</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> ==</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 0</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">        length</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> inside</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">1</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">10</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    else</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">        length</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> inside</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">1</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">100</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span></span></code></pre>
+<p>如果不控制求解顺序，<code>mode=1</code> 对应的 <code>length</code> 合法解更多，可能导致随机结果偏向 <code>mode=1</code>；使用 <code>solve mode before length</code> 后，会先决定 <code>mode</code>，再根据该结果选择合法的 <code>length</code>，从而避免前级变量因后级解空间大小不同而被“带偏”。但无论有没有 <code>solve before</code>，最终所有 constraint 都必须同时满足。</p>
+<h3 id="概率与取模约束综合例子">概率与取模约束综合例子</h3>
+<p>SystemVerilog 约束中，如果 <code>a=1</code> 时要求 <code>b=0/1</code> 合计 70%、<code>b=2</code> 为 30%，应写 <code>b dist {[0:1] :/ 70, 2 := 30};</code>。<code>:/</code> 表示区间共享总权重，所以 0、1 各约 35%；<code>:=</code> 则给区间内每个值相同权重，含义不同。若 <code>a=0</code>，可约束 <code>b==3</code>；若 <code>b>=1</code>，<code>c inside {[0:255]}</code>，否则 <code>c inside {[257:1023]}</code>；<code>a=1</code> 时 <code>c%8==0</code>，<code>a=0</code> 时 <code>c%16==0</code>。若题目要求先求解 A 再求解 B，用 <code>solve a before b;</code>。它影响求解分布顺序，不表示约束按代码先后顺序执行。</p>
+<h3 id="任意连续五次随机都不重复">任意连续五次随机都不重复</h3>
+<p>普通 constraint 不记忆之前结果，需要 history queue：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">class</span><span style="--shiki-light:#6F42C1;--shiki-dark:#FFCB8B"> recent_unique</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  rand int unsigned</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> value</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  int unsigned</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#82AAFF">$</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">];</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">  constraint</span><span style="--shiki-light:#6F42C1;--shiki-dark:#D6DEEB"> c</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    value</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> inside</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> {</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">0</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">:</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">99</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">}</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    foreach</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">]) </span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">value</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> !=</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">i</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">];</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  }</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">  function</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> void</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic"> post_randomize</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">();</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">push_back</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">value</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">);</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">    if</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB"> (</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">size</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">() </span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">></span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C"> 4</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">)</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> void</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">'(</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">history</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">.</span><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">pop_front</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">());</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">  endfunction</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">endclass</span></span></code></pre>
+<p>每次排除最近4次结果，成功后更新 history。randc 的完整循环不重复比“最近五次”更强，不是同一个分布要求。</p>
+<h3 id="地址范围对齐与进制换算如何理解">地址范围、对齐与进制换算如何理解？</h3>
+<p>地址范围约束中，如果采用常见半开区间 <code>[X,Y)</code>，且 X、Y 均为 32 位地址，可以写成：X、Y 低 12 位为 0，实现 4 KB 对齐；<code>Y > X</code>；<code>Y-X</code> 在 <code>0x2000~0x100000</code> 之间，即 8 KB 到 1 MB。若 Y 表示最后一个有效地址，即闭区间 <code>[X,Y]</code>，则区间长度应按 <code>Y-X+1</code> 计算，此时 Y 本身通常不是 4 KB 对齐，而是满足低 12 位为 <code>0xFFF</code>。常用换算：<code>4 KB = 0x1000</code>，<code>8 KB = 0x2000</code>，<code>1 MB = 0x100000</code>；本质上因为 <code>1 KB = 2^10 Byte</code>、<code>1 MB = 2^20 Byte</code>。十进制小数转二进制采用“小数部分不断乘 2、依次取整数位”的方法，例如 <code>0.1₁₀ = 0.000110011...₂</code>，是无限循环二进制小数，因此浮点数中通常只能近似表示。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+<li><a href="/posts/dv-soc-engineering/">第八篇：SoC 验证与工程工具</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/systemverilog/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>SystemVerilog</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-simulation-concurrency-sva/" class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"><div><span>下一篇</span><div class="text-accent/85 text-sm">数字验证问答（二）：仿真调度、并发与 SVA</div></div><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M13 18l6-6M13 6l6 6" /></svg></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>

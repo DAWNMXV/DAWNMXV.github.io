@@ -1,0 +1,752 @@
+<!DOCTYPE html><html dir="ltr" lang="zh-CN" class="overflow-y-scroll scroll-smooth"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="canonical" href="https://dawnmxv.github.io/posts/dv-soc-engineering/"><meta name="generator" content="Astro v7.3.7"><!-- Primary meta --><title>数字验证问答（八）：SoC 验证与工程工具 | DAWNMX</title><meta name="title" content="数字验证问答（八）：SoC 验证与工程工具 | DAWNMX"><meta name="description" content="系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。"><meta name="author" content="DAWNMXV"><link rel="sitemap" href="/sitemap-index.xml"><!-- Open Graph --><meta property="og:type" content="website"><meta property="og:site_name" content="DAWNMX"><meta property="og:title" content="数字验证问答（八）：SoC 验证与工程工具 | DAWNMX"><meta property="og:description" content="系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。"><meta property="og:url" content="https://dawnmxv.github.io/posts/dv-soc-engineering/"><meta property="og:image" content="https://dawnmxv.github.io/default-og.webp"><!-- Twitter / X --><meta property="twitter:card" content="summary_large_image"><meta property="twitter:url" content="https://dawnmxv.github.io/posts/dv-soc-engineering/"><meta property="twitter:title" content="数字验证问答（八）：SoC 验证与工程工具 | DAWNMX"><meta property="twitter:description" content="系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。"><meta property="twitter:image" content="https://dawnmxv.github.io/default-og.webp"><!-- RSS autodiscovery --><link rel="alternate" type="application/rss+xml" title="DAWNMX" href="https://dawnmxv.github.io/rss.xml/"><!-- Filled at runtime by theme.ts to match the current background colour --><meta name="theme-color" content=""><!-- Extra head content injected by child layouts (e.g. JSON-LD, article meta) --><meta property="og:type" content="article"><meta property="article:published_time" content="2026-10-08T06:00:00.000Z"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"数字验证问答（八）：SoC 验证与工程工具 | DAWNMX","datePublished":"2026-10-08T06:00:00.000Z","author":[{"@type":"Person","name":"DAWNMXV","url":"https://github.com/DAWNMXV"}]}</script><!--
+      Inline FOUC-prevention script: sets data-theme on <html> before
+      the browser paints. Runs synchronously, no defer/async.
+    --><script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const theme = stored === "dark" ? "dark" : "light";
+        const root = document.firstElementChild;
+        root?.setAttribute("data-theme", theme);
+        root?.classList.toggle("dark", theme === "dark");
+        // Expose value so theme.ts can skip re-detection.
+        window.__theme = { value: theme };
+      })();
+    </script><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script type="module" src="/_astro/ClientRouter.astro_astro_type_script_index_0_lang.BDCjmQ8c.js"></script><link rel="stylesheet" href="/_astro/Footer.Bw_pPwf1.css"><style>@keyframes astroFadeInOut{0%{opacity:1}to{opacity:0}}@keyframes astroFadeIn{0%{opacity:0;mix-blend-mode:plus-lighter}to{opacity:1;mix-blend-mode:plus-lighter}}@keyframes astroFadeOut{0%{opacity:1;mix-blend-mode:plus-lighter}to{opacity:0;mix-blend-mode:plus-lighter}}@keyframes astroSlideFromRight{0%{transform:translate(100%)}}@keyframes astroSlideFromLeft{0%{transform:translate(-100%)}}@keyframes astroSlideToRight{to{transform:translate(100%)}}@keyframes astroSlideToLeft{to{transform:translate(-100%)}}@media (prefers-reduced-motion){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*),[data-astro-transition-scope]{animation:none!important}}
+</style><style>[data-astro-transition-scope="astro-bztu2lml-1"] { view-transition-name: \6570\5B57\9A8C\8BC1; }@layer astro { ::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\6570\5B57\9A8C\8BC1) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-1"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-1"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-2"] { view-transition-name: soc; }@layer astro { ::view-transition-old(soc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(soc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(soc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(soc) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-2"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-2"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style><style>[data-astro-transition-scope="astro-bztu2lml-3"] { view-transition-name: \5DE5\7A0B\5DE5\5177; }@layer astro { ::view-transition-old(\5DE5\7A0B\5DE5\5177) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }::view-transition-new(\5DE5\7A0B\5DE5\5177) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back]::view-transition-old(\5DE5\7A0B\5DE5\5177) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back]::view-transition-new(\5DE5\7A0B\5DE5\5177) { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; } }[data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }[data-astro-transition=back][data-astro-transition-fallback="old"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="old"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeOut; }[data-astro-transition=back][data-astro-transition-fallback="new"] [data-astro-transition-scope="astro-bztu2lml-3"],
+			[data-astro-transition=back][data-astro-transition-fallback="new"][data-astro-transition-scope="astro-bztu2lml-3"] { 
+	animation-duration: 180ms;
+	animation-timing-function: cubic-bezier(0.76, 0, 0.24, 1);
+	animation-fill-mode: both;
+	animation-name: astroFadeIn; }</style></head><body class="bg-background font-app text-foreground selection:bg-accent/75 selection:text-accent-foreground flex min-h-svh flex-col"><a id="skip-to-content" href="#main-content" class="bg-background text-accent absolute inset-s-16 -top-full z-50 px-3 py-2 backdrop-blur-lg transition-all focus:top-4">跳到正文</a><header class="app-layout flex flex-col items-center justify-between sm:flex-row"><div class="border-border bg-background relative flex w-full items-baseline justify-between border-b py-4 sm:items-center sm:py-6"><a href="/" class="absolute py-1 text-xl leading-8 font-semibold whitespace-nowrap sm:static sm:my-auto sm:text-2xl sm:leading-none">DAWNMX</a><nav id="nav-menu" class="flex w-full flex-col items-center sm:ms-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"><button id="menu-btn" class="focus-outline self-end p-2 sm:hidden" aria-label="打开导航" aria-expanded="false" aria-controls="menu-items" data-label-open="打开导航" data-label-close="关闭导航"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden" viewBox="0 0 24 24" id="close-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M18 6 6 18M6 6l12 12" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="icon icon-tabler icons-tabler-outline icon-tabler-menu-deep" viewBox="0 0 24 24" id="menu-icon"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 6h16M7 12h13M10 18h10" /></svg></button><ul id="menu-items" class="[&amp;&gt;li&gt;a]:hover:text-accent mt-4 hidden w-44 grid-cols-2 place-content-center gap-2 sm:mt-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0 sm:[&amp;&gt;li]:h-8 [&amp;&gt;li&gt;a]:block [&amp;&gt;li&gt;a]:px-4 [&amp;&gt;li&gt;a]:py-3 [&amp;&gt;li&gt;a]:text-center [&amp;&gt;li&gt;a]:font-medium sm:[&amp;&gt;li&gt;a]:px-2 sm:[&amp;&gt;li&gt;a]:py-1"><li class="col-span-2"><a href="/posts/" class="active-nav">文章</a></li><li class="col-span-2"><a href="/tags/">标签</a></li><li class="col-span-2"><a href="/series/digital-verification/">问答</a></li><li class="col-span-2"><a href="/about/">关于</a></li><li class="col-span-2"><a href="/archives/" title="归档" aria-label="归档" class="group inline-flex items-center gap-1 hover:text-accent focus-outline flex size-full justify-center p-3 sm:relative sm:size-8 sm:p-0"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="hidden sm:absolute sm:top-1/2 sm:left-1/2 sm:block sm:size-6 sm:-translate-x-1/2 sm:-translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8M10 12h4" /></svg><span class="sm:sr-only">归档</span></a></li><li class="col-span-1 flex items-center justify-center"><a href="/search/" title="搜索" aria-label="搜索" class="group inline-flex items-center gap-1 hover:text-accent focus-outline relative size-8"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-1/2 left-1/2 size-6 -translate-x-1/2 -translate-y-1/2" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6" /></svg><span class="sr-only">搜索</span></a></li><li class="col-span-1 flex items-center justify-center"><button id="theme-btn" class="focus-outline hover:[&amp;&gt;svg]:stroke-accent relative size-12 p-4 sm:size-8" title="切换明暗模式" aria-label="auto" aria-live="polite"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 3h.393a7.5 7.5 0 0 0 7.92 12.446A9 9 0 1 1 12 2.992z" /></svg><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="absolute top-[50%] left-[50%] translate-[-50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M14.828 14.828a4 4 0 1 0-5.656-5.656 4 4 0 0 0 5.656 5.656M6.343 17.657l-1.414 1.414M6.343 6.343 4.929 4.929M17.657 6.343l1.414-1.414M17.657 17.657l1.414 1.414M4 12H2M12 4V2M20 12h2M12 20v2" /></svg></button></li></ul></nav></div></header><script type="module">function e(){let e=document.querySelector(`#menu-btn`),t=document.querySelector(`#menu-items`),n=document.querySelector(`#menu-icon`),r=document.querySelector(`#close-icon`);if(!e||!t||!n||!r)return;let i=e.dataset.labelOpen??`Open menu`,a=e.dataset.labelClose??`Close menu`;e.addEventListener(`click`,()=>{let o=e.getAttribute(`aria-expanded`)===`true`;e.setAttribute(`aria-expanded`,o?`false`:`true`),e.setAttribute(`aria-label`,o?i:a),t.classList.toggle(`hidden`),t.classList.toggle(`grid`),n.classList.toggle(`hidden`),r.classList.toggle(`hidden`)})}function t(){let e=document.getElementById(`skip-to-content`);e&&e.addEventListener(`click`,e=>{if(e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.button!==0)return;e.preventDefault();let t=document.getElementById(`main-content`);t&&(t.setAttribute(`tabindex`,`-1`),t.addEventListener(`blur`,()=>t.removeAttribute(`tabindex`),{once:!0}),t.focus(),t.scrollIntoView({behavior:`smooth`}))})}e(),document.addEventListener(`astro:after-swap`,e),t(),document.addEventListener(`astro:after-swap`,t);</script><script type="module">function e(){let e=document.querySelector(`#back-button`),t=sessionStorage.getItem(`backUrl`);t&&e&&(e.href=t)}document.addEventListener(`astro:page-load`,e),e();</script><main id="main-content" class="app-layout mt-8" data-pagefind-body><h1 style="view-transition-name:dv-soc-engineering" class="text-accent inline-block text-2xl font-bold sm:text-3xl">数字验证问答（八）：SoC 验证与工程工具</h1><div class="my-2 flex items-center gap-2"><div class="text-muted-foreground flex items-center gap-x-2"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 min-w-5.5" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2zM16 3v4M8 3v4M4 11h16M7 14h.013M10.01 14h.005M13.01 14h.005M16.015 14h.005M13.015 17h.005M7.01 17h.005M10.01 17h.005" /></svg><time class="text-sm sm:text-base" datetime="2026-10-08T06:00:00.000Z">2026-10-08</time></div><span aria-hidden="true" class="text-muted-foreground max-sm:hidden hidden">|</span></div><article id="article" class="mt-8 w-full app-prose max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"><p>这篇是数字验证问答系列的第八篇，整理自我的复习笔记。系统验证、参考模型、数值表示、嵌入式 C、Linux、Makefile 与仿真调试。</p>
+<p><a href="/series/digital-verification/">查看系列目录</a></p>
+<h2 id="目录">目录</h2>
+<p></p><details><summary>目录</summary><p></p>
+<ul>
+<li><a href="#soc-%E9%AA%8C%E8%AF%81%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%E4%B8%8E%E8%B0%83%E8%AF%95">SoC 验证、参考模型与调试</a>
+<ul>
+<li><a href="#soc-%E9%AA%8C%E8%AF%81%E7%9A%84%E5%B1%82%E7%BA%A7%E4%B8%8E%E9%9B%86%E6%88%90%E8%BE%B9%E7%95%8C">SoC 验证的层级与集成边界</a></li>
+<li><a href="#%E5%B0%8F%E5%9E%8B-soc-%E7%9A%84%E5%9F%BA%E7%A1%80%E4%B8%8E%E4%BA%A4%E5%8F%89%E5%9C%BA%E6%99%AF">小型 SoC 的基础与交叉场景</a></li>
+<li><a href="#rtl-%E4%BB%BF%E7%9C%9F%E9%80%9A%E8%BF%87%E4%BD%86-fpga-%E5%8E%9F%E5%9E%8B%E5%A4%B1%E8%B4%A5%E6%80%8E%E4%B9%88%E5%AE%9A%E4%BD%8D">RTL 仿真通过但 FPGA 原型失败，怎么定位？</a></li>
+<li><a href="#fpga-%E5%8E%9F%E5%9E%8B%E4%B8%8E%E8%BD%AF%E4%BB%B6%E4%BB%BF%E7%9C%9F%E5%90%84%E6%9C%89%E4%BB%80%E4%B9%88%E4%BC%98%E5%8A%A3">FPGA 原型与软件仿真各有什么优劣？</a></li>
+<li><a href="#%E5%BD%A2%E5%BC%8F%E9%AA%8C%E8%AF%81%E9%80%82%E5%90%88%E5%93%AA%E4%BA%9B%E9%97%AE%E9%A2%98">形式验证适合哪些问题？</a></li>
+<li><a href="#%E9%97%A8%E7%BA%A7%E4%BB%BF%E7%9C%9F%E9%9C%80%E8%A6%81%E4%BB%80%E4%B9%88%E8%83%BD%E8%AF%81%E6%98%8E%E4%BB%80%E4%B9%88">门级仿真需要什么，能证明什么？</a></li>
+<li><a href="#%E5%8F%82%E8%80%83%E6%A8%A1%E5%9E%8B%E5%BA%94%E8%AF%A5%E5%81%9A%E5%88%B0%E4%BB%80%E4%B9%88%E7%B2%BE%E5%BA%A6">参考模型应该做到什么精度？</a></li>
+<li><a href="#%E6%A8%A1%E6%8B%9F%E5%89%8D%E7%AB%AF-expectedactual-%E4%B8%8D%E4%B8%80%E8%87%B4%E6%80%8E%E6%A0%B7%E6%8E%92%E6%9F%A5">模拟前端 Expected/Actual 不一致怎样排查？</a></li>
+<li><a href="#%E4%B8%AD%E6%96%AD%E8%BF%9B%E5%85%A5%E4%B8%8E%E8%BF%94%E5%9B%9E%E7%9A%84%E8%BD%AF%E7%A1%AC%E4%BB%B6%E8%81%8C%E8%B4%A3">中断进入与返回的软硬件职责</a></li>
+<li><a href="#watchdog-%E7%9A%84%E8%B6%85%E6%97%B6%E5%96%82%E7%8B%97%E4%B8%8E%E7%AA%97%E5%8F%A3%E6%9C%BA%E5%88%B6">Watchdog 的超时、喂狗与窗口机制</a></li>
+</ul>
+</li>
+<li><a href="#%E6%95%B0%E5%80%BC%E8%A1%A8%E7%A4%BA%E4%BD%8D%E8%BF%90%E7%AE%97%E4%B8%8E%E5%B5%8C%E5%85%A5%E5%BC%8F-c">数值表示、位运算与嵌入式 C</a>
+<ul>
+<li><a href="#%E6%9C%89%E7%AC%A6%E5%8F%B7%E8%A1%A5%E7%A0%81%E6%89%A9%E4%BD%8D%E4%B8%8E%E6%BA%A2%E5%87%BA">有符号补码、扩位与溢出</a></li>
+<li><a href="#float32%E8%A7%84%E6%A0%BC%E5%8C%96%E9%9D%9E%E8%A7%84%E6%A0%BC%E5%8C%96%E4%B8%8E%E7%89%B9%E6%AE%8A%E5%80%BC">Float32：规格化、非规格化与特殊值</a></li>
+<li><a href="#xx-1lowbit-%E4%B8%8E%E5%B8%B8%E8%A7%81%E4%BD%8D%E6%93%8D%E4%BD%9C">X&#x26;(X-1)、Lowbit 与常见位操作</a></li>
+<li><a href="#volatile-%E8%83%BD%E4%BF%9D%E8%AF%81%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E4%BF%9D%E8%AF%81%E4%BB%80%E4%B9%88">Volatile 能保证什么，不能保证什么？</a></li>
+<li><a href="#c-%E5%AF%84%E5%AD%98%E5%99%A8%E4%BD%8D%E6%93%8D%E4%BD%9C%E6%95%B0%E7%BB%84%E4%B8%8E%E6%8C%87%E9%92%88">C 寄存器位操作、数组与指针</a></li>
+<li><a href="#%E5%B0%8F%E6%95%B0%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E4%BA%A7%E7%94%9F%E6%B5%AE%E7%82%B9%E8%A1%A8%E7%A4%BA%E8%AF%AF%E5%B7%AE">小数为什么会产生浮点表示误差？</a></li>
+<li><a href="#%E4%BD%8D%E6%93%8D%E4%BD%9C%E7%9A%84%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%AF%84%E5%AD%98%E5%99%A8%E5%89%AF%E4%BD%9C%E7%94%A8">位操作的类型与寄存器副作用</a></li>
+</ul>
+</li>
+<li><a href="#linuxmakefile-%E4%B8%8E%E4%BB%BF%E7%9C%9F%E8%B0%83%E8%AF%95%E5%B7%A5%E5%85%B7">Linux、Makefile 与仿真调试工具</a>
+<ul>
+<li><a href="#cp-%E4%B8%8E%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5%E7%9A%84%E8%B7%AF%E5%BE%84%E5%85%B3%E7%B3%BB">Cp 与符号链接的路径关系</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E7%BB%9F%E8%AE%A1%E9%9D%9E%E9%87%8D%E5%8F%A0%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BA%E7%8E%B0%E6%AC%A1%E6%95%B0">如何统计非重叠字符串出现次数？</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E6%8C%89%E6%95%B4%E8%A1%8C%E8%BF%87%E6%BB%A4%E6%97%A5%E5%BF%97">如何按整行过滤日志？</a></li>
+<li><a href="#makefile-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%98%E9%87%8F%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%8F%98%E9%87%8F">Makefile 命令行变量与自动变量</a></li>
+<li><a href="#sformatf-%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%83%BD%E7%9B%B4%E6%8E%A5%E7%85%A7%E6%90%AC-psprintf-%E5%8F%82%E6%95%B0">$sformatf 为什么不能直接照搬 $psprintf 参数？</a></li>
+<li><a href="#%E5%8D%81%E5%85%AD%E8%BF%9B%E5%88%B6%E6%98%BE%E7%A4%BA%E4%B8%8E%E5%A4%9A%E7%BB%B4%E6%95%B0%E7%BB%84%E6%B3%A2%E5%BD%A2">十六进制显示与多维数组波形</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E5%88%97%E5%85%B6%E4%BB%96%E6%96%87%E7%AB%A0">系列其他文章</a></li>
+</ul>
+<p></p></details><p></p>
+<h2 id="soc-验证参考模型与调试">SoC 验证、参考模型与调试</h2>
+<p>验证层级、Formal/FPGA/GLS、软硬件协同和系统交叉场景。</p>
+<h3 id="soc-验证的层级与集成边界">SoC 验证的层级与集成边界</h3>
+<p>SoC 验证关注的是集成后的系统行为，通常包括 Boot、CPU、地址映射、互连、存储器、Cache、一致性、DMA、中断、外设、时钟复位、低功耗、安全权限、软硬件协同、错误恢复和性能。验证通常按 IP 级、子系统级、SoC 级和软硬件协同逐层展开。SoC 级最常见的问题不是单个 IP 算错，而是集成边界，例如地址映射错误、配置顺序错误、复位不同步、中断路由错误、DMA/Cache 交互和低功耗状态切换。</p>
+<h3 id="小型-soc-的基础与交叉场景">小型 SoC 的基础与交叉场景</h3>
+<p>小型 SoC 验证应同时覆盖单模块和系统级交叉场景。对于含 RISC-V、32 KB ROM/RAM、Timer、Watchdog、I2C Master、PLL/晶振切换、工作/睡眠模式的系统，基本 testcase 应包括：复位启动、ROM 边界与越界访问、RAM pattern 读写、Timer 正常倒计时/中断/边界值、Watchdog timeout 和喂狗边界、I2C 读写与 NACK/error、PLL 与晶振动态切换、进入/退出 sleep，以及 sleep 下 Timer/WDT 是否继续工作的行为。更有价值的是交叉场景，如 I2C 传输中请求 sleep、CPU 访问 RAM 时切换时钟、Watchdog timeout 与模式切换同时发生。SoC 结构上通常是 CPU、ROM/RAM、Timer/WDT/I2C 通过系统总线互联，外加 CRG、睡眠控制、电源管理和中断控制模块。</p>
+<h3 id="rtl-仿真通过但-fpga-原型失败怎么定位">RTL 仿真通过但 FPGA 原型失败，怎么定位？</h3>
+<p>最后，RTL 仿真通过而 FPGA 原型失败，应该优先归类为 RTL simulation 与 synthesis/hardware mismatch，而不是简单认为“仿真器有问题”。例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="system-verilog"><code><span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">always_comb</span><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic"> begin</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    next_addr</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA"> =</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> current_addr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">;</span></span>
+<span class="line"><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">    next_addr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">index</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">] </span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">=</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478"> current_addr</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">[</span><span style="--shiki-light:#24292EFF;--shiki-dark:#C5E478">index</span><span style="--shiki-light:#D32F2F;--shiki-dark:#C792EA">+</span><span style="--shiki-light:#1976D2;--shiki-dark:#F78C6C">1</span><span style="--shiki-light:#24292EFF;--shiki-dark:#D6DEEB">];</span></span>
+<span class="line"><span style="--shiki-light:#D32F2F;--shiki-light-font-style:inherit;--shiki-dark:#C792EA;--shiki-dark-font-style:italic">end</span></span></code></pre>
+<p>这种“先全量默认赋值，再覆盖一个动态 bit”的写法在语法和正常综合语义上都是合法的。综合器通常会把动态索引实现成 decoder + mux：被 <code>index</code> 选中的 bit 取新值，其他 bit 保持 <code>current_addr</code>。真正的风险通常来自动态索引越界、<code>index</code> 含 X、复位/初始化在 RTL 和 FPGA 上不一致、综合器特殊优化或工具 bug，以及 timing/CDC 问题。验证上应加入索引范围断言、<code>$isunknown()</code> 检查和“未被选中的 bit 必须保持不变”的断言，并配合 lint、RTL-to-netlist formal equivalence、必要时 gate-level simulation。一个重要判断方法是：若 RTL 与综合网表 equivalence 已经失败，优先查 RTL/综合语义；若 equivalence 通过但 FPGA 仍失败，则应更关注时序、CDC、复位、初始化和实现层问题。</p>
+<h3 id="fpga-原型与软件仿真各有什么优劣">FPGA 原型与软件仿真各有什么优劣？</h3>
+<p>FPGA 原型验证的主要挑战是设计规模和跨 FPGA 分割、板间或芯片间 I/O 限制、跨 FPGA 延迟、时钟和复位映射、ASIC 宏单元替代、内部可观测性弱以及长时间布局布线。其主要优势是运行速度高，适合长软件场景；软件仿真则恰好相反，速度慢但可观测性、可控性和调试能力强，适合断言、覆盖率、约束随机、错误注入和自动化回归。</p>
+<h3 id="形式验证适合哪些问题">形式验证适合哪些问题？</h3>
+<p>形式验证适合状态空间可控、性质清晰的控制类问题，例如仲裁器互斥和公平性、FIFO 溢出/下溢、协议属性、非法状态、死锁、安全权限、复位控制和 RTL/门级等价性检查。它的优势是可以证明性质对所有合法状态成立，而不是只验证随机激励碰到的路径，但不适合直接对超大 SoC、长软件流程或模拟电路做完整状态空间验证。</p>
+<h3 id="门级仿真需要什么能证明什么">门级仿真需要什么，能证明什么？</h3>
+<p>门级后仿通常需要门级网表、标准单元仿真库、Testbench，以及带时序仿真时使用的 SDF；还可能需要 SRAM、PLL、IO 等 IP 模型。零延迟门级仿真主要检查综合后功能、复位和 X 传播；SDF 后仿还会体现单元和互连延迟、setup/hold、recovery/removal、脉宽等时序检查。门级仿真不能代替 STA，因为仿真只覆盖实际跑到的路径，而 STA 系统性分析时序路径。</p>
+<h3 id="参考模型应该做到什么精度">参考模型应该做到什么精度？</h3>
+<p>参考模型的作用是根据输入生成期望结果，再交给 scoreboard 与 DUT 输出比较。参考模型可分为功能级、bit-accurate、cycle-accurate、transaction-level 等不同精度。验证环境中不应盲目追求“越精确越好”，而应根据被验证功能决定是否需要位精确、周期精确或仅事务级一致。</p>
+<h3 id="模拟前端-expectedactual-不一致怎样排查">模拟前端 Expected/Actual 不一致怎样排查？</h3>
+<p>数字配置与模拟前端联合验证出现 expected 与 actual 不一致时，应分层定位：先查复位时序、寄存器默认值、写入和读回，再查配置是否真正传到模拟接口，随后检查模拟稳定时间、采样时刻、符号位、量化、单位和缩放关系。模拟结果通常不适合严格 <code>==</code>，应使用绝对误差或相对误差容限。晶体管级模型精确但很慢，因此芯片级回归通常使用 Verilog-A/Verilog-AMS 行为模型、RNM、<code>wreal</code>、查找表或数学模型；晶体管级模型主要用于模块级精确验证和行为模型校准。核心思想是“晶体管级保精度，高层模型保速度”。</p>
+<h3 id="中断进入与返回的软硬件职责">中断进入与返回的软硬件职责</h3>
+<p>中断流程要分清软硬件职责。进中断时，外设产生 IRQ，中断控制器完成使能判断和优先级仲裁，CPU 在允许响应后由硬件保存最基本的返回状态，如 PC、处理器状态/特权级等，并跳转到中断向量入口；进入 ISR 后由软件保存必要的通用寄存器、识别中断源并处理中断。出中断时，软件先清除外设中断状态，必要时向中断控制器发送 EOI，再恢复软件保存的寄存器，执行 <code>mret/eret</code> 等异常返回指令，由硬件恢复 PC、特权级和中断状态。不同架构硬件自动保存的现场不同，例如 RISC-V 通常通过 <code>mepc/mcause/mstatus</code> 保存异常信息，其余大量现场由软件维护。</p>
+<h3 id="watchdog-的超时喂狗与窗口机制">Watchdog 的超时、喂狗与窗口机制</h3>
+<p>看门狗本质是独立超时计数器。软件必须在规定时间内喂狗，否则触发中断、NMI 或复位，用于检测程序跑飞、死循环和系统无响应。超时时间既不能短于正常最长任务时间，也不能过长；最好使用独立时钟；不能在固定中断里无条件喂狗，否则主程序失效时仍可能持续喂狗。窗口看门狗进一步规定“过早喂狗”也属于异常。</p>
+<h2 id="数值表示位运算与嵌入式-c">数值表示、位运算与嵌入式 C</h2>
+<p>补码、浮点特殊值、lowbit、volatile 和 C 基础。</p>
+<h3 id="有符号补码扩位与溢出">有符号补码、扩位与溢出</h3>
+<p>SystemVerilog 有符号数采用二进制补码表示，扩位时 signed 做符号扩展，unsigned 做零扩展。N 位 signed 范围为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><msup><mn>2</mn><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∼</mo><msup><mn>2</mn><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">-2^{N-1}\sim2^{N-1}-1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.9247em;vertical-align:-0.0833em;"></span><span class="mord">−</span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.9247em;vertical-align:-0.0833em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8413em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.109em;">N</span><span class="mbin mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span>。有符号加法中，两个同号数相加却得到相反符号，是典型 overflow；减法中，两个操作数异号且结果符号异常也可能溢出。尤其要注意 signed/unsigned 混合运算和表达式位宽：赋值目标更宽并不保证中间表达式不会先溢出，稳妥做法是先显式扩位、统一 signed 属性再运算。</p>
+<h3 id="float32规格化非规格化与特殊值">Float32：规格化、非规格化与特殊值</h3>
+<p>IEEE 754 浮点数中，规格化数与非规格化数的核心区别在于有效数最高位是否存在隐含的 <code>1</code>。以单精度 <code>float32</code> 为例，格式为 <code>1 bit 符号位 S + 8 bit 指数 E + 23 bit 尾数 F</code>。当 <code>1 ≤ E ≤ 254</code> 时是规格化数，数值为</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mi>S</mi></msup><mo>×</mo><mo stretchy="false">(</mo><mn>1.</mn><mi>F</mi><msub><mo stretchy="false">)</mo><mn>2</mn></msub><mo>×</mo><msup><mn>2</mn><mrow><mi>E</mi><mo>−</mo><mn>127</mn></mrow></msup></mrow><annotation encoding="application/x-tex">(-1)^S \times (1.F)_2 \times 2^{E-127}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1413em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0576em;">S</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1.</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8913em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0576em;">E</span><span class="mbin mtight">−</span><span class="mord mtight">127</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<p>其中最高位的 <code>1</code> 不实际存储，因此称为 hidden bit / implicit 1。规格化的本质就是把二进制数写成类似 <code>1.xxxx × 2^n</code> 的形式。
+当 <code>E=0</code> 且 <code>F≠0</code> 时是非规格化数（subnormal，也称 denormal），此时不再有隐藏的 <code>1</code>，而是</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mo stretchy="false">(</mo><mo>−</mo><mn>1</mn><msup><mo stretchy="false">)</mo><mi>S</mi></msup><mo>×</mo><mo stretchy="false">(</mo><mn>0.</mn><mi>F</mi><msub><mo stretchy="false">)</mo><mn>2</mn></msub><mo>×</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>126</mn></mrow></msup></mrow><annotation encoding="application/x-tex">(-1)^S \times (0.F)_2 \times 2^{-126}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.1413em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">−</span><span class="mord">1</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8913em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0576em;">S</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">0.</span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">126</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<p>注意指数固定按 <code>1-127=-126</code> 计算，而不是 <code>0-127=-127</code>。非规格化数的主要作用是表示比最小规格化数 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mn>126</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-126}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">126</span></span></span></span></span></span></span></span></span></span></span></span> 更小、但又尚未小到 0 的数，实现 gradual underflow（渐进下溢）。单精度最小正非规格化数为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mn>149</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-149}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">149</span></span></span></span></span></span></span></span></span></span></span></span>，而最小正规格化数为 <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mo>−</mo><mn>126</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2^{-126}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8141em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">126</span></span></span></span></span></span></span></span></span></span></span></span>。
+判断 IEEE 754 特殊值时，最重要的是先看指数域：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>指数 E</th><th>尾数 F</th><th>含义</th></tr></thead><tbody><tr><td><code>00000000</code></td><td><code>0</code></td><td><code>+0 / -0</code></td></tr><tr><td><code>00000000</code></td><td>非 0</td><td>非规格化数</td></tr><tr><td><code>00000001 ~ 11111110</code></td><td>任意</td><td>规格化有限数</td></tr><tr><td><code>11111111</code></td><td><code>0</code></td><td><code>+∞ / -∞</code></td></tr><tr><td><code>11111111</code></td><td>非 0</td><td><code>NaN</code></td></tr></tbody></table>
+<p>正零和负零只由符号位区分，例如 <code>+0 = 0 | 00000000 | 0...0</code>，<code>-0 = 1 | 00000000 | 0...0</code>。通常 <code>+0 == -0</code>，但某些运算可以体现符号差异，例如 <code>1/+0 → +∞</code>、<code>1/-0 → -∞</code>。无穷大的指数全 1、尾数全 0，符号位决定正负，常见于溢出或非零数除以零。
+NaN（Not a Number）的特征是 <code>E=255</code> 且 <code>F≠0</code>，常见于 <code>0/0</code>、<code>∞-∞</code>、<code>∞/∞</code> 等无有效实数结果的运算。NaN 的重要特性是它不等于任何数，包括自身，因此 <code>NaN == NaN</code> 为假，判断 NaN 应使用专门的 <code>isnan</code> 类接口。NaN 还可进一步分为 quiet NaN 和 signaling NaN，常见实现中由尾数最高位区分，但具体异常行为取决于 FPU 实现。
+几个常见单精度边界值应记住：</p>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>最小正非规格化数</mtext><mo>=</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>149</mn></mrow></msup><mo>≈</mo><mn>1.4</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>45</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\text{最小正非规格化数}=2^{-149}\approx1.4\times10^{-45}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord cjk_fallback">最小正非规格化数</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">149</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.4</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">45</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>最小正规格化数</mtext><mo>=</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>126</mn></mrow></msup><mo>≈</mo><mn>1.175</mn><mo>×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>38</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\text{最小正规格化数}=2^{-126}\approx1.175\times10^{-38}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord cjk_fallback">最小正规格化数</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">126</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1.175</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">38</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mtext>最大有限正数</mtext><mo>=</mo><mo stretchy="false">(</mo><mn>2</mn><mo>−</mo><msup><mn>2</mn><mrow><mo>−</mo><mn>23</mn></mrow></msup><mo stretchy="false">)</mo><mo>×</mo><msup><mn>2</mn><mn>127</mn></msup><mo>≈</mo><mn>3.403</mn><mo>×</mo><msup><mn>10</mn><mn>38</mn></msup></mrow><annotation encoding="application/x-tex">\text{最大有限正数}=(2-2^{-23})\times2^{127}\approx3.403\times10^{38}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord text"><span class="mord cjk_fallback">最大有限正数</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">2</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">23</span></span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">127</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">3.403</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8641em;"></span><span class="mord">1</span><span class="mord"><span class="mord">0</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">38</span></span></span></span></span></span></span></span></span></span></span></span></span>
+<p>最容易混淆的点有三个：<code>E=0</code> 不一定是 0，只有 <code>E=0,F=0</code> 才是零；非规格化数没有隐藏的 <code>1</code>；<code>E=255</code> 也不一定是无穷大，只有尾数为 0 才是无穷大，尾数非 0 则是 NaN。</p>
+<h3 id="xx-1lowbit-与常见位操作">X&#x26;(X-1)、Lowbit 与常见位操作</h3>
+<p>常见位运算技巧中，最重要的是 <code>x &#x26; (x-1)</code> 和 <code>x &#x26; -x</code>。<code>x &#x26; (x-1)</code> 会清除最低位的那个 <code>1</code>，所以不断执行：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>while (x != 0) begin</span></span>
+<span class="line"><span>    x &#x26;= x - 1;</span></span>
+<span class="line"><span>    count++;</span></span>
+<span class="line"><span>end</span></span></code></pre>
+<p>循环次数就是原数中 <code>1</code> 的数量；同时 <code>(x != 0) &#x26;&#x26; ((x &#x26; (x-1)) == 0)</code> 可判断 <code>x</code> 是否为 2 的幂，注意必须显式排除 <code>x==0</code>。<code>x &#x26; -x</code> 利用二进制补码 <code>-x = ~x + 1</code>，会只保留最低置位的 <code>1</code>，也称 lowbit。其他常见操作包括：<code>x &#x26; (1&#x3C;&#x3C;n)</code> 检查第 n 位，<code>x | (1&#x3C;&#x3C;n)</code> 置 1，<code>x &#x26; ~(1&#x3C;&#x3C;n)</code> 清 0，<code>x ^ (1&#x3C;&#x3C;n)</code> 翻转，<code>x &#x26; 1</code> 判断奇偶。</p>
+<h3 id="volatile-能保证什么不能保证什么">Volatile 能保证什么，不能保证什么？</h3>
+<p>嵌入式 C 中 <code>volatile</code> 表示变量可能被当前执行流之外的因素修改，因此编译器不能把访问随意优化掉，典型用于硬件寄存器、中断共享变量、DMA 更新数据等。<code>volatile</code> 只限制编译器优化，不保证原子性、线程互斥、多核内存顺序或 Cache 一致性，因此不能把它当作并发同步机制。</p>
+<h3 id="c-寄存器位操作数组与指针">C 寄存器位操作、数组与指针</h3>
+<p>C 语言寄存器位操作的通用写法是：置位 <code>reg |= (1U &#x3C;&#x3C; n);</code>，清零 <code>reg &#x26;= ~(1U &#x3C;&#x3C; n);</code>。若直接访问硬件寄存器地址，应使用 <code>volatile</code>，例如 <code>*(volatile unsigned int *)0x100 |= (1U&#x3C;&#x3C;31);</code>。二维数组部分初始化时，未显式初始化的元素补 0，例如 <code>int a[2][2]={2,3};</code> 得到第一行 2、3，第二行全 0；而 <code>{{2},{3}}</code> 则每一行只初始化第一个元素。<code>int (*ptr)[N]</code> 是“指向含 N 个 int 的数组的指针”，不是数组名。指针 <code>==/!=</code> 可用于合法比较，但 <code>&#x3C; > &#x3C;= >=</code> 只有在同一数组对象范围内比较才有明确语义。<code>switch</code> 表达式要求整数或枚举类型，<code>float</code> 不可直接用于 <code>switch</code>。统计整数补码中 1 的个数，推荐先转 <code>unsigned int</code>，再循环执行 <code>x &#x26;= x-1</code>，每次消掉最低位一个 1。</p>
+<h3 id="小数为什么会产生浮点表示误差">小数为什么会产生浮点表示误差？</h3>
+<p>十进制小数转二进制可用小数部分反复乘 2、取整数位的方法。0.1 的二进制是无限循环的 0.000110011…，因此有限位浮点数通常只能近似表示。</p>
+<h3 id="位操作的类型与寄存器副作用">位操作的类型与寄存器副作用</h3>
+<p>统计和 lowbit 运算优先用合适宽度的无符号类型；移位量必须在位宽范围内。硬件寄存器读改写还需检查 W1C、read-clear、并发更新和访问宽度，不能把 |= 或 &#x26;= 当成所有 MMIO 的通用写法。</p>
+<h2 id="linuxmakefile-与仿真调试工具">Linux、Makefile 与仿真调试工具</h2>
+<p>路径、日志、Make变量、格式化打印和多维数组波形。</p>
+<h3 id="cp-与符号链接的路径关系">Cp 与符号链接的路径关系</h3>
+<p>Linux 中，<code>cp 源 目标</code> 的第一个路径就是源文件。若源路径不是以 <code>/</code> 开头，则按当前工作目录解析，当前目录可用 <code>pwd</code> 查看。符号链接使用 <code>ln -s old new</code> 创建，<code>new</code> 保存的是 <code>old</code> 的路径；修改 <code>old</code> 的内容后，通过 <code>new</code> 仍能访问修改后的数据，但如果 <code>old</code> 被删除或改名，符号链接会变成悬空链接，无法继续访问原文件。</p>
+<h3 id="如何统计非重叠字符串出现次数">如何统计非重叠字符串出现次数？</h3>
+<p>Linux 中统计文件里字符串 <code>10101</code> 出现次数，并把结果以 <code>content: 数量</code> 写入文件，可以简洁写成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>echo "content: $(grep -o '10101' input.txt | wc -l)" > result.txt</span></span></code></pre>
+<p>其中 <code>grep -o</code> 会把每个匹配单独输出，<code>wc -l</code> 统计匹配数量。需要注意，这种方式统计的是非重叠匹配次数。</p>
+<h3 id="如何按整行过滤日志">如何按整行过滤日志？</h3>
+<p>Linux 中把文件 A 里所有包含字符串 <code>test</code> 的整行保存到 B，最直接写法是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="bash"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-light-font-style:inherit;--shiki-dark:#82AAFF;--shiki-dark-font-style:italic">grep</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD"> "</span><span style="--shiki-light:#22863A;--shiki-dark:#ECC48D">test</span><span style="--shiki-light:#22863A;--shiki-dark:#D9F5DD">"</span><span style="--shiki-light:#2B5581;--shiki-dark:#ECC48D"> A</span><span style="--shiki-light:#D32F2F;--shiki-dark:#7FDBCA"> ></span><span style="--shiki-light:#2B5581;--shiki-dark:#ECC48D"> B</span></span></code></pre>
+<p>忽略大小写用 <code>grep -i</code>；只匹配完整单词用 <code>grep -w</code>。
+常用 grep 选项：-n 显示行号，-i 忽略大小写，-v 反选，-E 扩展正则，-r 递归，-A/-B/-C 查看上下文。-c 统计匹配行，不是总出现次数。</p>
+<h3 id="makefile-命令行变量与自动变量">Makefile 命令行变量与自动变量</h3>
+<p>Makefile 中 <code>$@</code> 是自动变量，表示当前规则的 target；常见的还有 <code>$&#x3C;</code> 表示第一个 prerequisite，<code>$^</code> 表示所有 prerequisite。例如 <code>gcc hello.c -o $@</code> 在目标为 <code>hello</code> 时，相当于 <code>gcc hello.c -o hello</code>。
+工程基础题方面，<code>make TEST=xxx SEED=xxx</code> 这种命令行变量可在 Makefile 中用 <code>$(TEST)</code>、<code>$(SEED)</code> 读取；<code>make run</code> 中的 <code>run</code> 是 target/goal，<code>$(MAKECMDGOALS)</code> 可获取命令目标，recipe 内 <code>$@</code> 表示当前 target。</p>
+<h3 id="sformatf-为什么不能直接照搬-psprintf-参数">$sformatf 为什么不能直接照搬 $psprintf 参数？</h3>
+<p>SystemVerilog 里，$sformatf 和 $psprintf 最容易混淆的点是：$sformatf 是标准 SystemVerilog 系统函数，它的调用模型是</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>$sformatf(format_string, arguments...)</span></span></code></pre>
+<p>也就是说，只有第一个参数是格式字符串，后续所有参数都只是给这个格式字符串里的 <code>%d</code>、<code>%x</code>、<code>%s</code> 等格式符提供数据。比如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>$sformatf("%0s\n", "", "row : %08x\n", 5, ...)</span></span></code></pre>
+<p>第一个格式字符串 <code>"%0s\n"</code> 里只有一个 <code>%0s</code>，因此只会消耗后面的 <code>""</code>。再往后的 <code>"row : %08x\n"</code>、<code>5</code>、<code>"col..."</code> 等，并不会继续被当成新的格式字符串解析，而是变成没有对应格式符的多余参数，所以模拟器会报类似：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>More arguments than required</span></span></code></pre>
+<p>因此，使用 $sformatf 时必须把所有格式说明符放进同一个格式字符串中，例如：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>string s;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>s = $sformatf(</span></span>
+<span class="line"><span>  "row  : %08x\ncol  : %08x\naddr : %08x\ncmd  : %0s\n",</span></span>
+<span class="line"><span>  5, 6, 7, "cmd"</span></span>
+<span class="line"><span>);</span></span></code></pre>
+<p>或者先利用 SystemVerilog 的字符串拼接构造格式字符串，再调用 $sformatf：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>string fmt;</span></span>
+<span class="line"><span>string s;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>fmt = {</span></span>
+<span class="line"><span>  "row  : %08x\n",</span></span>
+<span class="line"><span>  "col  : %08x\n",</span></span>
+<span class="line"><span>  "addr : %08x\n",</span></span>
+<span class="line"><span>  "cmd  : %0s\n"</span></span>
+<span class="line"><span>};</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>s = $sformatf(fmt, 5, 6, 7, "cmd");</span></span></code></pre>
+<p>$psprintf 则不是标准 SystemVerilog 接口，而是部分模拟器提供的扩展。某些模拟器会把参数列表中后续出现的字符串继续当作格式片段解析，因此下面这种“格式字符串、参数、格式字符串、参数”交替排列的写法可能恰好能工作：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>$psprintf(</span></span>
+<span class="line"><span>  "%0s\n", "",</span></span>
+<span class="line"><span>  "row  : %08x\n", 5,</span></span>
+<span class="line"><span>  "col  : %08x\n", 6</span></span>
+<span class="line"><span>);</span></span></code></pre>
+<p>这也是为什么同一段参数用 $psprintf 看起来正常，而换成 $sformatf 就异常。关键不是 $sformatf 有问题，而是 $psprintf 支持了模拟器特有的非标准行为，这种代码可移植性较差，工程里应优先使用标准的 $sformatf。
+当 $sformatf 收到多余参数时，某些模拟器除了报警外，还可能继续把这些参数按默认格式打印出来。字符串在 SystemVerilog 底层本质上是字节序列，因此可能被解释成由 ASCII 字节拼成的大整数。例如 <code>"cmd"</code> 的 ASCII 是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>'c' = 0x63</span></span>
+<span class="line"><span>'m' = 0x6d</span></span>
+<span class="line"><span>'d' = 0x64</span></span></code></pre>
+<p>组合成：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>24'h636d64</span></span></code></pre>
+<p>其十进制值就是：</p>
+<pre class="astro-code astro-code-themes min-light night-owl" style="--shiki-light:#24292eff;--shiki-dark:#d6deeb;--shiki-light-bg:#ffffff;--shiki-dark-bg:#011627; overflow-x: auto;--file-name-offset: -0.75rem;" tabindex="0" data-language="text"><code><span class="line"><span>6516068</span></span></code></pre>
+<p>所以看到那些看似“随机的大数字”时，通常并不是随机值，而是字符串内容被作为 packed byte 数据按整数形式解释后的结果。
+核心结论是：$sformatf 只有一个真正的格式字符串，即第一个参数；后面的参数必须严格与其中的格式说明符匹配。不要把 $psprintf 的多格式片段扩展行为套到 $sformatf 上。</p>
+<h3 id="十六进制显示与多维数组波形">十六进制显示与多维数组波形</h3>
+<p>SystemVerilog 中如果只是把数值按十六进制显示，使用格式化符 <code>%h</code> 或 <code>%0h</code>，例如 <code>$display("%0h", a)</code>；其中 <code>%0h</code> 会省略前导 0。若需要把十六进制结果保存成字符串，可用 <code>$sformatf("%0h", a)</code>。类似地，<code>%d/%b/%o</code> 分别表示十进制、二进制和八进制。
+Verdi 查看二维/多维数组时，关键不是单纯在 GUI 中展开，而是仿真阶段必须把数组信息写入 FSDB。<code>$fsdbDumpvars(...)</code> 中的 <code>vars</code> 是 variables 的缩写，主要用于 dump 普通信号和变量；多维数组通常还需要开启 MDA（Multi-Dimensional Array）dump，例如配合 <code>$fsdbDumpMDA(...)</code>。若普通信号有波形而二维数组看不到，应优先检查数组是否被 dump，以及 VCS 编译时是否开启了相应的 memory/debug 支持。最核心的记忆就是：<code>Dumpvars → 普通信号</code>，<code>DumpMDA → 多维数组</code>。
+原笔记还提到 +mda、$fsdbDumpMDA 和 VCS +memcbk，需结合所用版本与 memory/debug 编译配置确认。
+相对符号链接的目标以链接所在目录为基准解析。上面的 cp 源路径则以当前工作目录为基准，两者不要混淆。</p>
+<h2 id="系列其他文章">系列其他文章</h2>
+<ul>
+<li><a href="/posts/dv-sv-basics/">第一篇：SystemVerilog 语言基础</a></li>
+<li><a href="/posts/dv-simulation-concurrency-sva/">第二篇：仿真调度、并发与 SVA</a></li>
+<li><a href="/posts/dv-rtl-timing-cdc/">第三篇：数字设计、时序与 CDC</a></li>
+<li><a href="/posts/dv-uvm-platform/">第四篇：UVM 验证平台</a></li>
+<li><a href="/posts/dv-axi-protocol/">第五篇：AXI 协议</a></li>
+<li><a href="/posts/dv-bridge-ahb-apb/">第六篇：Bridge 验证与 AHB/APB</a></li>
+<li><a href="/posts/dv-noc-chi-bandwidth/">第七篇：NoC、CHI 与接口带宽</a></li>
+</ul></article><hr class="my-8 border-dashed"><div id="btt-btn-container" class="fixed inset-e-4 bottom-8 z-50 md:sticky md:inset-e-auto md:float-end md:me-1 translate-y-14 opacity-0 transition duration-500"><button data-button="back-to-top" class="group bg-background relative px-2 py-1 size-14 rounded-full shadow-xl md:h-8 md:w-fit md:rounded-md md:shadow-none md:focus-visible:rounded-none md:bg-background/35 md:bg-clip-padding md:backdrop-blur-lg"><span id="progress-indicator" class="absolute inset-0 -z-10 block size-14 scale-110 rounded-full bg-transparent md:hidden md:h-8 md:rounded-md"></span><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block rotate-90 md:hidden" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><span class="group-hover:text-accent sr-only text-sm md:not-sr-only"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M12 5v14M16 9l-4-4M8 9l4-4" /></svg>回到顶部</span></button></div><script data-astro-rerun>
+  function backToTop() {
+    const rootElement = document.documentElement;
+    const btnContainer = document.querySelector("#btt-btn-container");
+    const backToTopBtn = document.querySelector("[data-button='back-to-top']");
+    const progressIndicator = document.querySelector("#progress-indicator");
+
+    if (!rootElement || !btnContainer || !backToTopBtn || !progressIndicator)
+      return;
+
+    backToTopBtn.addEventListener("click", () => {
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
+    });
+
+    let lastVisible = null;
+    function handleScroll() {
+      const scrollTotal = rootElement.scrollHeight - rootElement.clientHeight;
+      const scrollTop = rootElement.scrollTop;
+      const scrollPercent = Math.floor((scrollTop / scrollTotal) * 100);
+
+      progressIndicator.style.setProperty(
+        "background-image",
+        `conic-gradient(var(--accent), var(--accent) ${scrollPercent}%, transparent ${scrollPercent}%)`
+      );
+
+      const isVisible = scrollTop / scrollTotal > 0.3;
+
+      if (isVisible !== lastVisible) {
+        btnContainer.classList.toggle("opacity-100", isVisible);
+        btnContainer.classList.toggle("translate-y-0", isVisible);
+        btnContainer.classList.toggle("opacity-0", !isVisible);
+        btnContainer.classList.toggle("translate-y-14", !isVisible);
+        lastVisible = isVisible;
+      }
+    }
+
+    let ticking = false;
+    document.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+  backToTop();
+</script><ul class="mt-4 mb-8 flex flex-wrap gap-4 sm:my-8"><li><a data-astro-transition-scope="astro-bztu2lml-1" href="/tags/数字验证/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>数字验证</a></li><li><a data-astro-transition-scope="astro-bztu2lml-2" href="/tags/soc/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>SoC</a></li><li><a data-astro-transition-scope="astro-bztu2lml-3" href="/tags/工程工具/" class="flex items-center gap-0.5 border-foreground border-b-2 border-dashed hover:border-accent hover:text-accent hover:-mt-0.5 focus-visible:text-accent focus-visible:border-none text-sm"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="opacity-80 size-4" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 9h14M5 15h14M11 4 7 20M17 4l-4 16" /></svg>工程工具</a></li></ul><hr class="my-8 border-dashed"><div data-pagefind-ignore class="my-8 grid grid-cols-1 gap-6 sm:grid-cols-2"><a href="/posts/dv-noc-chi-bandwidth/" class="flex w-full gap-1 hover:opacity-75"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block flex-none rtl:rotate-180" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M5 12h14M5 12l6 6M5 12l6-6" /></svg><div><span>上一篇</span><div class="text-accent/85 text-sm">数字验证问答（七）：NoC、CHI 与接口带宽</div></div></a></div></main><footer class="app-layout mt-auto"><div class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"><div class="flex flex-wrap items-center gap-1"><a href="https://github.com/DAWNMXV" title="DAWNMX on Github" class="group inline-flex items-center gap-1 hover:text-accent p-2 hover:rotate-6 sm:p-1"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="inline-block size-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110" viewBox="0 0 24 24"><path stroke="none" d="M0 0h24v24H0z" /><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21" /></svg><span class="sr-only">DAWNMX on Github</span></a></div><div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row"><span>&#169; 2026 DAWNMX</span><span class="hidden sm:inline">&nbsp;|&nbsp;</span><a href="/games/">小实验</a></div></div></footer><script type="module">var e=`theme`,t=`light`,n=`dark`;function r(){return localStorage.getItem(e)||t}var i=window.__theme?.value??r();function a(){localStorage.setItem(e,i),o()}function o(){let e=document.firstElementChild;e?.setAttribute(`data-theme`,i),e?.classList.toggle(`dark`,i===n),document.querySelector(`#theme-btn`)?.setAttribute(`aria-label`,i);let t=window.getComputedStyle(document.body).backgroundColor;document.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)}function s(){o(),document.querySelector(`#theme-btn`)?.addEventListener(`click`,()=>{i=i===t?n:t,a()})}s(),document.addEventListener(`astro:after-swap`,s),document.addEventListener(`astro:before-swap`,e=>{let t=document.querySelector(`meta[name='theme-color']`)?.getAttribute(`content`);t&&e.newDocument.querySelector(`meta[name='theme-color']`)?.setAttribute(`content`,t)});</script></body></html><script data-astro-rerun>
+  function createProgressBar() {
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    progressContainer.appendChild(progressBar);
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  function addHeadingLinks() {
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    );
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  function attachCopyButtons() {
+    const copyButtonLabel = "复制";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      button.innerText = "已复制";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /** Accessible image lightbox for article images. */
+  function initLightbox() {
+    const article = document.getElementById("article");
+    if (!article) return;
+
+    const prefersReducedMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let overlay = null;
+    let lastFocused = null;
+
+    // Defer attribute mutations so they don't push the LCP timestamp.
+    // Event listeners below use delegation and don't need the attributes to exist yet.
+    requestAnimationFrame(() => {
+      const images = Array.from(article.querySelectorAll("img"));
+      for (const image of images) {
+        if (image.closest("a")) continue;
+        image.setAttribute("role", "button");
+        image.setAttribute("tabindex", "0");
+        image.setAttribute("aria-haspopup", "dialog");
+        image.setAttribute(
+          "aria-label",
+          image.alt ? `查看大图： ${image.alt}` : "查看大图"
+        );
+      }
+    });
+
+    function open(src, alt, trigger) {
+      if (overlay) return;
+      lastFocused = trigger ?? document.activeElement;
+
+      overlay = document.createElement("div");
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute(
+        "aria-label",
+        alt ? `图片预览： ${alt}` : "图片预览"
+      );
+      overlay.className =
+        "fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-200 motion-reduce:transition-none";
+
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", "关闭图片预览");
+      closeButton.className =
+        "absolute end-4 top-4 rounded p-2 text-3xl leading-none text-white";
+      closeButton.innerHTML = "&#10005;";
+      closeButton.addEventListener("click", close);
+
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      image.className =
+        "max-h-[90dvh] max-w-[90dvw] cursor-default object-contain";
+
+      overlay.append(closeButton, image);
+      overlay.addEventListener("click", e => {
+        if (e.target === overlay && currentScale <= 1) close();
+      });
+
+      let currentScale = 1;
+      let translateX = 0;
+      let translateY = 0;
+      let initialDist = 0;
+      let initialScale = 1;
+      let panStartX = 0;
+      let panStartY = 0;
+      let panStartTranslateX = 0;
+      let panStartTranslateY = 0;
+      let lastTapTime = 0;
+
+      function applyTransform() {
+        image.style.transform = `scale(${currentScale}) translate(${translateX}px, ${translateY}px)`;
+      }
+
+      function resetTransform() {
+        currentScale = 1;
+        translateX = 0;
+        translateY = 0;
+        image.style.transform = "";
+      }
+
+      overlay.addEventListener(
+        "touchstart",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            initialDist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            initialScale = currentScale;
+          } else if (t.length === 1) {
+            const now = Date.now();
+            if (now - lastTapTime < 300) {
+              e.preventDefault();
+              if (currentScale > 1) {
+                resetTransform();
+              } else {
+                currentScale = 2;
+                translateX = 0;
+                translateY = 0;
+                applyTransform();
+              }
+              lastTapTime = 0;
+              panStartX = t[0].clientX;
+              panStartY = t[0].clientY;
+              panStartTranslateX = translateX;
+              panStartTranslateY = translateY;
+            } else {
+              lastTapTime = now;
+              if (currentScale > 1) {
+                panStartX = t[0].clientX;
+                panStartY = t[0].clientY;
+                panStartTranslateX = translateX;
+                panStartTranslateY = translateY;
+              }
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener(
+        "touchmove",
+        e => {
+          const t = e.touches;
+          if (t.length === 2) {
+            e.preventDefault();
+            const dist = Math.hypot(
+              t[1].clientX - t[0].clientX,
+              t[1].clientY - t[0].clientY
+            );
+            currentScale = Math.min(
+              4,
+              Math.max(1, initialScale * (dist / initialDist))
+            );
+            applyTransform();
+          } else if (t.length === 1) {
+            if (currentScale > 1) {
+              e.preventDefault();
+              translateX =
+                panStartTranslateX + (t[0].clientX - panStartX) / currentScale;
+              translateY =
+                panStartTranslateY + (t[0].clientY - panStartY) / currentScale;
+              const maxX = Math.max(
+                0,
+                (image.clientWidth - overlay.clientWidth / currentScale) / 2
+              );
+              const maxY = Math.max(
+                0,
+                (image.clientHeight - overlay.clientHeight / currentScale) / 2
+              );
+              translateX = Math.min(maxX, Math.max(-maxX, translateX));
+              translateY = Math.min(maxY, Math.max(-maxY, translateY));
+              applyTransform();
+            } else {
+              e.preventDefault();
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      overlay.addEventListener("touchend", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      overlay.addEventListener("touchcancel", e => {
+        if (e.touches.length === 0 && currentScale <= 1.05) {
+          resetTransform();
+        }
+      });
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = "hidden";
+      document.addEventListener("keydown", onKeyDown);
+      window.__closeLightbox = close;
+
+      requestAnimationFrame(() => overlay?.classList.add("opacity-100"));
+      closeButton.focus();
+    }
+
+    function close() {
+      if (!overlay) return;
+      const el = overlay;
+      overlay = null;
+      window.__closeLightbox = null;
+
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      lastFocused?.focus();
+      lastFocused = null;
+
+      if (prefersReducedMotion()) {
+        el.remove();
+        return;
+      }
+      const remove = () => el.remove();
+      el.addEventListener("transitionend", remove, { once: true });
+      setTimeout(remove, 250); // fallback in case transitionend never fires
+      el.classList.remove("opacity-100");
+    }
+
+    function onKeyDown(e) {
+      if (e.key === "Escape") {
+        close();
+      } else if (e.key === "Tab") {
+        trapFocus(e);
+      }
+    }
+
+    // Keep keyboard focus inside the open dialog.
+    function trapFocus(e) {
+      if (!overlay) return;
+      const focusables = overlay.querySelectorAll(
+        'a[href], button, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    function triggerFromEvent(e) {
+      const image = e.target.closest("img");
+      if (!image || !article.contains(image) || image.closest("a")) return null;
+      return image;
+    }
+
+    function activate(image) {
+      open(image.currentSrc || image.src, image.alt, image);
+    }
+
+    article.addEventListener("click", e => {
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+
+    article.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+      const image = triggerFromEvent(e);
+      if (!image) return;
+      e.preventDefault();
+      activate(image);
+    });
+  }
+  initLightbox();
+
+  if (!window.__lightboxSwapBound) {
+    window.__lightboxSwapBound = true;
+    document.addEventListener("astro:before-swap", () =>
+      window.__closeLightbox?.()
+    );
+  }
+
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>
