@@ -1,0 +1,46 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/components/Main.astro";
+import series from "../../../notion-series-manifest.json";
+const questions = series.reduce(
+  (count, article) => count + article.questions.length,
+  0
+);
+const topics = series.reduce((count, article) => count + article.sections, 0);
+---
+
+<Layout
+  title="数字验证问答 | DAWNMX"
+  description="SystemVerilog、UVM、AMBA、NoC 与 SoC 验证复习笔记。"
+>
+  <Header />
+  <Main
+    pageTitle="数字验证问答"
+    pageDesc="把复习笔记按主题整理，便于查找，也便于回看。"
+  >
+    <p class="text-muted-foreground mt-4">
+      {series.length} 篇文章 · {topics} 个专题 · {questions} 条问答笔记
+    </p>
+    <ol class="mt-8">
+      {
+        series.map(article => (
+          <li class="border-border border-b py-6">
+            <a
+              href={`/${article.path}`}
+              class="text-accent text-lg font-medium hover:underline"
+            >
+              <h2>{article.title}</h2>
+            </a>
+            <p class="text-muted-foreground my-2 text-sm">
+              {article.sections} 个专题 · {article.questions.length} 条笔记
+            </p>
+            <p class="leading-7">{article.description}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </Main>
+  <Footer />
+</Layout>

@@ -102,3 +102,73 @@ assert(
 console.log(
   "Verified 7 old articles and URLs, preserved assets, the complete new article, all 4 illustrations, local links and the search index."
 );
+
+const series = JSON.parse(
+  readFileSync(join(root, "notion-series-manifest.json"), "utf8")
+);
+const normalizeHeading = value =>
+  value.replace(/[\\`*_]/g, "").replace(/\s+/gu, "");
+for (const [index, entry] of series.entries()) {
+  const $ = page(entry.path);
+  assert.equal(
+    $("h1").text().trim(),
+    entry.title,
+    `Missing series article: ${entry.path}`
+  );
+  const headings = $("#article h3")
+    .toArray()
+    .map(node => normalizeHeading($(node).text()));
+  for (const question of entry.questions)
+    assert(
+      headings.includes(normalizeHeading(question)),
+      `Missing question: ${question}`
+    );
+  const codes = $("#article pre code")
+    .toArray()
+    .map(node => hash($(node).text().replace(/\n$/, "")));
+  assert.deepEqual(
+    codes,
+    entry.codeHashes,
+    `Code was changed in ${entry.path}`
+  );
+  assert.equal(
+    $("#article .katex-error").length,
+    0,
+    `Formula rendering failed: ${entry.path}`
+  );
+  assert(
+    $("#article details summary")
+      .toArray()
+      .some(node => $(node).text() === "目录"),
+    `Missing table of contents: ${entry.path}`
+  );
+  for (const a of $("#article a[href^='#']").toArray()) {
+    const target = decodeURIComponent($(a).attr("href").slice(1));
+    assert(
+      $("[id]")
+        .toArray()
+        .some(node => $(node).attr("id") === target),
+      `Broken heading link: ${entry.path} #${target}`
+    );
+  }
+  const adjacent = $("[data-pagefind-ignore] a").toArray();
+  for (const [label, neighbor] of [
+    ["上一篇", series[index - 1]],
+    ["下一篇", series[index + 1]],
+  ]) {
+    const link = adjacent.find(node => $(node).text().trim().startsWith(label));
+    assert.equal(
+      link ? $(link).attr("href") : undefined,
+      neighbor ? `/${neighbor.path}` : undefined,
+      `Wrong ${label} in ${entry.path}`
+    );
+  }
+}
+assert.equal(series.length, 8);
+assert.equal(
+  series.reduce((n, entry) => n + entry.sections, 0),
+  22
+);
+console.log(
+  "Verified all 8 series articles, 22 source topics, 205 question headings, original code blocks, formulas and table-of-contents links."
+);

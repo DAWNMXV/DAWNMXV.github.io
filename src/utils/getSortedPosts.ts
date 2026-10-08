@@ -1,5 +1,10 @@
 import type { CollectionEntry } from "astro:content";
 import { postFilter } from "./postFilter";
+import series from "../../notion-series-manifest.json";
+
+const seriesOrder = new Map(
+  series.map((article, index) => [article.path.split("/")[1], index])
+);
 
 /**
  * Returns posts that are eligible to be shown to users, sorted by publication date
@@ -13,6 +18,9 @@ export function getSortedPosts(posts: CollectionEntry<"posts">[]) {
     .sort(
       (a, b) =>
         Math.floor(new Date(b.data.pubDatetime).getTime() / 1000) -
-        Math.floor(new Date(a.data.pubDatetime).getTime() / 1000)
+          Math.floor(new Date(a.data.pubDatetime).getTime() / 1000) ||
+        (seriesOrder.get(a.id) ?? Infinity) -
+          (seriesOrder.get(b.id) ?? Infinity) ||
+        a.id.localeCompare(b.id)
     );
 }

@@ -6,3 +6,4 @@ output/
 .playwright-cli/
 .DS_Store
 .env*
+.notion-cache/

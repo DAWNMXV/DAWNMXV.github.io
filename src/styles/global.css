@@ -2,6 +2,7 @@
 @import "./theme.css";
 @import "./typography.css";
 @import "rehype-callouts/theme/obsidian";
+@import "katex/dist/katex.min.css";
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
@@ -80,6 +81,24 @@ main > h1 {
 .app-prose pre {
   font-size: 0.85rem;
   overflow-x: auto;
+}
+.app-prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.5rem;
+}
+.app-prose details {
+  display: block;
+  margin-block: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+}
+.app-prose details summary {
+  font-weight: 600;
+}
+.app-prose details ul {
+  max-height: 28rem;
+  overflow-y: auto;
 }
 .app-prose blockquote {
   font-style: normal;

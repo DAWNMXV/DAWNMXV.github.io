@@ -16,36 +16,47 @@ import BackToTopButton from "./_components/BackToTopButton.astro";
 import AdjacentPostNav from "./_components/AdjacentPostNav.astro";
 import config from "@/config";
 import legacyRoutes from "@/legacy-routes.json";
+import series from "../../../../notion-series-manifest.json";
 
 export async function getStaticPaths() {
   const posts = await getCollection("posts");
   const sortedPosts = getSortedPosts(posts);
 
   return sortedPosts
-    .map((post, index) => ({
-      params: { slug: getPostSlug(post.id, post.filePath) },
-      props: {
-        post,
-        // sortedPosts is newest-first, so "older" (prev) is a higher index
-        // and "newer" (next) is a lower index.
-        prevPost:
-          index < sortedPosts.length - 1
-            ? {
-                id: sortedPosts[index + 1].id,
-                title: sortedPosts[index + 1].data.title,
-                filePath: sortedPosts[index + 1].filePath,
-              }
-            : null,
-        nextPost:
-          index > 0
-            ? {
-                id: sortedPosts[index - 1].id,
-                title: sortedPosts[index - 1].data.title,
-                filePath: sortedPosts[index - 1].filePath,
-              }
-            : null,
-      },
-    }))
+    .map((post, index) => {
+      const seriesIndex = series.findIndex(
+        article =>
+          article.path === `posts${getPostSlug(post.id, post.filePath)}/`
+      );
+      const adjacent = (direction: number) => {
+        const seriesEntry = series[seriesIndex + direction];
+        const neighbor =
+          seriesIndex >= 0
+            ? seriesEntry &&
+              posts.find(
+                entry =>
+                  `posts${getPostSlug(entry.id, entry.filePath)}/` ===
+                  seriesEntry.path
+              )
+            : sortedPosts[index - direction];
+        return neighbor
+          ? {
+              id: neighbor.id,
+              title: neighbor.data.title,
+              filePath: neighbor.filePath,
+            }
+          : null;
+      };
+      return {
+        params: { slug: getPostSlug(post.id, post.filePath) },
+        props: {
+          post,
+          // Series navigation follows the reading order; other posts use chronology.
+          prevPost: adjacent(-1),
+          nextPost: adjacent(1),
+        },
+      };
+    })
     .filter(({ props }) => !(props.post.id in legacyRoutes));
 }
 
