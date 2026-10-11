@@ -2,6 +2,8 @@
 
 白底、文字为主的个人博客。基于 [AstroPaper](https://github.com/satnaing/astro-paper) 6.1.0，保留原站七篇文章、日期、标签、图片和文章地址，并加入《焦虑与和解》及四张配图。
 
+页面参考 [数字验证、后端个人学习站](https://darenttheyang.github.io/backend-note/) 的阅读布局，使用白色内容区、蓝色链接和紧凑导航。首页显示文章列表、作者介绍与专题入口；文章页在宽屏显示左侧文章导航、正文和右侧目录，手机和平板使用折叠导航及目录。保留 Astro、原有内容和发布流程。
+
 ## 日常发布入口
 
 在 Mac 上双击 `shortcuts/博客助手.command`，即可使用中文菜单新建草稿、导入 Markdown 和配图、标记定稿、预览及发布。首次选择菜单 7 登录 GitHub。完整操作见 [发布指南](docs/发布指南.md)。
@@ -49,6 +51,8 @@ npm run preview
 - `astro-paper.config.ts`：站名、作者、描述、功能和 GitHub 链接。
 - `src/styles/theme.css`：颜色、字体。
 - `src/styles/global.css`：中文阅读排版。
+- `src/styles/reading.css`：文章正文、专题导航与响应式目录。
+- `src/components/NotebookNav.astro`、`ArticleToc.astro`：文章导航和目录。
 - `src/i18n/lang/zh-CN.ts`：中文界面文案。
 - `src/legacy-routes.json`：旧文章地址映射。
 - `recovery-manifest.json`：旧文、新文章和图片的迁移校验。

@@ -1,0 +1,45 @@
+---
+import { getCollection } from "astro:content";
+import config from "@/config";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import series from "../../notion-series-manifest.json";
+
+const posts = getSortedPosts(await getCollection("posts"));
+const tagCount = new Set(posts.flatMap(post => post.data.tags)).size;
+---
+
+<aside class="blog-profile" aria-label="作者与专题">
+  <section class="profile-panel">
+    <div class="profile-monogram" aria-hidden="true">D</div>
+    <h2>{config.site.title}</h2>
+    <p>记录学习，也记录生活。</p>
+    <div class="profile-stats">
+      <a href="/posts/"><strong>{posts.length}</strong><span>文章</span></a>
+      <a href="/series/digital-verification/"
+        ><strong>{series.length}</strong><span>系列文章</span></a
+      >
+      <a href="/tags/"><strong>{tagCount}</strong><span>标签</span></a>
+    </div>
+    <div class="profile-links">
+      <a href={config.site.profile}>GitHub ↗</a><a href="/rss.xml">RSS 订阅</a>
+    </div>
+  </section>
+  <nav class="profile-panel profile-series" aria-label="数字验证专题">
+    <h2>数字验证问答</h2>
+    <p>SystemVerilog · UVM · AMBA · NoC</p>
+    <ol>
+      {
+        series.map(article => (
+          <li>
+            <a href={`/${article.path}`}>
+              {article.title.split("：").slice(1).join("：")}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    <a class="profile-all" href="/series/digital-verification/"
+      >查看系列目录 →</a
+    >
+  </nav>
+</aside>

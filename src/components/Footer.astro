@@ -1,6 +1,5 @@
 ---
 import type { HTMLAttributes } from "astro/types";
-import Socials from "./Socials.astro";
 import config from "@/config";
 
 type Props = {
@@ -13,17 +12,15 @@ const currentYear = new Date().getFullYear();
 ---
 
 <footer
-  class:list={["app-layout", { "mt-auto": !noMarginTop }, className]}
+  class:list={["site-footer", { "mt-auto": !noMarginTop }, className]}
   {...attrs}
 >
-  <div
-    class="border-border flex flex-col items-center justify-between border-t py-6 sm:flex-row-reverse sm:py-4"
-  >
-    <Socials />
-    <div class="my-2 flex flex-col items-center whitespace-nowrap sm:flex-row">
-      <span>&#169; {currentYear} {config.site.title}</span>
-      <span class="hidden sm:inline">&nbsp;|&nbsp;</span>
+  <div class="footer-inner">
+    <span>&#169; {currentYear} {config.site.title} · 随笔与技术笔记</span>
+    <nav class="footer-links" aria-label="页脚导航">
+      <a href="/rss.xml">RSS 订阅</a>
+      <a href={config.site.profile}>GitHub</a>
       <a href="/games/">小实验</a>
-    </div>
+    </nav>
   </div>
 </footer>

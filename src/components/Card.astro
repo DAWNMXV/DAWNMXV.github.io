@@ -3,6 +3,9 @@ import type { CollectionEntry } from "astro:content";
 import { getPostUrl } from "@/utils/getPostPaths";
 import { toTransitionName } from "@/utils/toTransitionName";
 import Datetime from "./Datetime.astro";
+import { slugifyStr } from "@/utils/slugify";
+import { getRelativeLocaleUrl } from "astro:i18n";
+import config from "@/config";
 
 type Props = {
   variant?: "h2" | "h3";
@@ -13,19 +16,32 @@ const { variant: Heading = "h2", id, data, filePath } = Astro.props;
 const { title, description, ...props } = data;
 ---
 
-<li class="my-6">
+<li class="post-card">
   <a
     href={getPostUrl(id, filePath, Astro.currentLocale)}
-    class:list={[
-      "text-accent inline-block text-lg font-medium",
-      "decoration-dashed underline-offset-4 hover:underline",
-      "focus-visible:no-underline focus-visible:underline-offset-0",
-    ]}
+    class="post-card-title"
   >
     <Heading transition:name={toTransitionName(id)}>
       {title}
     </Heading>
   </a>
-  <Datetime {...props} />
-  <p>{description}</p>
+  <p class="post-card-description">{description}</p>
+  <div class="post-card-meta">
+    <span>{data.author}</span>
+    <Datetime {...props} />
+    {
+      data.tags[0] && (
+        <a
+          class="post-card-topic"
+          href={getRelativeLocaleUrl(
+            Astro.currentLocale ?? config.site.lang,
+            `tags/${slugifyStr(data.tags[0])}`
+          )}
+        >
+          {data.tags[0]}
+        </a>
+      )
+    }
+    {data.featured && <span>置顶</span>}
+  </div>
 </li>

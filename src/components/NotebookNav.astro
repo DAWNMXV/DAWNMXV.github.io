@@ -1,0 +1,75 @@
+---
+import { getCollection } from "astro:content";
+import { getSortedPosts } from "@/utils/getSortedPosts";
+import { getPostUrl } from "@/utils/getPostPaths";
+import series from "../../notion-series-manifest.json";
+
+type Props = { currentId: string };
+const { currentId } = Astro.props;
+const posts = getSortedPosts(await getCollection("posts"));
+const seriesPaths = new Set(series.map(article => `/${article.path}`));
+const otherPosts = posts.filter(
+  post =>
+    !seriesPaths.has(getPostUrl(post.id, post.filePath, Astro.currentLocale))
+);
+---
+
+<aside class="reading-nav" data-pagefind-ignore>
+  <button
+    class="notebook-toggle"
+    id="notebook-toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls="notebook-links"
+    >文章导航 <span aria-hidden="true">⌄</span></button
+  >
+  <nav class="notebook-links" id="notebook-links" aria-label="文章导航">
+    <a href="/posts/" class="notebook-home">全部文章</a>
+    <p class="notebook-group">
+      <a href="/series/digital-verification/">数字验证问答</a>
+    </p>
+    <ol class="notebook-series">
+      {
+        series
+          .filter(article =>
+            posts.some(
+              post =>
+                getPostUrl(post.id, post.filePath, Astro.currentLocale) ===
+                `/${article.path}`
+            )
+          )
+          .map((article, index) => (
+            <li>
+              <a
+                href={`/${article.path}`}
+                aria-current={
+                  article.path === `posts/${currentId}/` ? "page" : undefined
+                }
+              >
+                <>
+                  <span class="notebook-number">{index + 1}</span>
+                  <span>{article.title.split("：").slice(1).join("：")}</span>
+                </>
+              </a>
+            </li>
+          ))
+      }
+    </ol>
+    <p class="notebook-group">随笔与其他笔记</p>
+    <ul>
+      {
+        otherPosts.map(post => (
+          <li>
+            <a
+              href={getPostUrl(post.id, post.filePath, Astro.currentLocale)}
+              aria-current={post.id === currentId ? "page" : undefined}
+            >
+              {post.data.title}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+    <a href="/tags/" class="notebook-bottom">按标签查找 →</a>
+  </nav>
+</aside>

@@ -1,0 +1,38 @@
+---
+import type { MarkdownHeading } from "astro";
+
+type Props = { headings: MarkdownHeading[]; mobile?: boolean };
+const { headings, mobile = false } = Astro.props;
+const entries = headings.filter(
+  heading => heading.depth >= 2 && heading.depth <= 3 && heading.text !== "目录"
+);
+const Container = mobile ? "details" : "aside";
+---
+
+{
+  entries.length > 0 && (
+    <Container
+      class={mobile ? "mobile-toc" : "reading-toc"}
+      data-pagefind-ignore
+    >
+      {mobile ? (
+        <summary>
+          本页目录 <span>{entries.length} 节</span>
+        </summary>
+      ) : (
+        <p class="toc-title">此页内容</p>
+      )}
+      <nav aria-label={mobile ? "本页目录" : "此页内容"}>
+        <ul>
+          {entries.map(heading => (
+            <li class:list={{ "toc-nested": heading.depth === 3 }}>
+              <a data-toc-link href={`#${heading.slug}`}>
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </Container>
+  )
+}
